@@ -1,5 +1,3 @@
-// src/jsx.d.ts
-
 declare namespace JSX {
   interface IntrinsicElements {
     // Basic HTML elements with their common attributes

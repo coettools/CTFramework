@@ -3,7 +3,6 @@ import { VNode } from "./types";
 
 export function createElement(tag: string | ((props: any) => VNode) | (new (props: any) => Component<any, any>), props: any, ...children: (VNode | string)[]): VNode {
   props = props || {};
-  console.log("Creating element:", tag, props, children);
 
   return {
     tag,
@@ -95,7 +94,6 @@ export class CTFramework {
     if (vnode.props && vnode.props.onClick) {
       const oldEventId = element.getAttribute("click-event");
       if (oldEventId && CTFramework.eventHandlers[oldEventId]) {
-        console.log("delete old event");
         delete CTFramework.eventHandlers[oldEventId]; // Remove the old handler
       }
 
@@ -231,13 +229,11 @@ export class CTFramework {
 
         // Remove the old event listener from CTFramework.eventHandlers using click-event
         if (CTFramework.eventHandlers[eventId]) {
-          console.log(`Removing old event listener for ${eventType}`, eventId, CTFramework.eventHandlers[eventId]);
           delete CTFramework.eventHandlers[eventId]; // Remove from event handlers map
         }
 
         // Add the new event listener in CTFramework.eventHandlers using click-event
         if (value && typeof value === "function") {
-          console.log(`Adding new event listener for ${eventType}`, eventId, value);
           CTFramework.eventHandlers[eventId] = value; // Update the event handler in the map
         }
       } else if (name === "textContent") {
