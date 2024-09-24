@@ -1,0 +1,30 @@
+{
+  "name": "ctframework",
+  "version": "1.0.3",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "webpack --mode production --config webpack.config.mjs",
+    "build:dev": "webpack --mode development --config webpack.config.mjs"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./Component": {
+      "import": "./dist/Component.js",
+      "require": "./dist/Component.js"
+    }
+  },
+  "devDependencies": {
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.5.4",
+    "webpack": "^5.94.0",
+    "webpack-cli": "^5.1.4"
+  }
+}
