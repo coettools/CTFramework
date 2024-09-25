@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "module": "ESNext",
+    "lib": ["ES2017", "DOM"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": false,
+    "outDir": "./dist",
+    "declaration": true, // Ensure declarations are emitted
+    "jsx": "react", // Enable JSX handling
+    "jsxFactory": "createElement" // Use createElement from CTFramework
+  },
+  "include": [
+    "src",
+    "src/jsx.d.ts" // Ensure jsx.d.ts is included
+  ],
+  "exclude": ["node_modules", "dist"]
+}
