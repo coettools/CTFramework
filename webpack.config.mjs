@@ -9,14 +9,14 @@ export default () => {
   return {
     entry: "./src/index.ts", // Main entry point
     output: {
-      filename: "index.js", // Always output as index.js (or use index.min.js if you prefer)
+      filename: "index.js", // Always output as index.js
       path: path.resolve(__dirname, "dist"),
       library: {
-        name: "CTFramework",
-        type: "umd",
-        export: "CTFramework",
+        name: "CTFramework", // Global name for the UMD module
+        type: "umd", // Universal Module Definition (UMD) format
+        export: "default", // Export the default export
       },
-      globalObject: "this",
+      globalObject: "this", // This ensures proper behavior in different environments
       clean: true, // Clean the output directory before each build
     },
     module: {
