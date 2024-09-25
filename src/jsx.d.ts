@@ -1,7 +1,7 @@
 declare namespace JSX {
   interface IntrinsicElements {
     // Basic HTML elements with their common attributes
-    div: { [key: string]: any };
+    div: { [key: string]: any; isStatic?: boolean };
     header: { [key: string]: any };
     h1: { [key: string]: any };
     h2: { [key: string]: any };
