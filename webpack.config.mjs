@@ -5,19 +5,20 @@ import CopyWebpackPlugin from "copy-webpack-plugin";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default () => {
+export default (_env, argv) => {
+  const isProduction = argv.mode === "production";
   return {
     entry: "./src/index.ts", // Main entry point
     output: {
-      filename: "index.js", // Always output as index.js
+      filename: isProduction ? "index.min.js" : "index.js",
       path: path.resolve(__dirname, "dist"),
       library: {
-        name: "CTFramework", // Global name for the UMD module
-        type: "umd", // Universal Module Definition (UMD) format
-        export: "default", // Export the default export
+        name: "CTFramework",
+        type: "umd",
+        export: "CTFramework",
       },
-      globalObject: "this", // This ensures proper behavior in different environments
-      clean: true, // Clean the output directory before each build
+      globalObject: "this",
+      clean: true,
     },
     module: {
       rules: [
@@ -38,6 +39,6 @@ export default () => {
         ],
       }),
     ],
-    devtool: "source-map", // Generate source maps for debugging
+    devtool: isProduction ? "source-map" : "inline-source-map", // Use source maps for debugging
   };
 };
