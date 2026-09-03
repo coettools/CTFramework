@@ -35,7 +35,9 @@ docs/                    framework documentation
 npm install
 ```
 
-There are no package dependencies right now, so install is only there for normal package workflow consistency.
+The only dependency is esbuild, used at build time to minify JavaScript without
+changing template text or regular expressions. It is not included in the browser
+runtime. The library still has zero runtime dependencies.
 
 ## Commands
 
@@ -46,6 +48,9 @@ npm run test:browser
 npm run check
 npm run package:check
 npm run setup:git-hooks
+npm run sync:projects
+npm run sync:projects:preview
+npm run projects:check
 ```
 
 `npm run build` writes the distributable ES module package to `dist/`. Real projects import CTFramework from the package name after installation, or from a local package link during development:
@@ -58,13 +63,30 @@ npm link
 npm link @coettools/ctframework
 ```
 
-When this project is a Git repository, run `npm run setup:git-hooks` once. The tracked pre-commit hook runs `npm run check`, so builds and tests complete before every commit.
+When this project is a Git repository, run `npm run setup:git-hooks` once. The pre-commit hook runs `npm run check`. After a successful commit, the post-commit hook runs `npm run sync:projects` to refresh consuming web-dev projects and run their available checks. A post-commit failure does not undo the commit; fix the failure and rerun synchronization before releasing consumers.
+
+## Update consuming projects
+
+Framework work includes its consumers, not just this repository. After each commit:
+
+1. `npm run sync:projects` rebuilds and checks CTFramework from clean, committed build inputs.
+2. It discovers direct sibling projects using `vendor/ctframework.bundle.js` or `.min.js`, refreshes the variants they use or already carry, and copies LICENSE.ctframework. Embedded CSS travels with the bundles.
+3. It runs each project's `npm run check`, or its build and source syntax checks when no check script exists. Source-only starters get syntax checks and an explicit notice that build/tests are not configured.
+4. It verifies vendor bytes and any standard dist/vendor output against the new artifacts. Failures are reported per project and produce a nonzero exit code.
+5. Review affected application code and CSS for breaking API/token changes, fix consumers rather than adding legacy aliases, and test actual interactions on desktop and mobile.
+6. Commit and release each consumer through its own approved workflow. Updating local files does not update a live Vercel site or VPS.
+
+The hook never stages, commits, pushes, or deploys another project. It only replaces generated vendor files and runs checks/builds; application source and intentional style overrides remain untouched. Linked paths are refused. Package-managed consumers require an explicit dependency/lockfile update and currently stop automatic synchronization rather than being silently skipped. Projects outside this sibling/vendor convention need explicit integration before treating propagation as complete.
+
+Use `npm run sync:projects:preview` while developing to test uncommitted changes across projects. Use `npm run projects:check` to rebuild only the framework and detect stale consumer/vendor and dist files without replacing them. `npm run build` now writes only this library's dist; it no longer has a wiki-specific copying side effect.
+
+The latest local result, commit identity for committed runs, and file hashes are in `reports/ProjectSync.json` (ignored by Git). Browser verification and deployment are marked pending, never inferred from a successful build. If hooks are bypassed or unavailable, run the committed sync command manually. Do not consider an update finished while an affected consumer is stale, failing, or still awaiting the required verification/release.
 
 ## Documentation
 
 Start with the [CTFramework Guide](docs/Guide.md). It is the wiki-style documentation hub, with individual practical examples for every public API, service, utility, lifecycle method, DOM helper, and UI component.
 
-The interactive CTFramework wiki is in the sibling `../wiki.ct-framework/` folder and is built using CTFramework itself. Each `npm run build` creates the standalone `dist/ctframework.bundle.js` file and copies it to `wiki.ct-framework/vendor/`. Run `npm run test:browser`, then open `http://localhost:4170/wiki/`. `npm run check` verifies that every public export has a wiki coverage entry, so framework changes cannot silently leave the wiki behind.
+The interactive CTFramework wiki is in the sibling `../wiki.ct-framework/` folder and is built using CTFramework itself. The project synchronization command updates its vendor files and rebuilds/tests the wiki along with other consumers. Run `npm run test:browser`, then open `http://localhost:4170/wiki/`. `npm run check` verifies that every public export has a wiki coverage entry; browser checks still verify behavior.
 
 - [Getting Started](docs/Getting-Started.md)
 - [HTML And DOM](docs/Html-And-Dom.md)
@@ -167,13 +189,17 @@ http://localhost:4170/tests/browser/showcase/
 
 ## Default style
 
-CTFramework adds its default stylesheet once when `CT.Mount(...)` first renders a component. It establishes the coettools navy, signal cyan and vital green visual language while allowing normal project CSS to override it automatically.
+CTFramework adds its Split stylesheet once when `CT.Mount(...)` first renders a component: graphite surroundings, navy panels, compact corners, cyan actions, and green selection or success states. Role-based CSS properties and normal project styles provide overrides without compatibility aliases or another theme library.
 
 Read [Styling.md](docs/Styling.md) for the supplied classes, every theme token, component overrides and full project-wide replacement patterns.
 
 ## Components
 
-Read [Components.md](docs/Components.md) for `ApplicationLayout`, `Accordion`, `DataTable`, `Dropdown`, `SideNavigation`, `Tooltip`, `Badge`, `Card`, `Alert`, `Dialog`, `PopupWindow`, `Toast`, and `FallbackView` usage.
+Read [Components.md](docs/Components.md) for `ApplicationLayout`, `Accordion`, `DataTable`, `Dropdown`, `SideNavigation`, `Tooltip`, `Badge`, `Card`, `CodeBlock`, `Alert`, `Dialog`, `PopupWindow`, `Toast`, and `FallbackView` usage.
+
+`CodeBlock` displays formatted source with basic syntax colours, line numbers, Copy,
+and a Wrap toggle. The wiki and showcase use it for their code examples. See the
+[component options](docs/Components.md#codeblock) and [style overrides](docs/Styling.md#style-code-examples).
 
 ## License
 

@@ -101,14 +101,17 @@ ${Dropdown({
 
 Options can be strings or `{ Value, Label }` objects. `OnChange(value, option)` receives the selected value and source option.
 
+`Value` selects the matching option on the first render, including numeric zero.
+You can replace `Options` and `Value` together in a parent update; option children
+are rendered before the selected value is applied.
+
 ## SideNavigation
 
-`SideNavigation` has an icon-only collapse control that reduces the navigation to a compact rail. The control shows a short hover hint, and optional local search remains available when expanded.
+`SideNavigation` lists the supplied items and highlights the active page. Its icon-only collapse control reduces the navigation to a compact rail and shows a short hover hint. Expanding restores the full item list.
 
 ```js
 ${SideNavigation({
   Title: "Workspace",
-  Searchable: true,
   ActiveId: activeArea,
   Items: [
     { Id: "overview", Label: "Overview" },
@@ -141,6 +144,65 @@ ${Card({
 ```
 
 `Card` accepts `Title`, `Content`, and optional `Footer`.
+
+## CodeBlock
+
+Use `CodeBlock` for source examples, configuration, or logs. It preserves indentation,
+adds basic syntax colours, and keeps long lines inside its own scroll area. No runtime
+dependency or remote service is used. The wiki and showcase use this same control.
+
+```js
+import { CodeBlock } from "./vendor/ctframework.bundle.min.js";
+
+const source = [
+  "const Add = (left, right) => {",
+  "  return left + right;",
+  "};"
+].join("\n");
+
+CodeBlock({
+  Title: "Helpers.js",
+  Language: "javascript",
+  Code: source
+});
+```
+
+Return the result from `Render`, interpolate it inside `CT.Html`, or pass it to
+`CT.Mount`. Use a separate live component beside it when an example needs a preview.
+`Code` is always text: HTML and scripts are never executed.
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `Code` | `""` | Source string. Preserve your newlines and indentation here. |
+| `Title` | `""` | Optional filename or caption, also used as the scroll region's accessible name. |
+| `Language` | `"javascript"` | `javascript`, `html`, `css`, `json`, or `text`. Unknown languages use plain text. |
+| `LineNumbers` | `true` | Show a gutter; line numbers are excluded from the copied source. |
+| `Wrap` | `false` | Initial wrapping state. The reader can toggle Wrap without changing the source. |
+| `Copy` | `true` | Show Copy. It copies the original string, including indentation and line endings. |
+
+The keyboard-focusable code region supports horizontal scrolling. Copy uses the
+browser Clipboard API, normally available on HTTPS or localhost. If copying is
+unavailable or denied, an inline message explains how to copy manually. `Copied`
+appears only after the browser confirms success.
+
+```js
+CodeBlock({
+  Title: "Response.json",
+  Language: "json",
+  Code: JSON.stringify(response, null, 2),
+  Wrap: true,
+  LineNumbers: false,
+  Copy: false
+});
+```
+
+This is a code display, not an editor or automatic formatter. Supply formatted
+source; it does not rewrite your code. Highlighting is intentionally lightweight,
+not a full language parser: JavaScript template strings use one string colour.
+Inputs above 100,000 characters use plain text to limit highlighting work. For large
+logs, display a useful excerpt rather than rendering an entire file.
+
+See [Styling](Styling.md#style-code-examples) for syntax colours and scoped overrides.
 
 ## Alert
 

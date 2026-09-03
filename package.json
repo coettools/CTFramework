@@ -28,6 +28,9 @@
     "LICENSE",
     "README.md"
   ],
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  },
   "scripts": {
     "build": "node scripts/build.js",
     "build:min": "node scripts/build.js",
@@ -38,6 +41,9 @@
     "check": "npm run build && npm run test && npm run test:coverage",
     "package:check": "npm pack --dry-run",
     "setup:git-hooks": "node scripts/setup-git-hooks.js",
+    "sync:projects": "node scripts/SyncProjects.js --committed",
+    "sync:projects:preview": "node scripts/SyncProjects.js --working-tree",
+    "projects:check": "npm run build && node scripts/SyncProjects.js --verify",
     "prepare": "npm run build && npm run setup:git-hooks"
   }
 }

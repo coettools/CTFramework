@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { chmodSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,4 +17,10 @@ execFileSync("git", ["config", "core.hooksPath", ".githooks"], {
   stdio: "inherit"
 });
 
-console.log("CTFramework pre-commit hook enabled.");
+if (process.platform !== "win32") {
+  for (const name of ["pre-commit", "post-commit"]) {
+    chmodSync(path.join(projectDirectory, ".githooks", name), 0o755);
+  }
+}
+
+console.log("CTFramework pre-commit checks and post-commit project synchronization enabled.");

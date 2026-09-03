@@ -1,12 +1,12 @@
 import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { transform as Transform } from "esbuild";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectDirectory = path.resolve(scriptDirectory, "..");
 const sourceDirectory = path.join(projectDirectory, "src");
 const outputDirectory = path.join(projectDirectory, "dist");
-const wikiDirectory = path.join(projectDirectory, "..", "wiki.ct-framework");
 const cleanOnly = process.argv.includes("--clean");
 
 async function main() {
@@ -26,12 +26,9 @@ async function main() {
   const bundle = await CreateBundle();
   const minifiedBundlePath = path.join(outputDirectory, "ctframework.bundle.min.js");
   await writeFile(bundlePath, bundle);
-  await writeFile(minifiedBundlePath, MinifyJavaScript(bundle));
-  await mkdir(path.join(wikiDirectory, "vendor"), { recursive: true });
-  await copyFile(bundlePath, path.join(wikiDirectory, "vendor", "ctframework.bundle.js"));
-  await copyFile(minifiedBundlePath, path.join(wikiDirectory, "vendor", "ctframework.bundle.min.js"));
-
-  console.log("CTFramework build complete. Debug and minified standalone bundles copied to wiki.ct-framework/vendor.");
+  const minified = await Transform(bundle, { minify: true, keepNames: true, format: "esm", target: "es2022" });
+  await writeFile(minifiedBundlePath, minified.code);
+  console.log("CTFramework build complete. Module distribution and standalone bundles are in dist/.");
 }
 
 async function CreateBundle() {
@@ -154,77 +151,6 @@ function MinifyCss(css) {
     .replace(/\s+/g, " ")
     .replace(/\s*([{}:;,>])\s*/g, "$1")
     .trim();
-}
-
-function MinifyJavaScript(source) {
-  let result = "";
-  let index = 0;
-  let quote = null;
-  let previousCharacter = "";
-
-  while (index < source.length) {
-    const character = source[index];
-    const nextCharacter = source[index + 1];
-
-    if (quote) {
-      result += character;
-
-      if (character === "\\") {
-        result += nextCharacter || "";
-        index += 2;
-        continue;
-      }
-
-      if (character === quote) {
-        quote = null;
-      }
-
-      index += 1;
-      continue;
-    }
-
-    if (character === "\"" || character === "'" || character === "`") {
-      quote = character;
-      result += character;
-      previousCharacter = character;
-      index += 1;
-      continue;
-    }
-
-    if (character === "/" && nextCharacter === "/") {
-      index = source.indexOf("\n", index);
-      index = index === -1 ? source.length : index + 1;
-      continue;
-    }
-
-    if (character === "/" && nextCharacter === "*") {
-      const commentEnd = source.indexOf("*/", index + 2);
-      index = commentEnd === -1 ? source.length : commentEnd + 2;
-      continue;
-    }
-
-    if (/\s/.test(character)) {
-      let nextIndex = index + 1;
-      while (nextIndex < source.length && /\s/.test(source[nextIndex])) {
-        nextIndex += 1;
-      }
-
-      const followingCharacter = source[nextIndex] || "";
-      if (/[A-Za-z0-9_$]/.test(previousCharacter) && /[A-Za-z0-9_$]/.test(followingCharacter)) {
-        result += " ";
-        previousCharacter = " ";
-      }
-
-      index = nextIndex;
-      continue;
-    }
-
-    result += character;
-    previousCharacter = character;
-    index += 1;
-  }
-
-  return result;
 }
 
 async function copyDirectory(sourcePath, outputPath) {

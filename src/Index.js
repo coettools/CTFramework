@@ -4,6 +4,7 @@ import { Accordion } from "./components/Accordion.js";
 import { Alert } from "./components/Alert.js";
 import { Badge } from "./components/Badge.js";
 import { Card } from "./components/Card.js";
+import { CodeBlock } from "./components/CodeBlock.js";
 import { DataTable } from "./components/DataTable.js";
 import { Dialog } from "./components/Dialog.js";
 import { Dropdown } from "./components/Dropdown.js";
@@ -28,6 +29,7 @@ export {
   Alert,
   Badge,
   Card,
+  CodeBlock,
   DataTable,
   Dialog,
   Dropdown,

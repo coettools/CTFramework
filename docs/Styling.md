@@ -1,22 +1,45 @@
 # CTFramework Styling
 
-CTFramework provides a coettools default visual language: sovereign navy surfaces, signal cyan structure and vital green for positive or active states. It is a starting point, not a restriction. Each project can keep it, adjust it, or replace parts of it with normal CSS.
+Split is the default coettools design: graphite surroundings, navy panels, compact
+corners, cyan actions, and green selection or success states. Borders stay neutral;
+accent edges belong to headers and selected navigation items.
 
-## How it loads
+## Load The Default
 
-The default stylesheet is added once, immediately before the first `CT.Mount(...)` render. There is nothing to import and nothing to configure in an application.
-
-The stylesheet is placed in the `ctframework` CSS layer. Your normal project stylesheet is not layered, so it overrides CTFramework automatically even if the browser loaded your stylesheet before the first mount. Do not edit CTFramework's `Default.css` from a project; write project CSS instead.
+`CT.Mount` adds the stylesheet once. Both standalone bundles embed it; no separate
+framework CSS download or import is needed. The module distribution includes its
+stylesheet in styles/Default.css.
 
 ```js
+import CT, { Card } from "./vendor/ctframework.bundle.min.js";
+
 CT(() => {
-  CT.Mount(App, "#app");
+  CT.Mount(Card({
+    Title: "Project status",
+    Content: CT.Html`<p>Ready to work.</p>`
+  }), "#app");
 });
 ```
 
-## Start With The Default
+The stylesheet uses `@layer ctframework`. Normal, unlayered project CSS takes
+precedence even when loaded before the first mount. Do not edit the vendor bundle
+or framework source from a consuming project.
 
-Use the supplied classes where the structure matches your page. They keep coettools projects familiar without adding a component library.
+## Surface And Accent Roles
+
+| Role | Default |
+| --- | --- |
+| Page, application navigation, inputs | Graphite #101315 |
+| Cards, panels, dialogs, popups | Navy #081f2b |
+| Headers, alerts, raised regions | Raised navy #102e3c |
+| Primary actions, links, keyboard focus | Cyan #2ab0b5 |
+| Selected navigation and success | Green #32cd32 |
+| Panels / controls / badges | 6px / 4px / 3px corners at the default 16px root size |
+
+Use the same roles in project-specific themes. Do not use a success color to imply
+that an unrelated action succeeded. Status badges also include text, not color alone.
+
+## Supplied Classes
 
 ```js
 const html = CT.Html;
@@ -24,10 +47,11 @@ const html = CT.Html;
 const Dashboard = () => html`
   <main class="ct-shell">
     <section class="ct-panel">
-      <p class="ct-eyebrow">System status</p>
-      <h1>Deployment ready</h1>
-      <p class="ct-muted">The last validation completed successfully.</p>
-      <button type="button" class="ct-button-success">Deploy</button>
+      <p class="ct-eyebrow">Project status</p>
+      <h1>Ready to work</h1>
+      <p class="ct-muted">Select a project to continue.</p>
+      <button type="button">Open project</button>
+      <button type="button" class="ct-button-secondary">Cancel</button>
     </section>
   </main>
 `;
@@ -35,123 +59,216 @@ const Dashboard = () => html`
 
 | Class | Purpose |
 | --- | --- |
-| `ct-shell` | Centered page container with responsive horizontal spacing. |
-| `ct-panel` | Navy content surface with cyan border treatment. |
-| `ct-eyebrow` | Compact, uppercase cyan section label. |
-| `ct-muted` | Secondary text color. |
-| `ct-button-secondary` | Transparent secondary button treatment. |
-| `ct-button-success` | Green positive or active action treatment. |
-| `ct-status` | Compact green monospace status text. |
-| `ct-error` | Error text color. |
+| `ct-shell` | Centered page container with responsive spacing. |
+| `ct-panel` | Navy content surface with neutral borders and compact corners. |
+| `ct-eyebrow` | Small uppercase accent label. |
+| `ct-muted` | Secondary readable text. |
+| `ct-button-secondary` | Transparent secondary action; raised surface on hover. |
+| `ct-button-success` | Filled positive action with its own hover color. |
+| `ct-status` | Compact success-colored monospace status text. |
+| `ct-error` | Error text. |
+| `ct-code-snippet` | Plain wrapping preformatted text, also used by startup/error fallbacks. Use CodeBlock for interactive source examples. |
 
-Native `button`, `input`, `select`, `textarea`, `a`, and `:focus-visible` also receive defaults. This means a usable page has a coherent baseline before project-specific styles are added.
+Native buttons, fields, links, and keyboard focus indicators are styled as well.
+Use labels on fields and keep the visible focus outline.
 
-## Component Styles
+## Theme Properties
 
-Every framework component ships with a `ct-*` class and default styling. Use the class directly only when adding a project-specific adjustment; the component adds it for you.
+Names describe purpose rather than a particular palette. These are the supported
+properties; no compatibility aliases are provided.
 
-| Component | Default class | Style role |
+| Property | Default | Purpose |
 | --- | --- | --- |
-| `Accordion` | `ct-accordion` | Expandable sections with an active green trigger state. |
-| `Card` | `ct-card` | Structured navy content surface with header, content and footer regions. |
-| `Badge` | `ct-badge` | Compact status marker with `success`, `warning`, or `danger` variants. |
-| `Alert` | `ct-alert` | Inline information message with a colored left signal. |
-| `Dropdown` | `ct-dropdown` | Labelled native select layout. |
-| `FallbackView` | `ct-fallback` | Clear not-found or recovery view; unexpected render errors use `ct-fallback-error`. |
-| `DataTable` | `ct-data-table` | Search, table and pager structure with responsive horizontal scrolling. |
-| `SideNavigation` | `ct-side-navigation` | Bordered vertical navigation with local search, active state, and a compact collapsed rail. |
-| `Tooltip` | `ct-tooltip` | Hover hint; position with `ct-tooltip-top` or `ct-tooltip-right`. |
-| `Dialog` | `ct-dialog` | Centered modal over `ct-dialog-backdrop`. |
-| `PopupWindow` | `ct-popup-window` | Non-blocking fixed window with position variants. |
-| `Toast` | `ct-toast` | Fixed status notification with type variants. |
-| `ApplicationLayout` | `ct-application-layout` | Full-viewport application shell with fixed regions and a scrolling content pane. |
+| `--ct-color-background` | #101315 | Page, navigation, code and field backgrounds. |
+| `--ct-color-surface` | #081f2b | Panels, cards and windows. |
+| `--ct-color-surface-raised` | #102e3c | Headers, alerts and secondary hover surfaces. |
+| `--ct-color-accent` | #2ab0b5 | Main actions, links, selected accent edges and focus. |
+| `--ct-color-accent-hover` | #46c8cc | Primary action hover. |
+| `--ct-color-on-accent` | #021019 | Text on filled primary and success actions. |
+| `--ct-color-success` | #32cd32 | Positive text, active navigation and success actions. |
+| `--ct-color-success-hover` | #55dd55 | Success action hover. |
+| `--ct-color-success-soft` | #19371f | Selected navigation and success badge backgrounds. |
+| `--ct-color-text` | #e4e4eb | Primary text. |
+| `--ct-color-muted` | #adb4bd | Secondary text and placeholders. |
+| `--ct-color-warning` | #edc671 | Warning text and indicators. |
+| `--ct-color-warning-soft` | #3b3020 | Warning badge background. |
+| `--ct-color-danger` | #f3a2aa | Error text and indicators. |
+| `--ct-color-danger-soft` | #40262e | Error badge background. |
+| `--ct-color-border` | #354a55 | Panel borders and dividers. |
+| `--ct-color-field-border` | #6b8390 | Visible boundaries around editable fields. |
+| `--ct-color-backdrop` | rgba(5, 11, 18, .79) | Modal backdrop. |
+| `--ct-code-keyword` | #81b6fa | Code keywords and HTML tags. |
+| `--ct-code-string` | #b1ce91 | Code strings and template literals. |
+| `--ct-code-number` | #e7b66b | Numbers, literal values and HTML entities. |
+| `--ct-code-property` | #70cbd2 | Object properties, HTML attributes and CSS properties. |
+| `--ct-code-function` | #e4d29c | JavaScript function calls. |
+| `--ct-code-comment` | #94a3af | Code comments. |
+| `--ct-radius-panel` | .375rem | Panels, cards and windows. |
+| `--ct-radius-control` | .25rem | Buttons, fields, code, alerts, tooltips and toast. |
+| `--ct-radius-badge` | .1875rem | Badge corners. |
+| `--ct-font-family` | Bahnschrift, "Arial Narrow", sans-serif | Interface text; no remote font dependency. |
+| `--ct-font-mono` | Consolas, "Courier New", monospace | Code and technical text. |
+| `--ct-focus-ring` | none | Optional focus shadow; the accent outline stays visible. |
 
-For example, a project can widen only its popup window without changing the framework default for every other project:
+## Change An Accent
+
+Place this in the project's own stylesheet. Update the hover and on-accent text
+together so the button remains readable in both states.
 
 ```css
+:root {
+  --ct-color-accent: #e7b66b;
+  --ct-color-accent-hover: #f2cc92;
+  --ct-color-on-accent: #021019;
+}
+```
+
+This changes actions and accent edges. It does not change success, warning, or error
+meaning. To change positive states too, set success, success-hover, and success-soft.
+
+## Change Corners
+
+```css
+/* Square treatment for this project. */
+:root {
+  --ct-radius-panel: 0;
+  --ct-radius-control: 0;
+  --ct-radius-badge: 0;
+}
+```
+
+## Theme One Section
+
+Custom properties inherit. A scoped override affects only that section, including
+controls rendered within it. It does not change the wiki navigation or another page.
+
+```css
+.settings-section {
+  --ct-color-accent: #e7b66b;
+  --ct-color-accent-hover: #f2cc92;
+}
+```
+
+```js
+const Settings = () => CT.Html`
+  <section class="settings-section">
+    ${Card({ Title: "Settings", Content: CT.Html`<button>Save settings</button>` })}
+  </section>
+`;
+```
+
+## Use A Light Palette
+
+Change the complete surface and status set, not just the page background. Bright
+dark-theme accents need darker counterparts for text on pale surfaces.
+
+```css
+:root {
+  color-scheme: light;
+  --ct-color-background: #e6ebeb;
+  --ct-color-surface: #f8fafa;
+  --ct-color-surface-raised: #dce5e6;
+  --ct-color-text: #162b34;
+  --ct-color-muted: #4e626c;
+  --ct-color-accent: #126a70;
+  --ct-color-accent-hover: #0d555a;
+  --ct-color-on-accent: #ffffff;
+  --ct-color-success: #197532;
+  --ct-color-success-hover: #105d26;
+  --ct-color-success-soft: #d6e9db;
+  --ct-color-warning: #795410;
+  --ct-color-warning-soft: #f2e5c7;
+  --ct-color-danger: #a8273a;
+  --ct-color-danger-soft: #f6dce1;
+  --ct-color-border: #a4b5bc;
+  --ct-color-field-border: #697e89;
+  --ct-color-backdrop: rgba(5, 11, 18, .65);
+  --ct-code-keyword: #245993;
+  --ct-code-string: #3b641d;
+  --ct-code-number: #7a4b12;
+  --ct-code-property: #14616a;
+  --ct-code-function: #67551d;
+  --ct-code-comment: #4e626c;
+}
+```
+
+This is an optional project override, not an automatically switched framework theme.
+Check normal, hover, focus, disabled, and status states after changing colors.
+
+## Override A Component
+
+Use normal selectors without `!important` or a competing layer. For example:
+
+```css
+/* Only this project's cards lose the header accent edge. */
+.project-card .ct-card-header {
+  border-left: 0;
+}
+
+/* Give a project popup more space without changing every dialog. */
 .ct-popup-window {
   width: min(calc(100% - 2rem), 32rem);
 }
 ```
 
-## Change The Theme
+Do not clip a navigation container to round its corners: its tooltip must be able
+to extend over nearby content. Defaults preserve that overflow.
 
-Change custom properties first. This keeps the existing component relationships while moving the project toward a different palette.
+## Style Code Examples
+
+`CodeBlock` uses a graphite code surface, a navy toolbar, 14px monospace text, and
+1.65 line spacing. Long lines scroll locally unless Wrap is enabled. Syntax colours
+are independent of success/warning colours so highlighting does not imply a status.
 
 ```css
-/* Project stylesheet: normal CSS intentionally overrides CTFramework. */
-:root {
-  --ct-color-abyss: #111827;
-  --ct-color-navy: #1f2937;
-  --ct-color-navy-light: #374151;
-  --ct-color-cyan: #60a5fa;
-  --ct-color-green: #86efac;
-  --ct-color-text: #f9fafb;
-  --ct-color-muted: #cbd5e1;
-  --ct-color-border: rgba(96, 165, 250, .45);
+/* Scope these changes to examples in one part of the project. */
+.project-examples {
+  --ct-code-keyword: #9fc7fa;
+  --ct-code-string: #c3daa9;
+}
+
+.project-examples .ct-code-viewport {
+  font-size: 1rem;
+  line-height: 1.8;
+  max-height: 32rem;
 }
 ```
 
-| Property | Default role |
-| --- | --- |
-| `--ct-color-abyss` | Page background and dark text on filled actions. |
-| `--ct-color-navy` | Main panels and editable controls. |
-| `--ct-color-navy-light` | Raised or selected dark surface. |
-| `--ct-color-cyan` | Main action, link and structural accent. |
-| `--ct-color-green` | Success, ready and active state. |
-| `--ct-color-text` | Primary readable text. |
-| `--ct-color-muted` | Secondary readable text. |
-| `--ct-color-danger` | Error and destructive text. |
-| `--ct-color-warning` | Warning state. |
-| `--ct-color-border` | Borders and dividers. |
-| `--ct-font-family` | Primary interface font stack. |
-| `--ct-font-mono` | Technical status and value font stack. |
-| `--ct-focus-ring` | Keyboard focus shadow. |
+The root is `ct-code-block`; the main parts are `ct-code-toolbar`, `ct-code-caption`,
+`ct-code-actions`, `ct-code-viewport`, `ct-code-source`, `ct-code-line`,
+`ct-code-number`, `ct-code-text`, and `ct-code-feedback`. Highlight spans use
+`ct-code-token-keyword`, `ct-code-token-string`, `ct-code-token-number`,
+`ct-code-token-property`, `ct-code-token-function`, and `ct-code-token-comment`.
+Prefer the six properties above to overriding individual token classes. When using
+a light palette, change all six along with the code background and text.
 
-## Override A Component
+## Component Reference
 
-Write normal selectors in the project stylesheet. They are unlayered, so they win against CTFramework's layered rule without `!important` or greater selector specificity.
+Components add their own classes. Use these only when you need a focused override.
 
-```css
-/* Give only this project's panels a softer shape. */
-.ct-panel {
-  border-radius: .5rem;
-}
+| Component | Class | Split treatment |
+| --- | --- | --- |
+| `ApplicationLayout` | `ct-application-layout` | Graphite shell, navy header with accent edge; independent content scrolling on desktop. |
+| `SideNavigation` | `ct-side-navigation` | Graphite rail; green-tinted selection with a left edge. |
+| `Card` | `ct-card` | Navy panel, raised header and selective accent edge. |
+| `CodeBlock` | `ct-code-block` | Graphite source, navy toolbar, syntax colours, optional gutter, Copy and Wrap. |
+| `Accordion` | `ct-accordion` | Navy surface, plus/minus indicator, active success-colored label. |
+| `DataTable` | `ct-data-table` | Raised toolbar, neutral dividers, compact pager, horizontal table overflow. |
+| `Dropdown` | `ct-dropdown` | Label and native graphite field with visible border. |
+| `Badge` | `ct-badge` | Compact corners and tinted success, warning or danger background. |
+| `Alert` | `ct-alert` | Raised surface with a status-colored left edge. |
+| `Dialog` | `ct-dialog` | Navy modal with neutral border; tall content scrolls in the backdrop without clipping local tooltips. |
+| `PopupWindow` | `ct-popup-window` | Fixed navy window with compact corners and bounded height. |
+| `Toast` | `ct-toast` | Raised notification with a status edge. |
+| `Tooltip` | `ct-tooltip` | Raised hover label positioned above surrounding content. |
+| `FallbackView` | `ct-fallback` | Navy recovery panel with an accent or error edge. |
 
-/* Make the application primary action wider. */
-.save-button {
-  min-width: 11rem;
-}
+## Keep Styles In Sync
 
-/* The project decides this form needs compact fields. */
-.inline-form input {
-  min-height: 2rem;
-}
-```
+A new or changed control needs its default CSS, usage example, showcase, wiki entry,
+and tests in the same change. JavaScript uses PascalCase; framework CSS classes and
+properties use lower-case hyphenated names prefixed with `ct-` or `--ct-`.
 
-Do not place overrides in `@layer ctframework`; that would make them part of the framework layer. Normal, unlayered CSS is the simplest and recommended approach.
-
-## Replace A Broad Default
-
-When a project intentionally needs a different global style, replace the relevant native selector in its own stylesheet. Keep this scoped to the project decision instead of changing CTFramework defaults.
-
-```css
-/* This project uses rounded controls by design. */
-button,
-input,
-select,
-textarea {
-  border-radius: .375rem;
-}
-
-/* This project uses a flat page background. */
-body {
-  background: #061f2e;
-}
-```
-
-The default stylesheet is still present, but these project rules take precedence. This keeps every project self-contained and makes its intentional design differences easy to find.
-
-## Naming
-
-JavaScript public APIs use PascalCase. CSS uses lower-case, hyphenated names because that is the standard browser convention. Framework classes and properties begin with `ct-` or `--ct-` so they remain identifiable and avoid common project-name collisions.
+The design lab in tests/browser/style-preview remains a separate exploration tool.
+Only Split is shipped as the production default. Build CTFramework to regenerate
+the module distribution and both bundles, then rebuild each consuming project.
