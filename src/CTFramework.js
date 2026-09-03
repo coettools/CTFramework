@@ -288,7 +288,9 @@ export class CTFramework {
     const fallback = CTFramework.CreateErrorFallbackDom(error);
     const oldDom = component.vnode?.dom;
 
-    if (oldDom?.parentNode) {
+    const canReplaceOldDom = oldDom?.parentNode && (!component.__container || oldDom.parentNode === component.__container);
+
+    if (canReplaceOldDom) {
       CTFramework.OnUnmount(component.vnode);
       oldDom.parentNode.replaceChild(fallback, oldDom);
     } else if (component.__container) {
