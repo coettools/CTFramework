@@ -1,6 +1,6 @@
 # CTFramework
 
-CTFramework is a small raw JavaScript frontend framework for CoetTools apps.
+CTFramework is a small raw JavaScript frontend framework for coettools apps.
 
 It uses one small `CT` entry point for HTML templates, components, mounting and direct DOM work.
 
@@ -167,7 +167,7 @@ http://localhost:4170/tests/browser/showcase/
 
 ## Default style
 
-CTFramework adds its default stylesheet once when `CT.Mount(...)` first renders a component. It establishes the CoetTools navy, signal cyan and vital green visual language while allowing normal project CSS to override it automatically.
+CTFramework adds its default stylesheet once when `CT.Mount(...)` first renders a component. It establishes the coettools navy, signal cyan and vital green visual language while allowing normal project CSS to override it automatically.
 
 Read [Styling.md](docs/Styling.md) for the supplied classes, every theme token, component overrides and full project-wide replacement patterns.
 

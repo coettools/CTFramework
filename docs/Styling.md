@@ -1,6 +1,6 @@
 # CTFramework Styling
 
-CTFramework provides a CoetTools default visual language: sovereign navy surfaces, signal cyan structure and vital green for positive or active states. It is a starting point, not a restriction. Each project can keep it, adjust it, or replace parts of it with normal CSS.
+CTFramework provides a coettools default visual language: sovereign navy surfaces, signal cyan structure and vital green for positive or active states. It is a starting point, not a restriction. Each project can keep it, adjust it, or replace parts of it with normal CSS.
 
 ## How it loads
 
@@ -16,7 +16,7 @@ CT(() => {
 
 ## Start With The Default
 
-Use the supplied classes where the structure matches your page. They keep CoetTools projects familiar without adding a component library.
+Use the supplied classes where the structure matches your page. They keep coettools projects familiar without adding a component library.
 
 ```js
 const html = CT.Html;

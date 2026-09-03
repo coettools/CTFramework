@@ -1,7 +1,7 @@
 {
   "name": "@coettools/ctframework",
   "version": "0.2.0",
-  "description": "Lightweight raw JavaScript frontend framework for CoetTools apps.",
+  "description": "Lightweight raw JavaScript frontend framework for coettools apps.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/Index.js",
