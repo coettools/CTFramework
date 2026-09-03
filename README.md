@@ -197,10 +197,16 @@ Read [Styling.md](docs/Styling.md) for the supplied classes, every theme token, 
 
 ## Components
 
-Read [Components.md](docs/Components.md) for `ApplicationLayout`, `Accordion`, `DataTable`, `Dropdown`, `SideNavigation`, `Tooltip`, `Badge`, `Card`, `CodeBlock`, `Alert`, `Dialog`, `PopupWindow`, `Toast`, and `FallbackView` usage.
+Read [Components.md](docs/Components.md) for `ApplicationLayout`, `Accordion`, `DataTable`, `Dropdown`, `SideNavigation`, `Tooltip`, `Badge`, `Card`, `CodeBlock`, `ImageCarousel`, `Alert`, `Dialog`, `PopupWindow`, `Toast`, and `FallbackView` usage.
+
+`ImageCarousel` provides manual image navigation, captions, slide selectors,
+keyboard controls, and touch/drag swiping. It handles empty galleries and failed
+images without adding dependencies. See [usage](docs/Components.md#imagecarousel)
+and [style overrides](docs/Styling.md#style-image-galleries).
 
 `CodeBlock` displays formatted source with basic syntax colours, line numbers, Copy,
-and a Wrap toggle. The wiki and showcase use it for their code examples. See the
+and a Wrap toggle. It supports JavaScript, C# (`Language: "csharp"`), HTML, CSS, JSON,
+and plain text. The wiki and showcase use it for their code examples. See the
 [component options](docs/Components.md#codeblock) and [style overrides](docs/Styling.md#style-code-examples).
 
 ## License

@@ -220,6 +220,11 @@ to extend over nearby content. Defaults preserve that overflow.
 1.65 line spacing. Long lines scroll locally unless Wrap is enabled. Syntax colours
 are independent of success/warning colours so highlighting does not imply a status.
 
+C# uses these same six syntax properties and token classes. No language-specific
+stylesheet is needed; existing dark, light, and scoped overrides apply to C# too.
+The default dialog constrains its content to the viewport, including on mobile;
+unwrapped code scrolls inside the block instead of widening the dialog.
+
 ```css
 /* Scope these changes to examples in one part of the project. */
 .project-examples {
@@ -242,6 +247,32 @@ The root is `ct-code-block`; the main parts are `ct-code-toolbar`, `ct-code-capt
 Prefer the six properties above to overriding individual token classes. When using
 a light palette, change all six along with the code background and text.
 
+## Style Image Galleries
+
+`ImageCarousel` uses the same navy frame, graphite image surface, and green selected
+state as other controls. It starts with a 16:9 image area and `Fit: "contain"` so
+images are not cropped. Use `Fit: "cover"` when a project deliberately wants cropping.
+
+```css
+.project-gallery .ct-image-carousel-viewport {
+  aspect-ratio: 4 / 3;
+}
+
+.project-gallery .ct-image-carousel-caption {
+  font-size: .875rem;
+  color: var(--ct-color-muted);
+}
+```
+
+Wrap the control in `.project-gallery` to scope these overrides. Its root is
+`ct-image-carousel`; parts are `ct-image-carousel-header`, `ct-image-carousel-count`,
+`ct-image-carousel-slide`, `ct-image-carousel-viewport`, `ct-image-carousel-image`,
+`ct-image-carousel-caption`, `ct-image-carousel-empty`, `ct-image-carousel-controls`,
+`ct-image-carousel-previous`, `ct-image-carousel-next`, `ct-image-carousel-indicators`,
+and `ct-image-carousel-indicator`. The selected button has `aria-current="true"`.
+Keep the visible focus ring and `touch-action: pan-y pinch-zoom` on the viewer so
+keyboard navigation, vertical scrolling, and zoom continue to work.
+
 ## Component Reference
 
 Components add their own classes. Use these only when you need a focused override.
@@ -252,6 +283,7 @@ Components add their own classes. Use these only when you need a focused overrid
 | `SideNavigation` | `ct-side-navigation` | Graphite rail; green-tinted selection with a left edge. |
 | `Card` | `ct-card` | Navy panel, raised header and selective accent edge. |
 | `CodeBlock` | `ct-code-block` | Graphite source, navy toolbar, syntax colours, optional gutter, Copy and Wrap. |
+| `ImageCarousel` | `ct-image-carousel` | Navy frame, uncropped 16:9 image viewer, caption, and green selected image button. |
 | `Accordion` | `ct-accordion` | Navy surface, plus/minus indicator, active success-colored label. |
 | `DataTable` | `ct-data-table` | Raised toolbar, neutral dividers, compact pager, horizontal table overflow. |
 | `Dropdown` | `ct-dropdown` | Label and native graphite field with visible border. |

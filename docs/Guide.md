@@ -26,7 +26,7 @@ This is the practical entry point for CTFramework. Each page uses the public pac
 ```js
 import CT, {
   Accordion, Alert, ApplicationLayout, Badge, Card, CodeBlock, Component, DataTable, Dialog, Dropdown,
-  FallbackView, GetFormValues, Guid, HttpClient, MaxLength, PopupWindow,
+  FallbackView, GetFormValues, Guid, HttpClient, ImageCarousel, MaxLength, PopupWindow,
   Required, Route, Router, SideNavigation, Store, Toast, Tooltip
 } from "@coettools/ctframework";
 ```

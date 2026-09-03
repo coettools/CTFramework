@@ -16,6 +16,7 @@ export const ShowcaseApiCoverage = [
   "Route",
   "Store",
   "HttpClient",
+  "ImageCarousel",
   "GetFormValues",
   "Guid",
   "Required",

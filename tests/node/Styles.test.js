@@ -41,10 +41,12 @@ test("module output and both standalone bundles contain the current default CSS"
 test("every visual component has default styling and an override reference", async () => {
   const css = await Read("../../src/styles/Default.css");
   const guide = await Read("../../docs/Styling.md");
-  for (const name of ["application-layout", "side-navigation", "card", "code-block", "accordion", "data-table", "dropdown", "badge", "alert", "dialog", "popup-window", "toast", "tooltip", "fallback"]) {
+  for (const name of ["application-layout", "side-navigation", "card", "code-block", "image-carousel", "accordion", "data-table", "dropdown", "badge", "alert", "dialog", "popup-window", "toast", "tooltip", "fallback"]) {
     assert.ok(css.includes(`.ct-${name} {`), `${name} needs default CSS`);
     assert.ok(guide.includes(`\`ct-${name}\``), `${name} needs styling documentation`);
   }
   assert.match(css, /^@layer ctframework/);
   assert.match(css, /prefers-reduced-motion: reduce/);
+  assert.match(css, /\.ct-dialog-backdrop\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/);
+  assert.match(css, /\.ct-dialog\s*\{[^}]*min-width:\s*0/);
 });

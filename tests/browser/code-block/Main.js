@@ -1,4 +1,5 @@
-import CT, { CodeBlock, Component, Dropdown } from "../../../dist/ctframework.bundle.min.js";
+import CT, { CodeBlock, Component, Dialog, Dropdown } from "../../../dist/ctframework.bundle.min.js";
+import { CSharpCode } from "../../fixtures/CSharpCode.js";
 
 const html = CT.Html;
 const Sample = '// A small helper\nconst Add = (left, right) => {\n  return left + right;\n};\n\nconsole.log(Add(2, 3));';
@@ -14,7 +15,7 @@ const Settle = async () => {
 class CodeBlockChecks extends Component {
   constructor(props) {
     super(props);
-    this.state = { Code: Sample, Language: "javascript", Count: 0 };
+    this.state = { Code: Sample, Language: "javascript", Count: 0, IsDialogOpen: false };
   }
 
   Render() {
@@ -22,12 +23,20 @@ class CodeBlockChecks extends Component {
       <section class="ct-panel">
         <label>Source<textarea id="source" rows="7" ${CT.Attr("value", this.state.Code)}
           ${CT.On("input", (event) => this.SetState({ Code: event.target.value }))}></textarea></label>
-        ${Dropdown({ Id: "language", Label: "Language", Value: this.state.Language, Options: ["javascript", "html", "css", "json", "text"], OnChange: (value) => this.SetState({ Language: value }) })}
+        ${Dropdown({ Id: "language", Label: "Language", Value: this.state.Language, Options: ["javascript", "csharp", "html", "css", "json", "text"], OnChange: (value) => this.SetState({ Language: value }) })}
+        <button type="button" ${CT.On("click", () => this.SetState({ Code: CSharpCode, Language: "csharp" }))}>Load C# example</button>
+        <button type="button" ${CT.On("click", () => this.SetState({ IsDialogOpen: true }))}>Open code dialog</button>
         <p><button type="button" ${CT.On("click", () => this.SetState((state) => ({ Count: state.Count + 1 })))}>Update parent</button> Count: ${this.state.Count}</p>
         <div id="primary">${CodeBlock({ Title: "Example", Code: this.state.Code, Language: this.state.Language })}</div>
         <h2>Independent plain text</h2>
         <div id="secondary">${CodeBlock({ Title: "Output.txt", Code: "Build complete.\nNo errors.", Language: "text", Copy: false, LineNumbers: false, Wrap: true })}</div>
         <label>Paste copied source<textarea id="paste" rows="4"></textarea></label>
+        ${Dialog({
+          Open: this.state.IsDialogOpen,
+          Title: "C# in a dialog",
+          Content: CodeBlock({ Title: "Greeting.cs", Code: CSharpCode, Language: "csharp" }),
+          OnClose: () => this.SetState({ IsDialogOpen: false })
+        })}
       </section>
     `;
   }
@@ -54,6 +63,17 @@ CT(async () => {
     await Settle();
     Assert(viewport.textContent === UnsafeSample, "HTML must remain literal text, including entities and final blank lines.");
     Assert(!viewport.querySelector("script, img, strong"), "HTML examples must never become executable DOM.");
+    app.SetState({ Code: CSharpCode, Language: "csharp" });
+    await Settle();
+    Assert(viewport.textContent === CSharpCode && document.querySelector("#primary .ct-code-language").textContent === "C#", "C# source and caption must render from the production bundle.");
+    Assert([...viewport.querySelectorAll(".ct-code-token-keyword")].some((token) => token.textContent === "public"), "C# keywords must use the default syntax colours.");
+    Assert([...viewport.querySelectorAll(".ct-code-token-string")].some((token) => token.textContent === '$"Hello, {name}!"'), "C# interpolated strings must retain their prefix and contents.");
+    app.SetState({ IsDialogOpen: true });
+    await Settle();
+    const dialog = document.querySelector(".ct-dialog").getBoundingClientRect();
+    Assert(dialog.left >= 0 && dialog.right <= innerWidth, "Long code lines must not push the dialog outside the viewport.");
+    app.SetState({ IsDialogOpen: false });
+    await Settle();
     source.focus();
     app.SetState({ Code: Sample + "\n// Still typing", Language: "javascript" });
     await Settle();
@@ -65,7 +85,7 @@ CT(async () => {
     app.SetState({ Code: Sample });
     await Settle();
     source.blur();
-    result.textContent = "10 checks passed. Try typing, changing language, Copy, Wrap, and Update parent.";
+    result.textContent = "14 checks passed. Try typing, changing language, Copy, Wrap, and Update parent.";
   } catch (error) {
     result.textContent = `FAILED: ${error.message}`;
     result.className = "ct-error";
