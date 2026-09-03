@@ -63,6 +63,8 @@ npm link @coettools/ctframework
 
 Start with the [CTFramework Guide](docs/Guide.md). It is the wiki-style documentation hub, with individual practical examples for every public API, service, utility, lifecycle method, DOM helper, and UI component.
 
+`npm run check` also checks the documentation against the source exports: complete imports, the CT method index, component entries and usage examples, and styling references. These checks catch missing or stale entries; changes to behavior and options still need a documentation review alongside the tests and wiki updates.
+
 - [Getting Started](docs/Getting-Started.md)
 - [HTML And DOM](docs/Html-And-Dom.md)
 - [Component Guide](docs/Component-Guide.md)
