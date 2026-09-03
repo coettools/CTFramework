@@ -1,6 +1,7 @@
 import { Component } from "./Component.js";
 import { CreateComponent } from "./ComponentFactory.js";
 import { CT } from "../CTFramework.js";
+import { Tooltip } from "./Tooltip.js";
 
 const html = CT.Html;
 
@@ -27,14 +28,30 @@ export class SideNavigationComponent extends Component {
   Render() {
     const { ActiveId, Items = [], OnNavigate, Searchable = false, Title = "Navigation" } = this.props;
     const visibleItems = this.GetVisibleItems();
+    const isOpen = this.state.IsOpen;
+    const toggleLabel = isOpen ? "Collapse navigation" : "Expand navigation";
 
     return html`
-      <aside ${CT.Attr("className", `ct-side-navigation ${this.state.IsOpen ? "is-open" : "is-closed"}`)}>
+      <aside ${CT.Attr("className", `ct-side-navigation ${isOpen ? "is-open" : "is-closed"}`)}>
         <header class="ct-side-navigation-header">
-          <strong>${Title}</strong>
-          <button type="button" class="ct-side-navigation-toggle ct-button-secondary" aria-label="Toggle navigation" ${CT.On("click", () => this.ToggleNavigation())}>Menu</button>
+          ${isOpen ? html`<strong>${Title}</strong>` : null}
+          ${Tooltip({
+            Text: toggleLabel,
+            Position: "right",
+            Content: html`
+              <button
+                type="button"
+                class="ct-side-navigation-toggle"
+                ${CT.Attr("aria-label", toggleLabel)}
+                ${CT.Attr("aria-expanded", String(isOpen))}
+                ${CT.On("click", () => this.ToggleNavigation())}
+              >
+                <span class="ct-side-navigation-collapse-icon" aria-hidden="true"></span>
+              </button>
+            `
+          })}
         </header>
-        ${this.state.IsOpen
+        ${isOpen
           ? html`
               <div class="ct-side-navigation-content">
                 ${Searchable

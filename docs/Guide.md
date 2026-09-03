@@ -27,6 +27,6 @@ This is the practical entry point for CTFramework. Each page uses the public pac
 import CT, {
   Accordion, Alert, Badge, Card, Component, DataTable, Dialog, Dropdown,
   FallbackView, GetFormValues, Guid, HttpClient, MaxLength, PopupWindow,
-  Required, Route, Router, SideNavigation, Store, Toast
+  Required, Route, Router, SideNavigation, Store, Toast, Tooltip
 } from "@coettools/ctframework";
 ```

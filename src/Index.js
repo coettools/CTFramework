@@ -10,6 +10,7 @@ import { FallbackView } from "./components/FallbackView.js";
 import { PopupWindow } from "./components/PopupWindow.js";
 import { SideNavigation } from "./components/SideNavigation.js";
 import { Toast } from "./components/Toast.js";
+import { Tooltip } from "./components/Tooltip.js";
 import { CT } from "./CTFramework.js";
 import { Router } from "./services/Router.js";
 import { Route } from "./utils/Route.js";
@@ -32,6 +33,7 @@ export {
   PopupWindow,
   SideNavigation,
   Toast,
+  Tooltip,
   CT,
   Router,
   Route,
