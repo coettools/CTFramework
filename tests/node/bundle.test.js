@@ -2,22 +2,22 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import CT, * as CTFrameworkBundle from "../../dist/ctframework.bundle.js";
 import MinifiedCT, * as MinifiedCTFrameworkBundle from "../../dist/ctframework.bundle.min.js";
+import * as CTFramework from "../../src/Index.js";
+
+const publicExports = Object.keys(CTFramework)
+  .filter((name) => name !== "default")
+  .sort();
 
 test("standalone bundle exports the complete public API", () => {
-  const publicExports = [
-    "Accordion", "Alert", "Badge", "Card", "Component", "CT", "DataTable", "Dialog", "Dropdown",
-    "FallbackView", "GetFormValues", "Guid", "HttpClient", "MaxLength", "PopupWindow", "Required",
-    "Route", "Router", "SideNavigation", "Store", "Toast"
-  ];
-
   assert.equal(CT, CTFrameworkBundle.CT);
-  publicExports.forEach((name) => assert.equal(typeof CTFrameworkBundle[name], "function"));
+  assert.deepEqual(Object.keys(CTFrameworkBundle).filter((name) => name !== "default").sort(), publicExports);
+  publicExports.forEach((name) => assert.equal(typeof CTFrameworkBundle[name], typeof CTFramework[name]));
 });
 
 test("minified standalone bundle exports the complete public API", () => {
   assert.equal(MinifiedCT, MinifiedCTFrameworkBundle.CT);
-  assert.equal(typeof MinifiedCTFrameworkBundle.Component, "function");
-  assert.equal(typeof MinifiedCTFrameworkBundle.DataTable, "function");
+  assert.deepEqual(Object.keys(MinifiedCTFrameworkBundle).filter((name) => name !== "default").sort(), publicExports);
+  publicExports.forEach((name) => assert.equal(typeof MinifiedCTFrameworkBundle[name], typeof CTFramework[name]));
 });
 
 test("bundled Component preserves a derived component constructor", () => {
