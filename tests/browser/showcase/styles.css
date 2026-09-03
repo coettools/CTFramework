@@ -1,0 +1,174 @@
+#app {
+  width: 100%;
+}
+
+.hero {
+  border-top: 3px solid var(--ct-color-cyan);
+}
+
+.hero h1 {
+  max-width: 16ch;
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  line-height: 1.05;
+}
+
+.hero-copy {
+  max-width: 58ch;
+  margin: 1rem 0 0;
+}
+
+.top-nav,
+.button-row,
+.note-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin: 1.25rem 0;
+}
+
+.top-nav .nav-link {
+  min-width: 7rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.stat-card {
+  padding: 1rem;
+  border-left: 2px solid var(--ct-color-cyan);
+  background: var(--ct-color-navy-light);
+}
+
+.stat-label {
+  display: block;
+  color: var(--ct-color-muted);
+  font-size: .875rem;
+}
+
+.stat-value {
+  display: block;
+  margin-top: .5rem;
+  color: var(--ct-color-green);
+  font-family: var(--ct-font-mono);
+  font-size: 2rem;
+}
+
+.panel-heading h2 {
+  margin: 0;
+}
+
+.panel-heading p {
+  max-width: 64ch;
+  margin: .5rem 0 0;
+  color: var(--ct-color-muted);
+}
+
+.note-form input {
+  flex: 1 1 16rem;
+}
+
+.notes-list {
+  display: grid;
+  gap: .75rem;
+  padding: 0;
+  margin: 1.5rem 0 0;
+  list-style: none;
+}
+
+.note-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--ct-color-border);
+  background: var(--ct-color-navy-light);
+}
+
+.dom-box {
+  display: grid;
+  min-height: 10rem;
+  place-items: center;
+  padding: 1.25rem;
+  border: 1px dashed var(--ct-color-border);
+  background: var(--ct-color-navy);
+  color: var(--ct-color-muted);
+  text-align: center;
+}
+
+.dom-box.is-active {
+  color: var(--ct-color-green);
+  font-weight: 700;
+}
+
+.utility-result {
+  overflow-wrap: anywhere;
+  padding: 1rem;
+  border-left: 2px solid var(--ct-color-green);
+  background: var(--ct-color-navy-light);
+  color: var(--ct-color-text);
+  font-family: var(--ct-font-mono);
+  font-size: .875rem;
+}
+
+.component-layout {
+  display: grid;
+  grid-template-columns: minmax(12rem, 18rem) minmax(0, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.component-main {
+  display: grid;
+  gap: 1rem;
+}
+
+.ct-card-content {
+  display: grid;
+  gap: 1rem;
+}
+
+.component-card-content {
+  display: grid;
+  gap: 1rem;
+}
+
+.component-examples {
+  display: grid;
+  gap: .75rem;
+  margin-top: 1.5rem;
+}
+
+.showcase-example {
+  display: grid;
+  gap: .75rem;
+  margin-top: 1.5rem;
+}
+
+.showcase-example h3 {
+  margin: 0;
+}
+
+.component-examples h3 {
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .note-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .component-layout {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,23 @@
+export const ShowcaseApiCoverage = [
+  "Accordion",
+  "Alert",
+  "Badge",
+  "Card",
+  "Component",
+  "CT",
+  "DataTable",
+  "Dialog",
+  "Dropdown",
+  "FallbackView",
+  "PopupWindow",
+  "Router",
+  "Route",
+  "Store",
+  "HttpClient",
+  "GetFormValues",
+  "Guid",
+  "Required",
+  "MaxLength",
+  "SideNavigation",
+  "Toast"
+];

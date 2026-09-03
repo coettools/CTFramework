@@ -1,0 +1,41 @@
+{
+  "name": "@coettools/ctframework",
+  "version": "0.2.0",
+  "description": "Lightweight raw JavaScript frontend framework for CoetTools apps.",
+  "type": "module",
+  "main": "./dist/Index.js",
+  "module": "./dist/Index.js",
+  "browser": "./dist/ctframework.bundle.min.js",
+  "exports": {
+    ".": {
+      "import": "./dist/Index.js",
+      "default": "./dist/Index.js"
+    },
+    "./bundle": {
+      "import": "./dist/ctframework.bundle.min.js",
+      "default": "./dist/ctframework.bundle.min.js"
+    },
+    "./bundle/debug": {
+      "import": "./dist/ctframework.bundle.js",
+      "default": "./dist/ctframework.bundle.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "docs",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build.js",
+    "build:min": "node scripts/build.js",
+    "clean": "node scripts/build.js --clean",
+    "test": "node --test",
+    "test:browser": "node scripts/serve-tests.js",
+    "test:coverage": "node scripts/check-showcase-coverage.js && node scripts/check-wiki-coverage.js",
+    "check": "npm run build && npm run test && npm run test:coverage",
+    "package:check": "npm pack --dry-run",
+    "setup:git-hooks": "node scripts/setup-git-hooks.js",
+    "prepare": "npm run build && npm run setup:git-hooks"
+  }
+}
