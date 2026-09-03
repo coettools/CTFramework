@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { Accordion, DataTable, Dropdown, Tooltip } from "../../src/Index.js";
+import { Accordion, ApplicationLayout, DataTable, Dropdown, Tooltip } from "../../src/Index.js";
 import { AccordionComponent } from "../../src/components/Accordion.js";
 import { DataTableComponent } from "../../src/components/DataTable.js";
 import { DropdownComponent } from "../../src/components/Dropdown.js";
@@ -47,4 +47,14 @@ test("Tooltip renders its content and supporting text", () => {
   assert.equal(tooltip.props.values[0], "Control");
   assert.equal(tooltip.props.values[1].props.values[0].value, "ct-tooltip-content ct-tooltip-right");
   assert.equal(tooltip.props.values[1].props.values[1], "Helpful description");
+});
+
+test("ApplicationLayout provides named layout regions", () => {
+  const layout = ApplicationLayout({ Header: "Header", SideNavigation: "Navigation", Content: "Content", Footer: "Footer" });
+  const template = JSON.stringify(layout);
+
+  assert.match(template, /ct-application-layout-header/);
+  assert.match(template, /ct-application-layout-navigation/);
+  assert.match(template, /ct-application-layout-content/);
+  assert.match(template, /ct-application-layout-footer/);
 });

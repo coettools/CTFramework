@@ -102,6 +102,85 @@
     padding: 2rem 0 4rem;
   }
 
+  .ct-application-layout {
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    overflow: hidden;
+    background: var(--ct-color-abyss);
+  }
+
+  .ct-application-layout.has-header {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .ct-application-layout.has-footer {
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .ct-application-layout.has-header.has-footer {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+
+  .ct-application-layout-header,
+  .ct-application-layout-footer {
+    min-width: 0;
+    padding: 1rem clamp(1rem, 2vw, 2rem);
+    border-color: var(--ct-color-border);
+    background: var(--ct-color-navy);
+  }
+
+  .ct-application-layout-header {
+    border-bottom: 1px solid var(--ct-color-border);
+  }
+
+  .ct-application-layout-footer {
+    border-top: 1px solid var(--ct-color-border);
+  }
+
+  .ct-application-layout-workspace {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  .ct-application-layout.has-side-navigation .ct-application-layout-workspace {
+    grid-template-columns: minmax(13.75rem, 18rem) minmax(0, 1fr);
+    transition: grid-template-columns .16s ease;
+  }
+
+  .ct-application-layout.has-side-navigation .ct-application-layout-workspace:has(.ct-side-navigation.is-closed) {
+    grid-template-columns: 3.75rem minmax(0, 1fr);
+  }
+
+  .ct-application-layout-navigation,
+  .ct-application-layout-content {
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .ct-application-layout-navigation {
+    overflow-y: auto;
+    background: var(--ct-color-navy);
+  }
+
+  .ct-application-layout-navigation .ct-side-navigation,
+  .ct-application-layout-navigation .ct-side-navigation.is-closed {
+    width: 100%;
+    min-height: 100%;
+    border-top: 0;
+    border-bottom: 0;
+    border-left: 0;
+  }
+
+  .ct-application-layout-content {
+    overflow-y: auto;
+    padding: clamp(1rem, 2vw, 2rem);
+  }
+
   .ct-panel {
     padding: 1.5rem;
     border: 1px solid var(--ct-color-border);
@@ -554,6 +633,29 @@
 
     .ct-side-navigation {
       width: 100%;
+    }
+
+    .ct-application-layout {
+      height: auto;
+      min-height: 100vh;
+      overflow: visible;
+    }
+
+    .ct-application-layout.has-side-navigation .ct-application-layout-workspace,
+    .ct-application-layout.has-side-navigation .ct-application-layout-workspace:has(.ct-side-navigation.is-closed) {
+      grid-template-columns: minmax(0, 1fr);
+      overflow: visible;
+    }
+
+    .ct-application-layout-navigation,
+    .ct-application-layout-content {
+      overflow: visible;
+    }
+
+    .ct-application-layout-navigation .ct-side-navigation {
+      height: auto;
+      min-height: 0;
+      border-right: 0;
     }
   }
 }

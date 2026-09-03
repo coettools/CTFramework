@@ -64,6 +64,7 @@ Every framework component ships with a `ct-*` class and default styling. Use the
 | `Dialog` | `ct-dialog` | Centered modal over `ct-dialog-backdrop`. |
 | `PopupWindow` | `ct-popup-window` | Non-blocking fixed window with position variants. |
 | `Toast` | `ct-toast` | Fixed status notification with type variants. |
+| `ApplicationLayout` | `ct-application-layout` | Full-viewport application shell with fixed regions and a scrolling content pane. |
 
 For example, a project can widen only its popup window without changing the framework default for every other project:
 

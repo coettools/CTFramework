@@ -6,6 +6,7 @@ This is the compact public API index. For copy-ready individual examples, use th
 import CT, {
   Accordion,
   Alert,
+  ApplicationLayout,
   Badge,
   Card,
   Component,
@@ -174,4 +175,4 @@ const requestId = Guid();
 
 ## Components
 
-`Accordion`, `Alert`, `Badge`, `Card`, `DataTable`, `Dialog`, `Dropdown`, `FallbackView`, `PopupWindow`, `SideNavigation`, `Toast`, and `Tooltip` are documented in [Components.md](Components.md).
+`ApplicationLayout`, `Accordion`, `Alert`, `Badge`, `Card`, `DataTable`, `Dialog`, `Dropdown`, `FallbackView`, `PopupWindow`, `SideNavigation`, `Toast`, and `Tooltip` are documented in [Components.md](Components.md).

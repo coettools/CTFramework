@@ -15,6 +15,26 @@ return html`
 `;
 ```
 
+## ApplicationLayout
+
+`ApplicationLayout` is the default application shell: a fixed `Header`, optional `SideNavigation`, independently scrolling `Content`, and optional `Footer`. It fills the desktop viewport and returns to normal page scrolling on smaller screens. Pass raw HTML or CTFramework components to each region.
+
+```js
+${ApplicationLayout({
+  Header: html`<div><strong>Operations</strong></div>`,
+  SideNavigation: SideNavigation({
+    Title: "Workspace",
+    ActiveId: activeArea,
+    Items: navigationItems,
+    OnNavigate: (item) => this.SetState({ activeArea: item.Id })
+  }),
+  Content: html`<section><h1>Overview</h1><p>Only this region scrolls on desktop.</p></section>`,
+  Footer: html`<small>CoetTools</small>`
+})}
+```
+
+When `SideNavigation` is used, its collapse control reduces the layout to a compact rail automatically. Do not add fixed positioning or overflow rules in application CSS unless the project intentionally needs a different layout behavior.
+
 ## DataTable
 
 `DataTable` provides client-side search and paging. `Data` is an array of plain objects. `Columns` controls the visible columns. A column's optional `Render(row, value)` function can return text, HTML, or another CTFramework component.
