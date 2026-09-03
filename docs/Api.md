@@ -23,7 +23,8 @@ import CT, {
   Router,
   SideNavigation,
   Store,
-  Toast
+  Toast,
+  Tooltip
 } from "@coettools/ctframework";
 ```
 
@@ -173,4 +174,4 @@ const requestId = Guid();
 
 ## Components
 
-`Accordion`, `Alert`, `Badge`, `Card`, `DataTable`, `Dialog`, `Dropdown`, `FallbackView`, `PopupWindow`, `SideNavigation`, and `Toast` are documented in [Components.md](Components.md).
+`Accordion`, `Alert`, `Badge`, `Card`, `DataTable`, `Dialog`, `Dropdown`, `FallbackView`, `PopupWindow`, `SideNavigation`, `Toast`, and `Tooltip` are documented in [Components.md](Components.md).

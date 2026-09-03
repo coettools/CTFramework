@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { Accordion, DataTable, Dropdown } from "../../src/Index.js";
+import { Accordion, DataTable, Dropdown, Tooltip } from "../../src/Index.js";
 import { AccordionComponent } from "../../src/components/Accordion.js";
 import { DataTableComponent } from "../../src/components/DataTable.js";
 import { DropdownComponent } from "../../src/components/Dropdown.js";
@@ -37,4 +37,14 @@ test("Dropdown resolves object and primitive options", () => {
   assert.equal(dropdown.GetOptionLabel({ Value: "production", Label: "Production" }), "Production");
   assert.equal(dropdown.GetOptionValue("development"), "development");
   assert.equal(dropdown.GetOptionLabel("development"), "development");
+});
+
+test("Tooltip renders its content and supporting text", () => {
+  const tooltip = Tooltip({ Content: "Control", Text: "Helpful description", Position: "right" });
+
+  assert.equal(tooltip.tag, "ct-template");
+  assert.match(tooltip.props.strings.join(""), /ct-tooltip/);
+  assert.equal(tooltip.props.values[0], "Control");
+  assert.equal(tooltip.props.values[1].props.values[0].value, "ct-tooltip-content ct-tooltip-right");
+  assert.equal(tooltip.props.values[1].props.values[1], "Helpful description");
 });

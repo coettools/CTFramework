@@ -173,4 +173,4 @@ Read [Styling.md](docs/Styling.md) for the supplied classes, every theme token, 
 
 ## Components
 
-Read [Components.md](docs/Components.md) for `Accordion`, `DataTable`, `Dropdown`, `SideNavigation`, `Badge`, `Card`, `Alert`, `Dialog`, `PopupWindow`, `Toast`, and `FallbackView` usage.
+Read [Components.md](docs/Components.md) for `Accordion`, `DataTable`, `Dropdown`, `SideNavigation`, `Tooltip`, `Badge`, `Card`, `Alert`, `Dialog`, `PopupWindow`, `Toast`, and `FallbackView` usage.

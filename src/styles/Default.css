@@ -338,6 +338,11 @@
     width: min(100%, 18rem);
     border: 1px solid var(--ct-color-border);
     background: var(--ct-color-navy);
+    transition: width .16s ease;
+  }
+
+  .ct-side-navigation.is-closed {
+    width: 3.75rem;
   }
 
   .ct-side-navigation-header,
@@ -358,6 +363,82 @@
   .ct-toast button {
     min-height: auto;
     padding: .3rem .5rem;
+  }
+
+  .ct-side-navigation.is-closed .ct-side-navigation-header {
+    justify-content: center;
+    padding-inline: .5rem;
+    border-bottom: 0;
+  }
+
+  .ct-side-navigation-toggle {
+    display: inline-grid;
+    width: 2.25rem;
+    height: 2.25rem;
+    place-items: center;
+    padding: 0;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--ct-color-text);
+  }
+
+  .ct-side-navigation-toggle:hover,
+  .ct-side-navigation-toggle:focus-visible {
+    border-color: var(--ct-color-cyan);
+    background: var(--ct-color-navy);
+    color: var(--ct-color-cyan);
+  }
+
+  .ct-side-navigation-collapse-icon {
+    width: .7rem;
+    height: .7rem;
+    border-bottom: 2px solid currentColor;
+    border-left: 2px solid currentColor;
+    transform: rotate(45deg);
+  }
+
+  .ct-side-navigation.is-closed .ct-side-navigation-collapse-icon {
+    transform: rotate(-135deg);
+  }
+
+  .ct-tooltip {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .ct-tooltip-content {
+    position: absolute;
+    z-index: 1200;
+    width: max-content;
+    max-width: 16rem;
+    padding: .45rem .6rem;
+    border: 1px solid var(--ct-color-border);
+    border-radius: .2rem;
+    background: var(--ct-color-navy-light);
+    box-shadow: 0 .6rem 1.4rem rgba(0, 0, 0, .35);
+    color: var(--ct-color-text);
+    font-size: .8125rem;
+    line-height: 1.25;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .12s ease;
+  }
+
+  .ct-tooltip:hover .ct-tooltip-content,
+  .ct-tooltip:focus-within .ct-tooltip-content {
+    opacity: 1;
+  }
+
+  .ct-tooltip-top {
+    bottom: calc(100% + .5rem);
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .ct-tooltip-right {
+    top: 50%;
+    left: calc(100% + .5rem);
+    transform: translateY(-50%);
   }
 
   .ct-side-navigation-search {

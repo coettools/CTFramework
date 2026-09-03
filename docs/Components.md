@@ -83,7 +83,7 @@ Options can be strings or `{ Value, Label }` objects. `OnChange(value, option)` 
 
 ## SideNavigation
 
-`SideNavigation` includes a menu toggle and optional local search.
+`SideNavigation` has an icon-only collapse control that reduces the navigation to a compact rail. The control exposes an accessible hover and keyboard-focus hint, and optional local search remains available when expanded.
 
 ```js
 ${SideNavigation({
@@ -95,6 +95,18 @@ ${SideNavigation({
     { Id: "settings", Label: "Settings" }
   ],
   OnNavigate: (item) => this.SetState({ activeArea: item.Id })
+})}
+```
+
+## Tooltip
+
+`Tooltip` adds a short hint to a control without changing the control itself. `Content` is the element to wrap. `Position` is `top` by default and also supports `right`.
+
+```js
+${Tooltip({
+  Text: "Save the current changes",
+  Position: "top",
+  Content: html`<button type="button">Save</button>`
 })}
 ```
 

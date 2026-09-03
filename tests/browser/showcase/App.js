@@ -15,7 +15,8 @@ import CT, {
   PopupWindow,
   Required,
   SideNavigation,
-  Toast
+  Toast,
+  Tooltip
 } from "../../../src/Index.js";
 
 const html = CT.Html;
@@ -155,6 +156,7 @@ export class App extends Component {
     this.componentExamples = [
       { Id: "accordion", Title: "Accordion", Content: CodeExample({ code: 'Accordion({ Items: [{ Id: "details", Title: "Details", Content: html`<p>Content</p>` }] })' }) },
       { Id: "side-navigation", Title: "SideNavigation", Content: CodeExample({ code: 'SideNavigation({ Items, ActiveId, Searchable: true, OnNavigate })' }) },
+      { Id: "tooltip", Title: "Tooltip", Content: CodeExample({ code: 'Tooltip({ Text: "Helpful context", Position: "top", Content: html`<button>Hover me</button>` })' }) },
       { Id: "card", Title: "Card", Content: CodeExample({ code: 'Card({ Title: "Deployment", Content: html`<p>Ready</p>` })' }) },
       { Id: "alert", Title: "Alert", Content: CodeExample({ code: 'Alert({ Title: "Ready", Message: "All services available.", Type: "success" })' }) },
       { Id: "dropdown", Title: "Dropdown", Content: CodeExample({ code: 'Dropdown({ Id: "environment", Options, Value, OnChange })' }) },
@@ -313,6 +315,7 @@ export class App extends Component {
                     <button type="button" ${CT.On("click", this.actions.openDialog)}>Open dialog</button>
                     <button type="button" class="ct-button-secondary" ${CT.On("click", this.actions.togglePopup)}>Toggle window</button>
                     <button type="button" class="ct-button-success" ${CT.On("click", this.actions.showToast)}>Show toast</button>
+                    ${Tooltip({ Text: "A reusable hover and keyboard-focus hint.", Content: html`<button type="button" class="ct-button-secondary">Hover for help</button>` })}
                   </div>
                 `
               })}
