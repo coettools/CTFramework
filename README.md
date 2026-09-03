@@ -86,6 +86,8 @@ The latest local result, commit identity for committed runs, and file hashes are
 
 Start with the [CTFramework Guide](docs/Guide.md). It is the wiki-style documentation hub, with individual practical examples for every public API, service, utility, lifecycle method, DOM helper, and UI component.
 
+`npm run check` also checks the documentation against the source exports: complete imports, the CT method index, component entries and usage examples, and styling references. These checks catch missing or stale entries; changes to behavior and options still need a documentation review alongside the tests and wiki updates.
+
 The interactive CTFramework wiki is in the sibling `../wiki.ct-framework/` folder and is built using CTFramework itself. The project synchronization command updates its vendor files and rebuilds/tests the wiki along with other consumers. Run `npm run test:browser`, then open `http://localhost:4170/wiki/`. `npm run check` verifies that every public export has a wiki coverage entry; browser checks still verify behavior.
 
 - [Getting Started](docs/Getting-Started.md)

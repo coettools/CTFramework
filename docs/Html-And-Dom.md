@@ -63,6 +63,14 @@ const secondButton = buttons.Get(1);
 
 `CT(selector, scope?)` returns all matching elements. The optional scope may be a selector or DOM element. `length` contains the selected count and `Get(index?)` returns one element or `null`.
 
+`CT.CreateSelection(target, scope?)` is the explicit form of the selection helper. Both forms also accept a DOM node or an iterable of nodes:
+
+```js
+const buttons = CT.CreateSelection("button", ".toolbar");
+const selectedNodes = CT.CreateSelection(document.querySelectorAll(".selected"));
+selectedNodes.AddClass("is-ready");
+```
+
 ## Each And Find
 
 ```js

@@ -9,6 +9,7 @@ import CT, {
   ApplicationLayout,
   Badge,
   Card,
+  CodeBlock,
   Component,
   DataTable,
   Dialog,
@@ -37,10 +38,12 @@ import CT, {
 | --- | --- |
 | `CT(callback)` | Runs `callback` once the document is ready. |
 | `CT(selector, scope?)` | Returns a chainable DOM selection. |
+| `CT.Ready(callback)` | Explicit form of `CT(callback)`. |
+| `CT.CreateSelection(target, scope?)` | Explicit selection helper; accepts a selector, DOM node, or iterable of nodes. |
 | `CT.Html` | Tagged template function for component markup. One root HTML element is required. |
 | `CT.On(eventType, handler)` | Adds an event marker inside an HTML start tag. |
 | `CT.Attr(name, value)` | Adds a dynamic attribute marker inside an HTML start tag. |
-| `CT.Mount(ComponentClassOrInstance, target, props?)` | Renders a component into an element or selector. |
+| `CT.Mount(component, target, props?)` | Renders a component class, instance, or CT view into an element or selector. |
 | `CT.Unmount(target)` | Removes a mounted component and runs its unmount lifecycle. |
 
 ```js
@@ -49,7 +52,7 @@ const html = CT.Html;
 return html`
   <button
     ${CT.Attr("className", isReady ? "ready" : "waiting")}
-    ${CT.On("click", save)}
+    ${CT.On("click", Save)}
   >Save</button>
 `;
 ```
@@ -175,4 +178,4 @@ const requestId = Guid();
 
 ## Components
 
-`ApplicationLayout`, `Accordion`, `Alert`, `Badge`, `Card`, `DataTable`, `Dialog`, `Dropdown`, `FallbackView`, `PopupWindow`, `SideNavigation`, `Toast`, and `Tooltip` are documented in [Components.md](Components.md).
+`ApplicationLayout`, `Accordion`, `Alert`, `Badge`, `Card`, `CodeBlock`, `DataTable`, `Dialog`, `Dropdown`, `FallbackView`, `PopupWindow`, `SideNavigation`, `Toast`, and `Tooltip` are documented in [Components.md](Components.md).

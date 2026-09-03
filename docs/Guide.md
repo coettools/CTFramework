@@ -18,8 +18,8 @@ This is the practical entry point for CTFramework. Each page uses the public pac
 - A template must have one root HTML element.
 - Put `CT.On(...)` and `CT.Attr(...)` inside an element's start tag.
 - Use `SetState` for component state; do not manually redraw a mounted component.
-- Import only from `@coettools/ctframework`; application code should not import internal `src` files.
-- All public CTFramework options and methods use PascalCase. Browser-native HTML properties retain their native form, such as `className`.
+- Import the built package through your module tooling, or the standalone bundle in a plain browser. Application code should not import internal framework `src` files. See [Getting Started](Getting-Started.md).
+- Use PascalCase for classes, public methods, and named helpers. Keep option names as documented: component options use PascalCase, while `HttpClient` accepts `baseUrl` and `headers`. Browser-native properties retain their native form, such as `className`.
 
 ## Complete Import
 
