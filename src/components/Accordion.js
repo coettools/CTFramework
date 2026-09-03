@@ -33,7 +33,7 @@ export class AccordionComponent extends Component {
               <button
                 type="button"
                 class="ct-accordion-trigger"
-                ${CT.Attr("aria-expanded", isOpen)}
+                ${CT.Attr("aria-expanded", String(isOpen))}
                 ${CT.On("click", () => this.ToggleItem(item.Id))}
               >${item.Title}</button>
               <div class="ct-accordion-content" ${CT.Attr("hidden", !isOpen)}>${item.Content}</div>

@@ -58,3 +58,10 @@ test("ApplicationLayout provides named layout regions", () => {
   assert.match(template, /ct-application-layout-content/);
   assert.match(template, /ct-application-layout-footer/);
 });
+
+test("Accordion writes an explicit ARIA expanded state", () => {
+  const accordion = new AccordionComponent({ Items: [{ Id: "details", Title: "Details", Content: "Content" }] });
+  const template = JSON.stringify(accordion.Render());
+
+  assert.match(template, /\"name\":\"aria-expanded\",\"value\":\"false\"/);
+});
