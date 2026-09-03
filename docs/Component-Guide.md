@@ -98,9 +98,41 @@ class LiveStatus extends Component {
 
 ## Component Organization
 
-Keep an application component structured around named responsibilities:
+Give each navigation page its own file and component class. Keep page state, handlers, and lifecycle work in that class. App.js owns the shell and navigation; shared view helpers belong in components/.
+
+```text
+App.js
+pages/
+  HomePage.js
+  SettingsPage.js
+components/
+  PageHeading.js
+```
+
+For example, pages/SettingsPage.js owns the settings view:
 
 ```js
+import CT, { Component } from "@coettools/ctframework";
+
+const html = CT.Html;
+
+export class SettingsPage extends Component {
+  Render() {
+    return html`<section><h1>Settings</h1></section>`;
+  }
+}
+```
+
+The application mounts the selected page into a dedicated host using the public CT.Mount API:
+
+```js
+import CT, { Component } from "@coettools/ctframework";
+import { HomePage } from "./pages/HomePage.js";
+import { SettingsPage } from "./pages/SettingsPage.js";
+
+const html = CT.Html;
+const Pages = { home: HomePage, settings: SettingsPage };
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -111,18 +143,38 @@ class App extends Component {
     this.SetState({ ActiveView: viewName });
   }
 
-  RenderNavigation() {
-    return html`<button ${CT.On("click", () => this.Navigate("settings"))}>Settings</button>`;
+  MountPage() {
+    CT.Mount(Pages[this.state.ActiveView], "#page");
   }
 
-  RenderCurrentView() {
-    return this.state.ActiveView === "settings"
-      ? html`<section>Settings</section>`
-      : html`<section>Home</section>`;
+  ComponentOnMount() {
+    this.MountPage();
+  }
+
+  ComponentOnUpdate(prevProps, prevState) {
+    if (prevState.ActiveView !== this.state.ActiveView) {
+      this.MountPage();
+    }
+  }
+
+  ComponentOnUnmount() {
+    CT.Unmount("#page");
   }
 
   Render() {
-    return html`<main>${this.RenderNavigation()}${this.RenderCurrentView()}</main>`;
+    return html`
+      <main>
+        <nav>
+          <button ${CT.On("click", () => this.Navigate("home"))}>Home</button>
+          <button ${CT.On("click", () => this.Navigate("settings"))}>Settings</button>
+        </nav>
+        <div id="page"></div>
+      </main>
+    `;
   }
 }
 ```
+
+Keep the page host empty in the shell template: the mounted page owns its contents. CT.Mount unmounts the previous page and runs its cleanup before mounting the next page. The shell must also call CT.Unmount for that host during its own cleanup. Page state starts fresh when returning to a page; use Store when state needs to outlive it.
+
+The wiki demonstrates this structure with a Pages.js registry and one class for every navigation section.
