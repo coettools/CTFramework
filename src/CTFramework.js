@@ -269,6 +269,11 @@ export class CTFramework {
       }
 
       component.vnode = newVNode;
+      if (component.__hostVNode?.component === component) {
+        component.__hostVNode.renderedVNode = newVNode;
+        component.__hostVNode.dom = updatedDom;
+      }
+
       if (component.__container?.__ctRootComponent === component) {
         component.__container.__ctRootVNode = newVNode;
       }
@@ -367,6 +372,7 @@ export class CTFramework {
       vnode.component = component;
       vnode.renderedVNode = renderedVNode;
       component.vnode = renderedVNode;
+      component.__hostVNode = vnode;
 
       const dom = CTFramework.CreateDom(renderedVNode);
       vnode.dom = dom;
@@ -459,6 +465,7 @@ export class CTFramework {
 
     component.props = { ...(newVNode.props || {}), children: newVNode.children };
     newVNode.component = component;
+    component.__hostVNode = newVNode;
 
     if (!component.ShouldComponentUpdate(component.props, component.state)) {
       newVNode.dom = oldVNode.dom;
