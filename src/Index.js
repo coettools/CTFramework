@@ -1,4 +1,5 @@
 import { Component } from "./components/Component.js";
+import { ApplicationLayout } from "./components/ApplicationLayout.js";
 import { Accordion } from "./components/Accordion.js";
 import { Alert } from "./components/Alert.js";
 import { Badge } from "./components/Badge.js";
@@ -22,6 +23,7 @@ import { Required, MaxLength } from "./utils/Validators.js";
 
 export {
   Component,
+  ApplicationLayout,
   Accordion,
   Alert,
   Badge,

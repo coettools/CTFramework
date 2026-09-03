@@ -1,5 +1,6 @@
 import CT, {
   Accordion,
+  ApplicationLayout,
   Alert,
   Badge,
   Card,
@@ -154,6 +155,7 @@ export class App extends Component {
     ];
 
     this.componentExamples = [
+      { Id: "application-layout", Title: "ApplicationLayout", Content: CodeExample({ code: 'ApplicationLayout({ Header, SideNavigation, Content, Footer })' }) },
       { Id: "accordion", Title: "Accordion", Content: CodeExample({ code: 'Accordion({ Items: [{ Id: "details", Title: "Details", Content: html`<p>Content</p>` }] })' }) },
       { Id: "side-navigation", Title: "SideNavigation", Content: CodeExample({ code: 'SideNavigation({ Items, ActiveId, Searchable: true, OnNavigate })' }) },
       { Id: "tooltip", Title: "Tooltip", Content: CodeExample({ code: 'Tooltip({ Text: "Helpful context", Position: "top", Content: html`<button>Hover me</button>` })' }) },

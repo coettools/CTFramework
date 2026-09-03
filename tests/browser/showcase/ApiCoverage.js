@@ -1,5 +1,6 @@
 export const ShowcaseApiCoverage = [
   "Accordion",
+  "ApplicationLayout",
   "Alert",
   "Badge",
   "Card",
