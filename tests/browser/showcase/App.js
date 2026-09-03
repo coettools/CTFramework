@@ -13,6 +13,7 @@ import CT, {
   GetFormValues,
   Guid,
   HttpClient,
+  ImageCarousel,
   MaxLength,
   PopupWindow,
   Required,
@@ -20,6 +21,8 @@ import CT, {
   Toast,
   Tooltip
 } from "../../../src/Index.js";
+import { CSharpCode } from "../../fixtures/CSharpCode.js";
+import { CarouselImages } from "../../fixtures/CarouselImages.js";
 
 const html = CT.Html;
 
@@ -155,12 +158,20 @@ export class App extends Component {
     ];
 
     this.componentExamples = [
+      { Id: "image-carousel", Title: "ImageCarousel", Content: CodeBlock({ Title: "Usage", Code: 'ImageCarousel({\n  Label: "Project gallery",\n  Images: [\n    { Src: "./images/ridge.jpg", Alt: "Mountain ridges", Caption: "Northern ridge" },\n    { Src: "./images/coast.jpg", Alt: "Coast at dusk", Caption: "Coastal dusk" }\n  ],\n  Loop: true,\n  Fit: "contain",\n  OnChange: (index, image) => console.log(index, image.Caption)\n});' }) },
       { Id: "application-layout", Title: "ApplicationLayout", Content: CodeBlock({ Title: "ApplicationLayout", Code: "ApplicationLayout({\n  Header: html`<strong>Operations</strong>`,\n  SideNavigation: SideNavigation({\n    Title: \"Workspace\",\n    Items: navigationItems\n  }),\n  Content: html`<section><h1>Overview</h1></section>`\n});" }) },
       { Id: "accordion", Title: "Accordion", Content: CodeBlock({ Title: "Accordion", Code: "Accordion({\n  OpenIds: [\"details\"],\n  Items: [\n    {\n      Id: \"details\",\n      Title: \"Details\",\n      Content: html`<p>Deployment information.</p>`\n    }\n  ]\n});" }) },
       { Id: "alert", Title: "Alert", Content: CodeBlock({ Title: "Alert", Code: "Alert({\n  Title: \"Saved\",\n  Message: \"Changes are available.\",\n  Type: \"success\"\n});" }) },
       { Id: "badge", Title: "Badge", Content: CodeBlock({ Title: "Badge", Code: "Badge({\n  Text: \"Ready\",\n  Type: \"success\"\n});" }) },
       { Id: "card", Title: "Card", Content: CodeBlock({ Title: "Card", Code: "Card({\n  Title: \"Deployment\",\n  Content: html`<p>Ready</p>`,\n  Footer: html`<button type=\"button\">Open</button>`\n});" }) },
-      { Id: "code-block", Title: "CodeBlock", Content: CodeBlock({ Title: "CodeBlock", Code: "CodeBlock({\n  Title: \"Helpers.js\",\n  Language: \"javascript\",\n  Code: \"const Add = (left, right) => left + right;\",\n  LineNumbers: true,\n  Wrap: false,\n  Copy: true\n});" }) },
+      {
+        Id: "code-block",
+        Title: "CodeBlock",
+        Content: html`<section>
+          ${CodeBlock({ Title: "Usage", Code: 'CodeBlock({\n  Title: "Greeting.cs",\n  Language: "csharp",\n  Code: source,\n  LineNumbers: true,\n  Wrap: false,\n  Copy: true\n});' })}
+          ${CodeBlock({ Title: "Greeting.cs", Language: "csharp", Code: CSharpCode })}
+        </section>`
+      },
       { Id: "data-table", Title: "DataTable", Content: CodeBlock({ Title: "DataTable", Code: "DataTable({\n  Data: records,\n  PageSize: 10,\n  Columns: [\n    { Key: \"Name\", Title: \"Name\" },\n    {\n      Key: \"Status\",\n      Title: \"Status\",\n      Render: (row, value) => Badge({\n        Text: value,\n        Type: \"success\"\n      })\n    }\n  ]\n});" }) },
       { Id: "dialog", Title: "Dialog", Content: CodeBlock({ Title: "Dialog", Code: "Dialog({\n  Open: this.state.IsOpen,\n  Title: \"Confirm\",\n  Content: html`<p>Save these changes?</p>`,\n  OnClose: () => this.SetState({ IsOpen: false })\n});" }) },
       { Id: "dropdown", Title: "Dropdown", Content: CodeBlock({ Title: "Dropdown", Code: "Dropdown({\n  Id: \"environment\",\n  Label: \"Environment\",\n  Value: this.state.Environment,\n  Options: [\n    { Value: \"development\", Label: \"Development\" },\n    { Value: \"production\", Label: \"Production\" }\n  ],\n  OnChange: (value) => this.SetState({ Environment: value })\n});" }) },
@@ -325,6 +336,8 @@ export class App extends Component {
             </div>
           </div>
           <section class="component-examples">
+            <h3>Image gallery</h3>
+            ${ImageCarousel({ Label: "Landscape gallery", Images: CarouselImages })}
             <h3>Usage snippets</h3>
             ${Accordion({ Items: this.componentExamples, OpenIds: ["accordion"], Multiple: true })}
           </section>

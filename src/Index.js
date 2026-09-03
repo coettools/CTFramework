@@ -9,6 +9,7 @@ import { DataTable } from "./components/DataTable.js";
 import { Dialog } from "./components/Dialog.js";
 import { Dropdown } from "./components/Dropdown.js";
 import { FallbackView } from "./components/FallbackView.js";
+import { ImageCarousel } from "./components/ImageCarousel.js";
 import { PopupWindow } from "./components/PopupWindow.js";
 import { SideNavigation } from "./components/SideNavigation.js";
 import { Toast } from "./components/Toast.js";
@@ -34,6 +35,7 @@ export {
   Dialog,
   Dropdown,
   FallbackView,
+  ImageCarousel,
   PopupWindow,
   SideNavigation,
   Toast,

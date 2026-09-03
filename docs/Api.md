@@ -18,6 +18,7 @@ import CT, {
   GetFormValues,
   Guid,
   HttpClient,
+  ImageCarousel,
   MaxLength,
   PopupWindow,
   Required,
@@ -178,4 +179,4 @@ const requestId = Guid();
 
 ## Components
 
-`ApplicationLayout`, `Accordion`, `Alert`, `Badge`, `Card`, `CodeBlock`, `DataTable`, `Dialog`, `Dropdown`, `FallbackView`, `PopupWindow`, `SideNavigation`, `Toast`, and `Tooltip` are documented in [Components.md](Components.md).
+`ApplicationLayout`, `Accordion`, `Alert`, `Badge`, `Card`, `CodeBlock`, `DataTable`, `Dialog`, `Dropdown`, `FallbackView`, `ImageCarousel`, `PopupWindow`, `SideNavigation`, `Toast`, and `Tooltip` are documented in [Components.md](Components.md).

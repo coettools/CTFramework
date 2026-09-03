@@ -4,7 +4,7 @@ import { CT } from "../CTFramework.js";
 import { GetCodeLanguage, GetCodeLines } from "../utils/CodeHighlight.js";
 
 const html = CT.Html;
-const LanguageLabels = { javascript: "JavaScript", html: "HTML", css: "CSS", json: "JSON", text: "Plain text" };
+const LanguageLabels = { javascript: "JavaScript", csharp: "C#", html: "HTML", css: "CSS", json: "JSON", text: "Plain text" };
 
 export class CodeBlockComponent extends Component {
   constructor(props = {}) {
