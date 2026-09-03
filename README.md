@@ -35,7 +35,9 @@ docs/                    framework documentation
 npm install
 ```
 
-There are no package dependencies right now, so install is only there for normal package workflow consistency.
+The only dependency is esbuild, used at build time to minify JavaScript without
+changing template text or regular expressions. It is not included in the browser
+runtime. The library still has zero runtime dependencies.
 
 ## Commands
 
@@ -162,13 +164,17 @@ http://localhost:4170/tests/browser/showcase/
 
 ## Default style
 
-CTFramework adds its default stylesheet once when `CT.Mount(...)` first renders a component. It establishes the coettools navy, signal cyan and vital green visual language while allowing normal project CSS to override it automatically.
+CTFramework adds its Split stylesheet once when `CT.Mount(...)` first renders a component: graphite surroundings, navy panels, compact corners, cyan actions, and green selection or success states. Role-based CSS properties and normal project styles provide overrides without compatibility aliases or another theme library.
 
 Read [Styling.md](docs/Styling.md) for the supplied classes, every theme token, component overrides and full project-wide replacement patterns.
 
 ## Components
 
-Read [Components.md](docs/Components.md) for `ApplicationLayout`, `Accordion`, `DataTable`, `Dropdown`, `SideNavigation`, `Tooltip`, `Badge`, `Card`, `Alert`, `Dialog`, `PopupWindow`, `Toast`, and `FallbackView` usage.
+Read [Components.md](docs/Components.md) for `ApplicationLayout`, `Accordion`, `DataTable`, `Dropdown`, `SideNavigation`, `Tooltip`, `Badge`, `Card`, `CodeBlock`, `Alert`, `Dialog`, `PopupWindow`, `Toast`, and `FallbackView` usage.
+
+`CodeBlock` displays formatted source with basic syntax colours, line numbers, Copy,
+and a Wrap toggle. The wiki and showcase use it for their code examples. See the
+[component options](docs/Components.md#codeblock) and [style overrides](docs/Styling.md#style-code-examples).
 
 ## License
 

@@ -8,26 +8,15 @@ const html = CT.Html;
 export class SideNavigationComponent extends Component {
   constructor(props) {
     super(props);
-    this.state = { IsOpen: true, SearchTerm: "" };
-  }
-
-  GetVisibleItems() {
-    const searchTerm = this.state.SearchTerm.trim().toLowerCase();
-    const items = this.props.Items || [];
-    return searchTerm ? items.filter((item) => String(item.Label).toLowerCase().includes(searchTerm)) : items;
+    this.state = { IsOpen: true };
   }
 
   ToggleNavigation() {
     this.SetState((state) => ({ IsOpen: !state.IsOpen }));
   }
 
-  HandleSearch(event) {
-    this.SetState({ SearchTerm: event.target.value });
-  }
-
   Render() {
-    const { ActiveId, Items = [], OnNavigate, Searchable = false, Title = "Navigation" } = this.props;
-    const visibleItems = this.GetVisibleItems();
+    const { ActiveId, Items = [], OnNavigate, Title = "Navigation" } = this.props;
     const isOpen = this.state.IsOpen;
     const toggleLabel = isOpen ? "Collapse" : "Expand";
 
@@ -54,13 +43,10 @@ export class SideNavigationComponent extends Component {
         ${isOpen
           ? html`
               <div class="ct-side-navigation-content">
-                ${Searchable
-                  ? html`<label class="ct-side-navigation-search"><span>Search navigation</span><input type="search" ${CT.Attr("value", this.state.SearchTerm)} ${CT.On("input", (event) => this.HandleSearch(event))}></label>`
-                  : null}
                 <nav ${CT.Attr("aria-label", Title)}>
-                  ${visibleItems.length
-                    ? visibleItems.map((item) => html`<button type="button" ${CT.Attr("className", `ct-side-navigation-item ${item.Id === ActiveId ? "is-active" : ""}`)} ${CT.On("click", () => OnNavigate?.(item))}>${item.Label}</button>`)
-                    : html`<p class="ct-muted">No navigation items found.</p>`}
+                  ${Items.length
+                    ? Items.map((item) => html`<button type="button" ${CT.Attr("className", `ct-side-navigation-item ${item.Id === ActiveId ? "is-active" : ""}`)} ${CT.On("click", () => OnNavigate?.(item))}>${item.Label}</button>`)
+                    : html`<p class="ct-muted">No navigation items.</p>`}
                 </nav>
               </div>
             `

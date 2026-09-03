@@ -4,6 +4,7 @@ export const ShowcaseApiCoverage = [
   "Alert",
   "Badge",
   "Card",
+  "CodeBlock",
   "Component",
   "CT",
   "DataTable",

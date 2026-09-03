@@ -4,6 +4,7 @@ import CT, {
   Alert,
   Badge,
   Card,
+  CodeBlock,
   Component,
   DataTable,
   Dialog,
@@ -22,8 +23,7 @@ import CT, {
 
 const html = CT.Html;
 
-const CodeExample = ({ code }) => html`<pre class="ct-code-snippet"><code>${code}</code></pre>`;
-const UsageExample = ({ code }) => html`<section class="showcase-example"><h3>Usage</h3>${CodeExample({ code })}</section>`;
+const UsageExample = ({ Code }) => html`<section class="showcase-example">${CodeBlock({ Title: "Usage", Code })}</section>`;
 
 const PanelHeading = ({ title, body }) => {
   return html`
@@ -101,8 +101,8 @@ export class App extends Component {
           .ToggleClass("is-active", nextIsActive)
           .Attr("data-last-update", timestamp)
           .Css({
-            borderColor: nextIsActive ? "var(--ct-color-green)" : "var(--ct-color-border)",
-            backgroundColor: nextIsActive ? "var(--ct-color-navy-light)" : "var(--ct-color-navy)"
+            borderColor: nextIsActive ? "var(--ct-color-success)" : "var(--ct-color-border)",
+            backgroundColor: nextIsActive ? "var(--ct-color-surface-raised)" : "var(--ct-color-surface)"
           })
           .Text(`Helper update: ${timestamp}`);
       },
@@ -155,19 +155,20 @@ export class App extends Component {
     ];
 
     this.componentExamples = [
-      { Id: "application-layout", Title: "ApplicationLayout", Content: CodeExample({ code: 'ApplicationLayout({ Header, SideNavigation, Content, Footer })' }) },
-      { Id: "accordion", Title: "Accordion", Content: CodeExample({ code: 'Accordion({ Items: [{ Id: "details", Title: "Details", Content: html`<p>Content</p>` }] })' }) },
-      { Id: "side-navigation", Title: "SideNavigation", Content: CodeExample({ code: 'SideNavigation({ Items, ActiveId, Searchable: true, OnNavigate })' }) },
-      { Id: "tooltip", Title: "Tooltip", Content: CodeExample({ code: 'Tooltip({ Text: "Helpful context", Position: "top", Content: html`<button>Hover me</button>` })' }) },
-      { Id: "card", Title: "Card", Content: CodeExample({ code: 'Card({ Title: "Deployment", Content: html`<p>Ready</p>` })' }) },
-      { Id: "alert", Title: "Alert", Content: CodeExample({ code: 'Alert({ Title: "Ready", Message: "All services available.", Type: "success" })' }) },
-      { Id: "dropdown", Title: "Dropdown", Content: CodeExample({ code: 'Dropdown({ Id: "environment", Options, Value, OnChange })' }) },
-      { Id: "data-table", Title: "DataTable + Badge", Content: CodeExample({ code: 'DataTable({ Data, Columns: [{ Key: "Status", Render: (row, value) => Badge({ Text: value, Type: "success" }) }] })' }) },
-      { Id: "badge", Title: "Badge", Content: CodeExample({ code: 'Badge({ Text: "Ready", Type: "success" })' }) },
-      { Id: "dialog", Title: "Dialog", Content: CodeExample({ code: 'Dialog({ Open: this.state.isDialogOpen, Title: "Confirm", Content, OnClose })' }) },
-      { Id: "popup-window", Title: "PopupWindow", Content: CodeExample({ code: 'PopupWindow({ Open, Position: "bottom-right", Title: "Output", Content, OnClose })' }) },
-      { Id: "toast", Title: "Toast", Content: CodeExample({ code: 'Toast({ Visible, Title: "Saved", Message: "Changes are available.", Type: "success", OnClose })' }) },
-      { Id: "fallback", Title: "FallbackView", Content: CodeExample({ code: 'FallbackView({ Title: "Page not found", Message: "Choose another route.", OnAction: () => router.Navigate("/") })' }) }
+      { Id: "application-layout", Title: "ApplicationLayout", Content: CodeBlock({ Title: "ApplicationLayout", Code: "ApplicationLayout({\n  Header: html`<strong>Operations</strong>`,\n  SideNavigation: SideNavigation({\n    Title: \"Workspace\",\n    Items: navigationItems\n  }),\n  Content: html`<section><h1>Overview</h1></section>`\n});" }) },
+      { Id: "accordion", Title: "Accordion", Content: CodeBlock({ Title: "Accordion", Code: "Accordion({\n  OpenIds: [\"details\"],\n  Items: [\n    {\n      Id: \"details\",\n      Title: \"Details\",\n      Content: html`<p>Deployment information.</p>`\n    }\n  ]\n});" }) },
+      { Id: "alert", Title: "Alert", Content: CodeBlock({ Title: "Alert", Code: "Alert({\n  Title: \"Saved\",\n  Message: \"Changes are available.\",\n  Type: \"success\"\n});" }) },
+      { Id: "badge", Title: "Badge", Content: CodeBlock({ Title: "Badge", Code: "Badge({\n  Text: \"Ready\",\n  Type: \"success\"\n});" }) },
+      { Id: "card", Title: "Card", Content: CodeBlock({ Title: "Card", Code: "Card({\n  Title: \"Deployment\",\n  Content: html`<p>Ready</p>`,\n  Footer: html`<button type=\"button\">Open</button>`\n});" }) },
+      { Id: "code-block", Title: "CodeBlock", Content: CodeBlock({ Title: "CodeBlock", Code: "CodeBlock({\n  Title: \"Helpers.js\",\n  Language: \"javascript\",\n  Code: \"const Add = (left, right) => left + right;\",\n  LineNumbers: true,\n  Wrap: false,\n  Copy: true\n});" }) },
+      { Id: "data-table", Title: "DataTable", Content: CodeBlock({ Title: "DataTable", Code: "DataTable({\n  Data: records,\n  PageSize: 10,\n  Columns: [\n    { Key: \"Name\", Title: \"Name\" },\n    {\n      Key: \"Status\",\n      Title: \"Status\",\n      Render: (row, value) => Badge({\n        Text: value,\n        Type: \"success\"\n      })\n    }\n  ]\n});" }) },
+      { Id: "dialog", Title: "Dialog", Content: CodeBlock({ Title: "Dialog", Code: "Dialog({\n  Open: this.state.IsOpen,\n  Title: \"Confirm\",\n  Content: html`<p>Save these changes?</p>`,\n  OnClose: () => this.SetState({ IsOpen: false })\n});" }) },
+      { Id: "dropdown", Title: "Dropdown", Content: CodeBlock({ Title: "Dropdown", Code: "Dropdown({\n  Id: \"environment\",\n  Label: \"Environment\",\n  Value: this.state.Environment,\n  Options: [\n    { Value: \"development\", Label: \"Development\" },\n    { Value: \"production\", Label: \"Production\" }\n  ],\n  OnChange: (value) => this.SetState({ Environment: value })\n});" }) },
+      { Id: "fallback-view", Title: "FallbackView", Content: CodeBlock({ Title: "FallbackView", Code: "FallbackView({\n  Title: \"Page not found\",\n  OnAction: () => router.Navigate(\"/\")\n});" }) },
+      { Id: "popup-window", Title: "PopupWindow", Content: CodeBlock({ Title: "PopupWindow", Code: "PopupWindow({\n  Open: this.state.IsPopupOpen,\n  Position: \"bottom-right\",\n  Title: \"Output\",\n  Content: html`<p>Build complete.</p>`,\n  OnClose: () => this.SetState({ IsPopupOpen: false })\n});" }) },
+      { Id: "side-navigation", Title: "SideNavigation", Content: CodeBlock({ Title: "SideNavigation", Code: "SideNavigation({\n  Title: \"Workspace\",\n  ActiveId: this.state.ActiveId,\n  Items: [\n    { Id: \"overview\", Label: \"Overview\" },\n    { Id: \"settings\", Label: \"Settings\" }\n  ],\n  OnNavigate: (item) => this.SetState({ ActiveId: item.Id })\n});" }) },
+      { Id: "tooltip", Title: "Tooltip", Content: CodeBlock({ Title: "Tooltip", Code: "Tooltip({\n  Text: \"Save the current changes\",\n  Position: \"top\",\n  Content: html`<button type=\"button\">Save</button>`\n});" }) },
+      { Id: "toast", Title: "Toast", Content: CodeBlock({ Title: "Toast", Code: "Toast({\n  Visible: this.state.IsToastVisible,\n  Title: \"Saved\",\n  Message: \"Changes are available.\",\n  Type: \"success\",\n  OnClose: () => this.SetState({ IsToastVisible: false })\n});" }) }
     ];
 
     this.views = {
@@ -209,7 +210,7 @@ export class App extends Component {
             <button type="button" class="ct-button-secondary" ${CT.On("click", () => this.actions.incrementCount(-1))}>Decrement</button>
           </div>
           ${UsageExample({
-            code: 'class App extends Component {\n  Render() {\n    return html`<button ${CT.On("click", () => this.SetState({ count: this.state.count + 1 }))}>${this.state.count}</button>`;\n  }\n}'
+            Code: "class App extends Component {\n  constructor(props) {\n    super(props);\n    this.state = { Count: 0 };\n  }\n\n  Increase() {\n    this.SetState((state) => ({ Count: state.Count + 1 }));\n  }\n\n  Render() {\n    return html`\n      <button type=\"button\" ${CT.On(\"click\", () => this.Increase())}>\n        ${this.state.Count}\n      </button>\n    `;\n  }\n}"
           })}
         </section>
       `,
@@ -234,7 +235,7 @@ export class App extends Component {
             )}
           </ul>
           ${UsageExample({
-            code: 'const values = GetFormValues(event.target);\nstore.SetState((state) => ({\n  notes: [...state.notes, values.note]\n}));'
+            Code: 'const values = GetFormValues(event.target);\nstore.SetState((state) => ({\n  notes: [...state.notes, values.note]\n}));'
           })}
         </section>
       `,
@@ -249,7 +250,7 @@ export class App extends Component {
             Run DOM helper update
           </button>
           ${UsageExample({
-            code: 'CT("#dom-box")\n  .ToggleClass("is-active", true)\n  .Attr("data-last-update", timestamp)\n  .Text("Updated");'
+            Code: 'CT("#dom-box")\n  .ToggleClass("is-active", true)\n  .Attr("data-last-update", timestamp)\n  .Text("Updated");'
           })}
         </section>
       `,
@@ -269,7 +270,7 @@ export class App extends Component {
           </div>
           <p class="utility-result">${this.state.utilityResult}</p>
           ${UsageExample({
-            code: 'const id = Guid();\nconst isValid = Required(value) && MaxLength(value, 16);\nconst response = await httpClient.Get(url);'
+            Code: 'const id = Guid();\nconst isValid = Required(value) && MaxLength(value, 16);\nconst response = await httpClient.Get(url);'
           })}
         </section>
       `,
@@ -282,7 +283,6 @@ export class App extends Component {
           <div class="component-layout">
             ${SideNavigation({
               Title: "System areas",
-              Searchable: true,
               ActiveId: this.state.activeSystemArea,
               Items: [
                 { Id: "runtime", Label: "Runtime" },

@@ -798,8 +798,6 @@ export class CTFramework {
       return Array.from(element.attributes).some((attribute) => attribute.name.startsWith("data-ct-template-"));
     });
 
-    CTFramework.UpdateTemplateBindings(vnode.templateBindingElements, values);
-
     const slotWalker = document.createTreeWalker(root, NodeFilter.SHOW_COMMENT);
     const slots = [];
     let slot = slotWalker.nextNode();
@@ -829,6 +827,9 @@ export class CTFramework {
       vnode.templateSlots.push({ index, node, children });
     });
 
+    // Select values depend on option children being present first.
+    CTFramework.UpdateTemplateBindings(vnode.templateBindingElements, values);
+
     return root;
   }
 
@@ -846,13 +847,13 @@ export class CTFramework {
     newVNode.templateSlots = [];
     newVNode.templateBindingElements = oldVNode.templateBindingElements;
 
-    CTFramework.UpdateTemplateBindings(newVNode.templateBindingElements, newVNode.props.values);
-
     oldVNode.templateSlots.forEach((oldSlot) => {
       const children = NormalizeNodes([newVNode.props.values[oldSlot.index]]);
       CTFramework.UpdateTemplateSlot(oldSlot, children, newVNode);
       newVNode.templateSlots.push({ index: oldSlot.index, node: oldSlot.node, children });
     });
+
+    CTFramework.UpdateTemplateBindings(newVNode.templateBindingElements, newVNode.props.values);
 
     return dom;
   }
