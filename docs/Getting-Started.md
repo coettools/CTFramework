@@ -31,7 +31,7 @@ class App extends Component {
   Render() {
     return html`
       <main class="ct-shell">
-        <h1>My CoetTools app</h1>
+        <h1>My coettools app</h1>
         <button type="button" ${CT.On("click", () => this.SetState({ Count: this.state.Count + 1 }))}>
           Count: ${this.state.Count}
         </button>

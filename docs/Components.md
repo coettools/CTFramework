@@ -29,7 +29,7 @@ ${ApplicationLayout({
     OnNavigate: (item) => this.SetState({ activeArea: item.Id })
   }),
   Content: html`<section><h1>Overview</h1><p>Only this region scrolls on desktop.</p></section>`,
-  Footer: html`<small>CoetTools</small>`
+  Footer: html`<small>coettools</small>`
 })}
 ```
 
