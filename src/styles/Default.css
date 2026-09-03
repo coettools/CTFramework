@@ -503,8 +503,7 @@
     transition: opacity .12s ease;
   }
 
-  .ct-tooltip:hover .ct-tooltip-content,
-  .ct-tooltip:focus-within .ct-tooltip-content {
+  .ct-tooltip:hover .ct-tooltip-content {
     opacity: 1;
   }
 

@@ -29,7 +29,7 @@ export class SideNavigationComponent extends Component {
     const { ActiveId, Items = [], OnNavigate, Searchable = false, Title = "Navigation" } = this.props;
     const visibleItems = this.GetVisibleItems();
     const isOpen = this.state.IsOpen;
-    const toggleLabel = isOpen ? "Collapse navigation" : "Expand navigation";
+    const toggleLabel = isOpen ? "Collapse" : "Expand";
 
     return html`
       <aside ${CT.Attr("className", `ct-side-navigation ${isOpen ? "is-open" : "is-closed"}`)}>

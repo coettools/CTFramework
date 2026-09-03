@@ -317,7 +317,7 @@ export class App extends Component {
                     <button type="button" ${CT.On("click", this.actions.openDialog)}>Open dialog</button>
                     <button type="button" class="ct-button-secondary" ${CT.On("click", this.actions.togglePopup)}>Toggle window</button>
                     <button type="button" class="ct-button-success" ${CT.On("click", this.actions.showToast)}>Show toast</button>
-                    ${Tooltip({ Text: "A reusable hover and keyboard-focus hint.", Content: html`<button type="button" class="ct-button-secondary">Hover for help</button>` })}
+                    ${Tooltip({ Text: "A reusable hover hint.", Content: html`<button type="button" class="ct-button-secondary">Hover for help</button>` })}
                   </div>
                 `
               })}

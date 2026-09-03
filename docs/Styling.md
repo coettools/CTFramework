@@ -60,7 +60,7 @@ Every framework component ships with a `ct-*` class and default styling. Use the
 | `FallbackView` | `ct-fallback` | Clear not-found or recovery view; unexpected render errors use `ct-fallback-error`. |
 | `DataTable` | `ct-data-table` | Search, table and pager structure with responsive horizontal scrolling. |
 | `SideNavigation` | `ct-side-navigation` | Bordered vertical navigation with local search, active state, and a compact collapsed rail. |
-| `Tooltip` | `ct-tooltip` | Hover and keyboard-focus hint; position with `ct-tooltip-top` or `ct-tooltip-right`. |
+| `Tooltip` | `ct-tooltip` | Hover hint; position with `ct-tooltip-top` or `ct-tooltip-right`. |
 | `Dialog` | `ct-dialog` | Centered modal over `ct-dialog-backdrop`. |
 | `PopupWindow` | `ct-popup-window` | Non-blocking fixed window with position variants. |
 | `Toast` | `ct-toast` | Fixed status notification with type variants. |

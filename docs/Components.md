@@ -103,7 +103,7 @@ Options can be strings or `{ Value, Label }` objects. `OnChange(value, option)` 
 
 ## SideNavigation
 
-`SideNavigation` has an icon-only collapse control that reduces the navigation to a compact rail. The control exposes an accessible hover and keyboard-focus hint, and optional local search remains available when expanded.
+`SideNavigation` has an icon-only collapse control that reduces the navigation to a compact rail. The control shows a short hover hint, and optional local search remains available when expanded.
 
 ```js
 ${SideNavigation({
@@ -120,7 +120,7 @@ ${SideNavigation({
 
 ## Tooltip
 
-`Tooltip` adds a short hint to a control without changing the control itself. `Content` is the element to wrap. `Position` is `top` by default and also supports `right`.
+`Tooltip` adds a short hover hint to a control without changing the control itself. `Content` is the element to wrap. `Position` is `top` by default and also supports `right`.
 
 ```js
 ${Tooltip({
