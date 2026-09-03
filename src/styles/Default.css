@@ -163,7 +163,9 @@
   }
 
   .ct-application-layout-navigation {
-    overflow-y: auto;
+    position: relative;
+    z-index: 10;
+    overflow: visible;
     background: var(--ct-color-navy);
   }
 
@@ -171,9 +173,16 @@
   .ct-application-layout-navigation .ct-side-navigation.is-closed {
     width: 100%;
     min-height: 100%;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
     border-top: 0;
     border-bottom: 0;
     border-left: 0;
+  }
+
+  .ct-application-layout-navigation .ct-side-navigation-content {
+    min-height: 0;
+    overflow-y: auto;
   }
 
   .ct-application-layout-content {
