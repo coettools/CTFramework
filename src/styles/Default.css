@@ -148,12 +148,7 @@
   }
 
   .ct-application-layout.has-side-navigation .ct-application-layout-workspace {
-    grid-template-columns: minmax(13.75rem, 18rem) minmax(0, 1fr);
-    transition: grid-template-columns .16s ease;
-  }
-
-  .ct-application-layout.has-side-navigation .ct-application-layout-workspace:has(.ct-side-navigation.is-closed) {
-    grid-template-columns: 3.75rem minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr);
   }
 
   .ct-application-layout-navigation,
@@ -649,8 +644,7 @@
       overflow: visible;
     }
 
-    .ct-application-layout.has-side-navigation .ct-application-layout-workspace,
-    .ct-application-layout.has-side-navigation .ct-application-layout-workspace:has(.ct-side-navigation.is-closed) {
+    .ct-application-layout.has-side-navigation .ct-application-layout-workspace {
       grid-template-columns: minmax(0, 1fr);
       overflow: visible;
     }
