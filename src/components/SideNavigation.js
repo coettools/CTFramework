@@ -27,6 +27,7 @@ export class SideNavigationComponent extends Component {
           ${Tooltip({
             Text: toggleLabel,
             Position: "right",
+            ShowOnFocus: false,
             Content: html`
               <button
                 type="button"
@@ -45,7 +46,7 @@ export class SideNavigationComponent extends Component {
               <div class="ct-side-navigation-content">
                 <nav ${CT.Attr("aria-label", Title)}>
                   ${Items.length
-                    ? Items.map((item) => html`<button type="button" ${CT.Attr("className", `ct-side-navigation-item ${item.Id === ActiveId ? "is-active" : ""}`)} ${CT.On("click", () => OnNavigate?.(item))}>${item.Label}</button>`)
+                    ? Items.map((item) => html`<button type="button" ${CT.Attr("className", `ct-side-navigation-item ${item.Id === ActiveId ? "is-active" : ""}`)} ${CT.Attr("aria-current", item.Id === ActiveId ? "page" : null)} ${CT.On("click", () => OnNavigate?.(item))}>${item.Label}</button>`)
                     : html`<p class="ct-muted">No navigation items.</p>`}
                 </nav>
               </div>

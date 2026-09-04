@@ -3,8 +3,8 @@ export const GetFormValues = (formElement) => {
   const formData = new FormData(formElement);
 
   for (const [name, value] of formData.entries()) {
-    if (!(name in values)) {
-      values[name] = value;
+    if (!Object.hasOwn(values, name)) {
+      Object.defineProperty(values, name, { value, writable: true, enumerable: true, configurable: true });
       continue;
     }
 

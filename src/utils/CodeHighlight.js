@@ -9,8 +9,8 @@ const CSharpNumbers = /\b0[xX][\da-fA-F_]+[uUlL]*\b|\b0[bB][01_]+[uUlL]*\b|(?:\b
 const Patterns = {
   csharp: new RegExp(`${Comments}|//[^\\r\\n]*|${CSharpStrings.source}|^[\\t ]*#[a-zA-Z]+\\b|${CSharpNumbers.source}|@?[a-zA-Z_][\\w]*|\\$+`, "gm"),
   javascript: new RegExp(`${Comments}|//[^\\r\\n]*|${Strings}|\x60(?:\\\\[\\s\\S]|[^\x60\\\\])*\x60|\\b(?:0[xX][\\da-fA-F]+|\\d+(?:\\.\\d+)?)\\b|[a-zA-Z_$][\\w$]*`, "g"),
-  html: new RegExp(`<!--[\\s\\S]*?(?:-->|$)|${Strings}|</?[a-zA-Z][\\w:-]*|/?>|[a-zA-Z_:][\\w:.-]*(?=\\s*=)|&(?:#\\w+|\\w+);`, "g"),
-  css: new RegExp(`${Comments}|${Strings}|--[\\w-]+|[a-zA-Z-]+(?=\\s*:)|#[\\da-fA-F]{3,8}\\b|\\b\\d+(?:\\.\\d+)?(?:%|[a-z]+)?|@[\\w-]+`, "g"),
+  html: new RegExp(`<!--[\\s\\S]*?(?:-->|$)|${Strings}|</?[a-zA-Z][\\w:-]*|/?>|[a-zA-Z_:][\\w:.-]*|&(?:#\\w+|\\w+);`, "g"),
+  css: new RegExp(`${Comments}|${Strings}|--[\\w-]+|[a-zA-Z-]+|#[\\da-fA-F]{3,8}\\b|\\b\\d+(?:\\.\\d+)?(?:%|[a-z]+)?|@[\\w-]+`, "g"),
   json: new RegExp(`\"(?:\\\\[\\s\\S]|[^\"\\\\])*\"|\\b(?:true|false|null)\\b|-?\\b\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?\\b`, "g")
 };
 
@@ -28,8 +28,8 @@ const GetTokenType = (value, language, following) => {
     if (/^\s*:/.test(following)) return "property";
     return /^\s*\(/.test(following) ? "function" : "plain";
   }
-  if (language === "html") return value.startsWith("&") ? "number" : value.includes("<") || value.includes(">") ? "keyword" : "property";
-  if (language === "css") return value.startsWith("@") ? "keyword" : /^[#\d]/.test(value) ? "number" : "property";
+  if (language === "html") return value.startsWith("&") ? "number" : value.includes("<") || value.includes(">") ? "keyword" : /^\s*=/.test(following) ? "property" : "plain";
+  if (language === "css") return value.startsWith("@") ? "keyword" : /^[#\d]/.test(value) ? "number" : value.startsWith("--") || /^\s*:/.test(following) ? "property" : "plain";
   if (Literals.has(value) || /^-?\d/.test(value)) return "number";
   if (Keywords.has(value)) return "keyword";
   if (/^\s*:/.test(following)) return "property";
@@ -42,12 +42,22 @@ export const HighlightCode = (code, language) => {
   const pattern = Patterns[resolvedLanguage];
   if (!pattern || code.length > 100000) return [{ Text: code, Type: "plain" }];
 
-  const matcher = new RegExp(pattern.source, pattern.flags);
+  // Consume unmatched identifiers too, rather than retrying a searching regex
+  // at every character of a long token.
+  const matcher = new RegExp(pattern.source, pattern.flags.replace("g", "y"));
+  const plain = /[\w$-]+|\s+|[\s\S]/y;
   const tokens = [];
   let position = 0;
-  let match;
-  while ((match = matcher.exec(code))) {
-    if (match.index > position) tokens.push({ Text: code.slice(position, match.index), Type: "plain" });
+  while (position < code.length) {
+    matcher.lastIndex = position;
+    const match = matcher.exec(code);
+    if (!match) {
+      plain.lastIndex = position;
+      const value = plain.exec(code)[0];
+      tokens.push({ Text: value, Type: "plain" });
+      position = plain.lastIndex;
+      continue;
+    }
     let value = match[0];
     if (resolvedLanguage === "csharp" && /^\$*"{3,}$/.test(value)) {
       // Raw strings close with the opening quote count; do not scan their contents as code.

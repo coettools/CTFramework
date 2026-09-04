@@ -35,8 +35,8 @@ docs/                    framework documentation
 npm install
 ```
 
-The only dependency is esbuild, used at build time to minify JavaScript without
-changing template text or regular expressions. It is not included in the browser
+The only dependency is esbuild, used at build time to bundle ES modules and minify
+JavaScript and embedded CSS. It is not included in the browser
 runtime. The library still has zero runtime dependencies.
 
 ## Commands
@@ -64,6 +64,20 @@ npm link @coettools/ctframework
 Start with the [CTFramework Guide](docs/Guide.md). It is the wiki-style documentation hub, with individual practical examples for every public API, service, utility, lifecycle method, DOM helper, and UI component.
 
 `npm run check` also checks the documentation against the source exports: complete imports, the CT method index, component entries and usage examples, and styling references. These checks catch missing or stale entries; changes to behavior and options still need a documentation review alongside the tests and wiki updates.
+
+`npm run check` works in a standalone public checkout. `npm run check:workspace` also verifies wiki API coverage and requires the sibling wiki; `npm run test:wiki` runs that integration check on its own. Consumer synchronization checks wiki coverage when that project is present, then rebuilds and tests each consumer.
+
+## Browser Verification
+
+The [component checks](http://127.0.0.1:4170/tests/browser/components/) cover table
+and accordion identity, native dropdown forms/reset, tooltip accessibility, menu
+collapse cycles, popup focus, and alert priority. Add `?source` to test source
+modules. Follow the [interaction checklist](tests/browser/components/README.md)
+as well as the automated results, particularly for native reset-button timing.
+
+Run `npm run test:browser` and open [the showcase](http://127.0.0.1:4170/tests/browser/showcase/). The development server binds only to `127.0.0.1` and serves browser tests, source, and distribution assets. It is not a production server.
+
+The [runtime regression page](http://127.0.0.1:4170/tests/browser/runtime/) checks keyed updates, lifecycle guards, fallback recovery, cleanup, events, forms, dropdowns, toast reuse, and modal behavior. Add `?source` to test source modules instead of the minified bundle. Also run the `rendering`, `code-block`, and `image-carousel` pages under `tests/browser/`. Exercise the controls with mouse, keyboard, and a narrow viewport; Node tests alone do not validate browser behavior.
 
 - [Getting Started](docs/Getting-Started.md)
 - [HTML And DOM](docs/Html-And-Dom.md)

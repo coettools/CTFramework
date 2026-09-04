@@ -15,10 +15,32 @@ export class DataTableComponent extends Component {
   }
 
   GetSearchText(row) {
-    return Object.values(row || {})
+    return (this.props.Columns || [])
+      .filter((column) => column.Searchable !== false)
+      .map((column) => {
+        const value = this.GetCellValue(row, column);
+        return column.SearchText ? column.SearchText(row, value) : value;
+      })
       .filter((value) => ["string", "number", "boolean"].includes(typeof value))
       .join(" ")
       .toLowerCase();
+  }
+
+  GetRowKey(row) {
+    const rowKey = this.props.RowKey ?? "Id";
+    return typeof rowKey === "function" ? rowKey(row) : row?.[rowKey];
+  }
+
+  ValidateKeys(items, getKey, name) {
+    const keys = new Set();
+    for (const item of items) {
+      const key = getKey(item);
+      if (!(typeof key === "string" && key.length > 0 || typeof key === "number" && Number.isFinite(key))) {
+        throw new Error(`DataTable ${name} must provide a non-empty string or finite number for every item.`);
+      }
+      if (keys.has(key)) throw new Error(`DataTable ${name} must be unique. Duplicate: ${key}`);
+      keys.add(key);
+    }
   }
 
   GetFilteredRows() {
@@ -48,6 +70,8 @@ export class DataTableComponent extends Component {
 
   Render() {
     const { Columns = [], EmptyText = "No matching records.", SearchPlaceholder = "Search records" } = this.props;
+    this.ValidateKeys(this.props.Data || [], (row) => this.GetRowKey(row), "RowKey (default: Id)");
+    this.ValidateKeys(Columns, (column) => column.Key, "column Key");
     const filteredRows = this.GetFilteredRows();
     const pageCount = this.GetPageCount(filteredRows);
     const currentPage = Math.min(this.state.CurrentPage, pageCount);
@@ -65,14 +89,14 @@ export class DataTableComponent extends Component {
         </div>
         <div class="ct-data-table-scroll">
           <table>
-            <thead><tr>${Columns.map((column) => html`<th scope="col">${column.Title ?? column.Key}</th>`)}</tr></thead>
+            <thead><tr>${Columns.map((column) => ({ ...html`<th scope="col">${column.Title ?? column.Key}</th>`, key: column.Key }))}</tr></thead>
             <tbody>
               ${rows.length
-                ? rows.map((row) => html`<tr>${Columns.map((column) => {
+                ? rows.map((row) => ({ ...html`<tr>${Columns.map((column) => {
                     const value = this.GetCellValue(row, column);
-                    return html`<td>${column.Render ? column.Render(row, value) : value ?? ""}</td>`;
-                  })}</tr>`)
-                : html`<tr><td class="ct-data-table-empty" ${CT.Attr("colSpan", Columns.length)}>${EmptyText}</td></tr>`}
+                    return { ...html`<td>${column.Render ? column.Render(row, value) : value ?? ""}</td>`, key: column.Key };
+                  })}</tr>`, key: this.GetRowKey(row) }))
+                : html`<tr><td class="ct-data-table-empty" ${CT.Attr("colSpan", Math.max(1, Columns.length))}>${EmptyText}</td></tr>`}
             </tbody>
           </table>
         </div>

@@ -15,6 +15,12 @@ export class ToastComponent extends Component {
     this.SetState({ IsVisible: false });
   }
 
+  ComponentOnUpdate(prevProps) {
+    if (prevProps.Visible === false && this.props.Visible !== false && !this.state.IsVisible) {
+      this.SetState({ IsVisible: true });
+    }
+  }
+
   Render() {
     const { Message = "", Title = "", Type = "info", Visible = true } = this.props;
 
