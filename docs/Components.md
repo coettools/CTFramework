@@ -42,6 +42,7 @@ When `SideNavigation` is used, its collapse control reduces the layout to a comp
 ```js
 ${DataTable({
   Data: services,
+  RowKey: "Id",
   PageSize: 10,
   Columns: [
     { Key: "Name", Title: "Service" },
@@ -60,16 +61,58 @@ ${DataTable({
 | Option | Default | Purpose |
 | --- | --- | --- |
 | `Data` | `[]` | Rows to search and page. |
-| `Columns` | `[]` | `{ Key, Title, Value?, Render? }` definitions. |
+| `RowKey` | `"Id"` | Stable row property name or `(row) => key` function. |
+| `Columns` | `[]` | `{ Key, Title, Value?, Render?, Searchable?, SearchText? }` definitions. |
 | `PageSize` | `10` | Number of filtered rows per page. |
 | `SearchPlaceholder` | `Search records` | Search field placeholder. |
 | `EmptyText` | `No matching records.` | Message shown when no rows match. |
 
 `Value(row)` replaces direct `row[Key]` lookup. `Render(row, value)` controls the rendered cell.
 
+Every row key must be a unique non-empty string or finite number, including zero.
+Column keys must also be unique. Missing or duplicate keys produce a clear error
+rather than assigning an editor's state to another record. Use `RowKey: "Name"`
+only when names are unique and do not change; prefer a permanent record ID.
+
+Reordering rows or columns preserves mounted cell components. Filtering and paging
+unmount rows that leave the view. Keep edits in application state, keyed by record
+ID, if they must survive leaving the page.
+
+Search uses configured column values, including `Value(row)` output. Hidden row
+fields are not searched. Set `Searchable: false` to exclude a column, or supply
+`SearchText(row, value)` when a renderer shows a different label:
+
+```js
+DataTable({
+  Data: records,
+  RowKey: (row) => row.ServiceId,
+  Columns: [
+    { Key: "Name", Title: "Service", Value: (row) => `Service ${row.Name}` },
+    {
+      Key: "Status",
+      Title: "Status",
+      SearchText: (row, value) => value === 1 ? "Ready" : "Offline",
+      Render: (row, value) => Badge({ Text: value === 1 ? "Ready" : "Offline" })
+    },
+    { Key: "InternalCode", Title: "Reference", Searchable: false }
+  ]
+});
+```
+
+Search text must be a string, number, or boolean. Rendered HTML is never scraped
+or executed to discover searchable text.
+
 ## Accordion
 
 `Accordion` groups optional content behind compact expandable sections. Each item needs an `Id`, `Title`, and `Content`. Set `OpenIds` for initially open sections, and set `Multiple: true` when several sections may remain open.
+
+Use unique non-empty string or finite number IDs, not array positions. Reordering
+keeps each panel's state with its item. Collapsed content stays mounted; removed
+items are unmounted. `OpenIds` is read initially, not a controlled open-state option.
+Each trigger sits in an `h3` and is linked to its labelled panel with generated DOM
+IDs. Two accordions may reuse the same item IDs without DOM ID collisions.
+When more than six items can remain open together, panels use labelled groups
+instead of creating a large number of region landmarks.
 
 ```js
 ${Accordion({
@@ -89,7 +132,10 @@ ${Accordion({
 ```js
 ${Dropdown({
   Id: "environment",
+  Name: "Environment",
   Label: "Environment",
+  Required: true,
+  Disabled: false,
   Value: selectedEnvironment,
   Options: [
     { Value: "development", Label: "Development" },
@@ -101,13 +147,47 @@ ${Dropdown({
 
 Options can be strings or `{ Value, Label }` objects. `OnChange(value, option)` receives the selected value and source option.
 
+Selecting the placeholder calls `OnChange("", null)`. Handle that empty selection explicitly when the value is required; it does not throw or remount the select.
+
 `Value` selects the matching option on the first render, including numeric zero.
 You can replace `Options` and `Value` together in a parent update; option children
 are rendered before the selected value is applied.
 
+`Name` includes the selection in native `FormData` and `GetFormValues(form)`.
+`Disabled` and `Required` default to `false` and use native select behavior:
+disabled controls are omitted from submission; a required placeholder is invalid.
+Reserve the empty string for the placeholder and give each option a unique value.
+
+Keep `Value` in parent state and update it in `OnChange`. Native `form.reset()` or
+a reset button restores the value supplied when the dropdown mounted, then calls
+`OnChange` once so the parent stays in sync. If that option was removed, reset
+selects the placeholder. A cancelled reset does not change the value or call back.
+
+```js
+return html`<form ${CT.On("submit", (event) => {
+  event.preventDefault();
+  const values = GetFormValues(event.currentTarget);
+  console.log(values.Environment);
+})}>
+  ${Dropdown({
+    Name: "Environment",
+    Label: "Environment",
+    Required: true,
+    Value: this.state.Environment,
+    Options: ["development", "production"],
+    OnChange: (value) => this.SetState({ Environment: value })
+  })}
+  <button type="submit">Submit</button>
+  <button type="reset">Reset</button>
+</form>`;
+```
+
 ## SideNavigation
 
 `SideNavigation` lists the supplied items and highlights the active page. Its icon-only collapse control reduces the navigation to a compact rail and shows a short hover hint. Expanding restores the full item list.
+
+The active button exposes `aria-current="page"`. Collapse/Expand hints remain
+hover-only and hide on click until the pointer leaves and enters again.
 
 ```js
 ${SideNavigation({
@@ -123,7 +203,8 @@ ${SideNavigation({
 
 ## Tooltip
 
-`Tooltip` adds a short hover hint to a control without changing the control itself. `Content` is the element to wrap. `Position` is `top` by default and also supports `right`.
+`Tooltip` adds a short hint on hover or keyboard focus. `Content` should contain one
+target control. `Position` is `top` by default and also supports `right`.
 
 ```js
 ${Tooltip({
@@ -131,6 +212,24 @@ ${Tooltip({
   Position: "top",
   Content: html`<button type="button">Save</button>`
 })}
+```
+
+The hint is associated with the first enabled control through `aria-describedby`;
+existing description IDs are preserved. Text-only content gets a focusable wrapper.
+Escape or clicking the target dismisses the hint until a new hover or focus entry.
+Moving the pointer over the hint keeps it visible. Keep tooltip text short and put
+links, buttons, and essential instructions in ordinary page content instead.
+The default hint width and position adjust to remain inside the viewport edges.
+
+`ShowOnFocus` defaults to `true`. Set it to `false` for a deliberate hover-only
+hint, as SideNavigation does. Provide a visible or accessible label independently:
+
+```js
+Tooltip({
+  Text: "Expand",
+  ShowOnFocus: false,
+  Content: html`<button type="button" aria-label="Expand navigation">+</button>`
+});
 ```
 
 ## Card
@@ -167,8 +266,9 @@ CodeBlock({
 });
 ```
 
-Return the result from `Render`, interpolate it inside `CT.Html`, or pass it to
-`CT.Mount`. Use a separate live component beside it when an example needs a preview.
+Return the result from a component's `Render` or interpolate it inside `CT.Html`.
+Mount the containing component with `CT.Mount`. Use a separate live component
+beside it when an example needs a preview.
 `Code` is always text: HTML and scripts are never executed.
 
 | Option | Default | Purpose |
@@ -312,6 +412,16 @@ ${Alert({
 
 `Type` can be `info`, `success`, `warning`, or `danger`.
 
+Non-urgent types use `role="status"` with polite announcements. `danger` uses
+`role="alert"` with assertive announcements. Override this independently of color
+with `Live: "polite"`, `"assertive"`, or `"off"`. Use `off` for static content that
+does not need a live announcement; it removes the live-region role.
+
+```js
+Alert({ Type: "warning", Message: "Your session is about to expire.", Live: "assertive" });
+Alert({ Type: "info", Message: "Example configuration", Live: "off" });
+```
+
 ## Badge
 
 `Badge` is a compact label, especially useful in a `DataTable` cell.
@@ -339,7 +449,9 @@ ${Dialog({
 })}
 ```
 
-`Dialog` is modal and closes when its backdrop is selected. `Actions` is an array of `{ Label, ClassName?, OnClick }` objects.
+`Dialog` uses the browser's native modal top layer. Opening moves focus inside, Tab and Shift+Tab stay among its controls, and the background is inert. Escape, Close, and a backdrop click request `OnClose`; the parent must set `Open: false`. Closing restores focus to the opener when it still exists. Content is mounted only while open and cleaned up on close or unmount.
+
+`Actions` is an array of `{ Label, ClassName?, OnClick }` objects. Keep related popup/notification previews inside `Content` if they must remain usable above an open modal. Elements outside a native modal cannot be brought above it using `z-index` alone.
 
 ## PopupWindow
 
@@ -355,6 +467,14 @@ ${PopupWindow({
 
 `PopupWindow` is non-blocking and accepts `top-left`, `top-right`, `bottom-left`, or `bottom-right` for `Position`.
 
+It is an interactive non-modal window. Opening focuses its Close button once;
+ordinary parent updates do not move focus. Tab can leave the window, and the rest
+of the page stays usable. Escape while focus is inside requests `OnClose`; set
+`Open: false` there. Closing returns focus to the opener if focus was still inside
+the window. If the user already moved elsewhere, that focus is left alone.
+Content unmounts when closed. Inside a Dialog, its Escape closes only the popup.
+Use `Card` for passive output that should not receive opening focus.
+
 ## Toast
 
 ```js
@@ -368,6 +488,8 @@ ${Toast({
 ```
 
 `Toast` displays in the bottom-right and has a close action. Set the parent `Visible` state to `false` in `OnClose` when the notification must stay dismissed after another parent update.
+
+Set `Visible` back to `true` to show the same notification again. Without `OnClose`, Close dismisses it locally; a subsequent `false` to `true` transition resets that dismissal.
 
 ## FallbackView
 

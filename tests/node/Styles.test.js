@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { transform as Transform } from "esbuild";
 
 const Read = (file) => readFile(new URL(file, import.meta.url), "utf8");
 const ReadProperties = (css) => Object.fromEntries(
   [...css.matchAll(/(--ct-[a-z-]+)\s*:\s*([^;]+);/g)].map((match) => [match[1], match[2].trim()])
 );
-const Normalize = (css) => css.replace(/\s+/g, " ").replace(/\s*([{}:;,>])\s*/g, "$1").trim();
 
 test("default styling uses documented, role-based properties without aliases", async () => {
   const css = await Read("../../src/styles/Default.css");
@@ -29,12 +29,13 @@ test("default styling uses documented, role-based properties without aliases", a
 
 test("module output and both standalone bundles contain the current default CSS", async () => {
   const source = await Read("../../src/styles/Default.css");
+  const minified = (await Transform(source, { loader: "css", minify: true, target: "es2022" })).code.trim();
   assert.equal(await Read("../../dist/styles/Default.css"), source);
   for (const name of ["ctframework.bundle.js", "ctframework.bundle.min.js"]) {
     const bundle = await Read(`../../dist/${name}`);
     const embedded = bundle.match(/data:text\/css;charset=utf-8,([^"\s]+)/);
     assert.ok(embedded, `${name} must embed the default stylesheet`);
-    assert.equal(decodeURIComponent(embedded[1]), Normalize(source), `${name} has stale styles`);
+    assert.equal(decodeURIComponent(embedded[1]), minified, `${name} has stale styles`);
   }
 });
 

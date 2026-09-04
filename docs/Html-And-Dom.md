@@ -23,6 +23,8 @@ Values in `${...}` become text or CTFramework child views. Do not use raw string
 
 Place `CT.On(eventType, handler)` in the opening element tag. The handler receives the browser event.
 
+Template handlers receive a delegated event view: `target` is the original clicked element, while `currentTarget` is the element carrying `CT.On`, including clicks on nested SVG icons. Event methods such as `preventDefault` and `stopPropagation` operate on the original event.
+
 ```js
 html`<button type="button" ${CT.On("click", (event) => console.log(event.currentTarget))}>Save</button>`;
 ```
@@ -32,6 +34,8 @@ Template events support `click`, `dblclick`, `input`, `change`, `submit`, keyboa
 ## Dynamic Attributes: CT.Attr
 
 Use `CT.Attr(name, value)` for values that change during rendering. `true` creates a boolean attribute; `false`, `null`, and `undefined` remove it.
+
+Use strings for ARIA states: `CT.Attr("aria-expanded", String(isOpen))`. Use `null` to omit an ARIA attribute, for example on an inactive carousel selector. A changed attribute name removes the previous binding. Object style bindings remove properties no longer present.
 
 ```js
 html`

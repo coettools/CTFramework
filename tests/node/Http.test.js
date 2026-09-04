@@ -42,9 +42,9 @@ test("HttpClient merges headers and serializes JSON bodies", async (testContext)
 
   assert.equal(requestSnapshot.requestUrl, "/api/notes");
   assert.equal(requestSnapshot.requestOptions.method, "POST");
-  assert.equal(requestSnapshot.requestOptions.headers.Accept, "application/json");
-  assert.equal(requestSnapshot.requestOptions.headers.Authorization, "Bearer token");
-  assert.equal(requestSnapshot.requestOptions.headers["Content-Type"], "application/json");
+  assert.equal(requestSnapshot.requestOptions.headers.get("Accept"), "application/json");
+  assert.equal(requestSnapshot.requestOptions.headers.get("Authorization"), "Bearer token");
+  assert.equal(requestSnapshot.requestOptions.headers.get("Content-Type"), "application/json");
   assert.equal(requestSnapshot.requestOptions.body, JSON.stringify({ name: "CTFramework" }));
 });
 

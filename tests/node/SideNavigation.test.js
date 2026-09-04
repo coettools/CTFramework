@@ -18,6 +18,8 @@ test("SideNavigation shows every item and preserves the list through collapse cy
     assert.equal(expanded.match(/"Overview"/g)?.length, 1);
     assert.equal(expanded.match(/"Services"/g)?.length, 1);
     assert.equal(expanded.match(/ct-side-navigation-item is-active/g)?.length, 1);
+    assert.equal(expanded.match(/"name":"aria-current","value":"page"/g)?.length, 1);
+    assert.match(expanded, /"ShowOnFocus":false/);
     assert.doesNotMatch(expanded, /<input/);
     navigation.ToggleNavigation();
     assert.equal(navigation.state.IsOpen, false);

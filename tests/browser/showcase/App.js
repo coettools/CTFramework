@@ -58,6 +58,8 @@ export class App extends Component {
       notes: storeState.notes,
       utilityResult: "Run a utility demonstration.",
       selectedEnvironment: "",
+      environmentDisabled: false,
+      environmentResult: "Submit an environment to inspect the form values.",
       activeSystemArea: "runtime",
       isDialogOpen: false,
       isPopupOpen: false,
@@ -149,11 +151,12 @@ export class App extends Component {
 
     this.componentColumns = [
       { Key: "Name", Title: "Component" },
-      { Key: "Owner", Title: "Owner" },
+      { Key: "Owner", Title: "Owner", Value: (row) => `${row.Owner} team` },
       {
         Key: "Status",
         Title: "Status",
-        Render: (row, value) => Badge({ Text: value, Type: value === "Ready" ? "success" : value === "Warning" ? "warning" : "danger" })
+        SearchText: (row, value) => `${value} service`,
+        Render: (row, value) => Badge({ Text: `${value} service`, Type: value === "Ready" ? "success" : value === "Warning" ? "warning" : "danger" })
       }
     ];
 
@@ -161,7 +164,7 @@ export class App extends Component {
       { Id: "image-carousel", Title: "ImageCarousel", Content: CodeBlock({ Title: "Usage", Code: 'ImageCarousel({\n  Label: "Project gallery",\n  Images: [\n    { Src: "./images/ridge.jpg", Alt: "Mountain ridges", Caption: "Northern ridge" },\n    { Src: "./images/coast.jpg", Alt: "Coast at dusk", Caption: "Coastal dusk" }\n  ],\n  Loop: true,\n  Fit: "contain",\n  OnChange: (index, image) => console.log(index, image.Caption)\n});' }) },
       { Id: "application-layout", Title: "ApplicationLayout", Content: CodeBlock({ Title: "ApplicationLayout", Code: "ApplicationLayout({\n  Header: html`<strong>Operations</strong>`,\n  SideNavigation: SideNavigation({\n    Title: \"Workspace\",\n    Items: navigationItems\n  }),\n  Content: html`<section><h1>Overview</h1></section>`\n});" }) },
       { Id: "accordion", Title: "Accordion", Content: CodeBlock({ Title: "Accordion", Code: "Accordion({\n  OpenIds: [\"details\"],\n  Items: [\n    {\n      Id: \"details\",\n      Title: \"Details\",\n      Content: html`<p>Deployment information.</p>`\n    }\n  ]\n});" }) },
-      { Id: "alert", Title: "Alert", Content: CodeBlock({ Title: "Alert", Code: "Alert({\n  Title: \"Saved\",\n  Message: \"Changes are available.\",\n  Type: \"success\"\n});" }) },
+      { Id: "alert", Title: "Alert", Content: CodeBlock({ Title: "Alert", Code: "Alert({\n  Title: \"Saved\",\n  Message: \"Changes are available.\",\n  Type: \"success\",\n  Live: \"polite\"\n});" }) },
       { Id: "badge", Title: "Badge", Content: CodeBlock({ Title: "Badge", Code: "Badge({\n  Text: \"Ready\",\n  Type: \"success\"\n});" }) },
       { Id: "card", Title: "Card", Content: CodeBlock({ Title: "Card", Code: "Card({\n  Title: \"Deployment\",\n  Content: html`<p>Ready</p>`,\n  Footer: html`<button type=\"button\">Open</button>`\n});" }) },
       {
@@ -172,13 +175,13 @@ export class App extends Component {
           ${CodeBlock({ Title: "Greeting.cs", Language: "csharp", Code: CSharpCode })}
         </section>`
       },
-      { Id: "data-table", Title: "DataTable", Content: CodeBlock({ Title: "DataTable", Code: "DataTable({\n  Data: records,\n  PageSize: 10,\n  Columns: [\n    { Key: \"Name\", Title: \"Name\" },\n    {\n      Key: \"Status\",\n      Title: \"Status\",\n      Render: (row, value) => Badge({\n        Text: value,\n        Type: \"success\"\n      })\n    }\n  ]\n});" }) },
+      { Id: "data-table", Title: "DataTable", Content: CodeBlock({ Title: "DataTable", Code: "const records = [\n  { Id: 1, Name: \"Gateway\", Status: 1, Reference: \"gw\" },\n  { Id: 2, Name: \"Archive\", Status: 0, Reference: \"ar\" }\n];\nconst StatusLabel = (value) => value === 1 ? \"Ready\" : \"Offline\";\n\nDataTable({\n  Data: records,\n  RowKey: (row) => row.Id,\n  PageSize: 10,\n  Columns: [\n    { Key: \"Name\", Title: \"Name\", Value: (row) => `Service ${row.Name}` },\n    {\n      Key: \"Status\",\n      Title: \"Status\",\n      SearchText: (row, value) => StatusLabel(value),\n      Render: (row, value) => Badge({ Text: StatusLabel(value) })\n    },\n    { Key: \"Reference\", Title: \"Reference\", Searchable: false }\n  ]\n});" }) },
       { Id: "dialog", Title: "Dialog", Content: CodeBlock({ Title: "Dialog", Code: "Dialog({\n  Open: this.state.IsOpen,\n  Title: \"Confirm\",\n  Content: html`<p>Save these changes?</p>`,\n  OnClose: () => this.SetState({ IsOpen: false })\n});" }) },
-      { Id: "dropdown", Title: "Dropdown", Content: CodeBlock({ Title: "Dropdown", Code: "Dropdown({\n  Id: \"environment\",\n  Label: \"Environment\",\n  Value: this.state.Environment,\n  Options: [\n    { Value: \"development\", Label: \"Development\" },\n    { Value: \"production\", Label: \"Production\" }\n  ],\n  OnChange: (value) => this.SetState({ Environment: value })\n});" }) },
+      { Id: "dropdown", Title: "Dropdown", Content: CodeBlock({ Title: "Dropdown", Code: "return html`<form ${CT.On(\"submit\", (event) => {\n  event.preventDefault();\n  console.log(GetFormValues(event.currentTarget));\n})}>\n  ${Dropdown({\n    Id: \"environment\",\n    Name: \"Environment\",\n    Label: \"Environment\",\n    Required: true,\n    Disabled: false,\n    Value: this.state.Environment,\n    Options: [\"development\", \"production\"],\n    OnChange: (value) => this.SetState({ Environment: value })\n  })}\n  <button type=\"submit\">Submit</button>\n  <button type=\"reset\">Reset</button>\n</form>`;" }) },
       { Id: "fallback-view", Title: "FallbackView", Content: CodeBlock({ Title: "FallbackView", Code: "FallbackView({\n  Title: \"Page not found\",\n  OnAction: () => router.Navigate(\"/\")\n});" }) },
       { Id: "popup-window", Title: "PopupWindow", Content: CodeBlock({ Title: "PopupWindow", Code: "PopupWindow({\n  Open: this.state.IsPopupOpen,\n  Position: \"bottom-right\",\n  Title: \"Output\",\n  Content: html`<p>Build complete.</p>`,\n  OnClose: () => this.SetState({ IsPopupOpen: false })\n});" }) },
       { Id: "side-navigation", Title: "SideNavigation", Content: CodeBlock({ Title: "SideNavigation", Code: "SideNavigation({\n  Title: \"Workspace\",\n  ActiveId: this.state.ActiveId,\n  Items: [\n    { Id: \"overview\", Label: \"Overview\" },\n    { Id: \"settings\", Label: \"Settings\" }\n  ],\n  OnNavigate: (item) => this.SetState({ ActiveId: item.Id })\n});" }) },
-      { Id: "tooltip", Title: "Tooltip", Content: CodeBlock({ Title: "Tooltip", Code: "Tooltip({\n  Text: \"Save the current changes\",\n  Position: \"top\",\n  Content: html`<button type=\"button\">Save</button>`\n});" }) },
+      { Id: "tooltip", Title: "Tooltip", Content: CodeBlock({ Title: "Tooltip", Code: "Tooltip({\n  Text: \"Save the current changes\",\n  Position: \"top\",\n  ShowOnFocus: true,\n  Content: html`<button type=\"button\">Save</button>`\n});" }) },
       { Id: "toast", Title: "Toast", Content: CodeBlock({ Title: "Toast", Code: "Toast({\n  Visible: this.state.IsToastVisible,\n  Title: \"Saved\",\n  Message: \"Changes are available.\",\n  Type: \"success\",\n  OnClose: () => this.SetState({ IsToastVisible: false })\n});" }) }
     ];
 
@@ -308,8 +311,15 @@ export class App extends Component {
                 Content: html`
                   <div class="component-card-content">
                     ${Alert({ Title: "Default styles active", Message: "This screen uses CTFramework CSS without its own component theme.", Type: "success" })}
+                    <form ${CT.On("submit", (event) => {
+                      event.preventDefault();
+                      this.SetState({ environmentResult: JSON.stringify(GetFormValues(event.currentTarget)) });
+                    })}>
                     ${Dropdown({
                       Id: "environment-select",
+                      Name: "Environment",
+                      Required: true,
+                      Disabled: this.state.environmentDisabled,
                       Label: "Environment",
                       Placeholder: "Choose an environment",
                       Value: this.state.selectedEnvironment,
@@ -321,6 +331,13 @@ export class App extends Component {
                       OnChange: this.actions.selectEnvironment
                     })}
                     <p class="ct-status">${this.state.selectedEnvironment || "No environment selected"}</p>
+                    <div class="button-row">
+                      <button type="submit">Read form values</button>
+                      <button type="reset" class="ct-button-secondary">Reset environment</button>
+                      <button type="button" class="ct-button-secondary" ${CT.On("click", () => this.SetState({ environmentDisabled: !this.state.environmentDisabled }))}>${this.state.environmentDisabled ? "Enable dropdown" : "Disable dropdown"}</button>
+                    </div>
+                    <p class="ct-status">${this.state.environmentResult}</p>
+                    </form>
                   </div>
                 `,
                 Footer: html`
@@ -328,11 +345,11 @@ export class App extends Component {
                     <button type="button" ${CT.On("click", this.actions.openDialog)}>Open dialog</button>
                     <button type="button" class="ct-button-secondary" ${CT.On("click", this.actions.togglePopup)}>Toggle window</button>
                     <button type="button" class="ct-button-success" ${CT.On("click", this.actions.showToast)}>Show toast</button>
-                    ${Tooltip({ Text: "A reusable hover hint.", Content: html`<button type="button" class="ct-button-secondary">Hover for help</button>` })}
+                    ${Tooltip({ Text: "Hover or focus for help. Escape dismisses this hint.", Content: html`<button type="button" class="ct-button-secondary">Hover for help</button>` })}
                   </div>
                 `
               })}
-              ${DataTable({ Data: this.componentData, Columns: this.componentColumns, PageSize: 3 })}
+              ${DataTable({ RowKey: "Name", Data: this.componentData, Columns: this.componentColumns, PageSize: 3 })}
             </div>
           </div>
           <section class="component-examples">

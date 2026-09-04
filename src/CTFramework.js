@@ -5,7 +5,8 @@ import {
   IsFunctionalComponent,
   IsTextNode,
   NormalizeNodes,
-  NormalizeNode
+  NormalizeNode,
+  CloneState
 } from "./html/RenderNodes.js";
 
 export const CreateTemplate = (strings, ...values) => {
@@ -19,11 +20,11 @@ export const CreateTemplate = (strings, ...values) => {
   };
 };
 
-const isTemplateVNode = (vnode) => {
+const IsTemplateVNode = (vnode) => {
   return vnode?.tag === "ct-template";
 };
 
-const isTemplateMarker = (value, type) => {
+const IsTemplateMarker = (value, type) => {
   return value?.__ctTemplateMarker === type;
 };
 
@@ -164,6 +165,8 @@ export class CTFramework {
     container.textContent = "";
 
     component.__container = container;
+    component.__disposed = false;
+    container.__ctRootComponent = component;
 
     try {
       const vnode = NormalizeNode(component.Render());
@@ -185,14 +188,14 @@ export class CTFramework {
   }
 
   static Unmount(container) {
-    if (!container?.__ctRootVNode) {
+    if (!container?.__ctRootComponent) {
       return;
     }
 
+    const component = container.__ctRootComponent;
+    CTFramework.DisposeComponent(component);
     CTFramework.OnUnmount(container.__ctRootVNode);
-    container.__ctRootComponent.vnode = null;
-    container.__ctRootComponent.__container = null;
-    container.__ctRootComponent?.ComponentOnUnmount();
+    component.ComponentOnUnmount();
     container.textContent = "";
 
     delete container.__ctRootComponent;
@@ -209,13 +212,13 @@ export class CTFramework {
     }
   }
 
-  static ScheduleComponentUpdate(component, prevProps = component.props, prevState = component.state) {
-    if (!component?.vnode) {
+  static ScheduleComponentUpdate(component, prevProps = component.props, prevState = component.state, force = false) {
+    if (!component?.vnode || component.__disposed) {
       return;
     }
 
     if (!CTFramework.queuedComponentUpdates.has(component)) {
-      CTFramework.queuedComponentUpdates.set(component, { prevProps, prevState });
+      CTFramework.queuedComponentUpdates.set(component, { prevProps, prevState, force });
       CTFramework.ScheduleUpdate(() => {
         const queuedUpdate = CTFramework.queuedComponentUpdates.get(component);
 
@@ -225,7 +228,7 @@ export class CTFramework {
           return;
         }
 
-        CTFramework.Rerender(component, queuedUpdate.prevProps, queuedUpdate.prevState);
+        CTFramework.Rerender(component, queuedUpdate.prevProps, queuedUpdate.prevState, queuedUpdate.force);
       });
 
       return;
@@ -239,6 +242,7 @@ export class CTFramework {
 
     queuedUpdate.prevProps ??= prevProps;
     queuedUpdate.prevState ??= prevState;
+    queuedUpdate.force ||= force;
   }
 
   static ProcessUpdates() {
@@ -248,15 +252,28 @@ export class CTFramework {
     }
   }
 
-  static Rerender(component, prevProps = component.props, prevState = component.state) {
-    if (!component.vnode) {
+  static ShouldUpdate(component, prevProps, prevState, force = false) {
+    const nextProps = component.props;
+    const nextState = component.state;
+    component.props = prevProps;
+    component.state = prevState;
+    try {
+      return force || component.ShouldComponentUpdate(nextProps, nextState);
+    } finally {
+      component.props = nextProps;
+      component.state = nextState;
+    }
+  }
+
+  static Rerender(component, prevProps = component.props, prevState = component.state, force = false) {
+    if (!component.vnode || component.__disposed) {
       return;
     }
 
     try {
       const oldVNode = component.vnode;
 
-      if (!component.ShouldComponentUpdate(component.props, component.state)) {
+      if (!CTFramework.ShouldUpdate(component, prevProps, prevState, force)) {
         return;
       }
 
@@ -265,7 +282,8 @@ export class CTFramework {
 
       if (updatedDom !== oldVNode.dom && oldVNode.dom?.parentNode) {
         oldVNode.dom.parentNode.replaceChild(updatedDom, oldVNode.dom);
-        CTFramework.OnMountSubtree(newVNode);
+        if (newVNode.__ctMountMode === "subtree") CTFramework.OnMountSubtree(newVNode);
+        else CTFramework.OnMount(newVNode);
       }
 
       component.vnode = newVNode;
@@ -299,12 +317,20 @@ export class CTFramework {
       CTFramework.OnUnmount(component.vnode);
       oldDom.parentNode.replaceChild(fallback, oldDom);
     } else if (component.__container) {
+      CTFramework.OnUnmount(component.vnode);
       component.__container.textContent = "";
       component.__container.appendChild(fallback);
+    } else {
+      CTFramework.OnUnmount(component.vnode);
     }
 
     const fallbackVNode = { tag: "ct-error", props: {}, children: [], dom: fallback };
     component.vnode = fallbackVNode;
+
+    if (component.__hostVNode?.component === component) {
+      component.__hostVNode.renderedVNode = fallbackVNode;
+      component.__hostVNode.dom = fallback;
+    }
 
     if (component.__container?.__ctRootComponent === component) {
       component.__container.__ctRootVNode = fallbackVNode;
@@ -343,13 +369,14 @@ export class CTFramework {
   }
 
   static CreateDom(vnode) {
+    delete vnode.__ctUnmounted;
     if (IsTextNode(vnode)) {
       const textNode = document.createTextNode(vnode.props.nodeValue);
       vnode.dom = textNode;
       return textNode;
     }
 
-    if (isTemplateVNode(vnode)) {
+    if (IsTemplateVNode(vnode)) {
       return CTFramework.CreateTemplateDom(vnode);
     }
 
@@ -367,17 +394,20 @@ export class CTFramework {
       const ComponentClass = vnode.tag;
       const component = vnode.component ?? new ComponentClass({ ...(vnode.props || {}), children: vnode.children });
       component.props = { ...(vnode.props || {}), children: vnode.children };
-
-      const renderedVNode = NormalizeNode(component.Render());
+      component.__disposed = false;
       vnode.component = component;
-      vnode.renderedVNode = renderedVNode;
-      component.vnode = renderedVNode;
       component.__hostVNode = vnode;
 
-      const dom = CTFramework.CreateDom(renderedVNode);
-      vnode.dom = dom;
-
-      return dom;
+      try {
+        const renderedVNode = NormalizeNode(component.Render());
+        vnode.renderedVNode = renderedVNode;
+        component.vnode = renderedVNode;
+        const dom = CTFramework.CreateDom(renderedVNode);
+        vnode.dom = dom;
+        return dom;
+      } catch (error) {
+        return CTFramework.RenderErrorFallback(component, error);
+      }
     }
 
     const element = document.createElement(vnode.tag);
@@ -393,8 +423,14 @@ export class CTFramework {
   }
 
   static UpdateDom(oldVNode, newVNode) {
-    if (isTemplateVNode(oldVNode) || isTemplateVNode(newVNode)) {
-      if (isTemplateVNode(oldVNode) && isTemplateVNode(newVNode)) {
+    if (oldVNode.tag !== newVNode.tag || oldVNode.key !== newVNode.key) {
+      const newDom = CTFramework.CreateDom(newVNode);
+      newVNode.__ctMountMode = "self";
+      CTFramework.OnUnmount(oldVNode);
+      return newDom;
+    }
+    if (IsTemplateVNode(oldVNode) || IsTemplateVNode(newVNode)) {
+      if (IsTemplateVNode(oldVNode) && IsTemplateVNode(newVNode)) {
         return CTFramework.UpdateTemplateDom(oldVNode, newVNode);
       }
 
@@ -420,13 +456,6 @@ export class CTFramework {
       newVNode.component = oldVNode.component;
       newVNode.renderedVNode = oldVNode.renderedVNode;
       return newVNode.dom;
-    }
-
-    if (oldVNode.tag !== newVNode.tag || oldVNode.key !== newVNode.key) {
-      const newDom = CTFramework.CreateDom(newVNode);
-      newVNode.__ctMountMode = "self";
-      CTFramework.OnUnmount(oldVNode);
-      return newDom;
     }
 
     if (IsFunctionalComponent(newVNode.tag)) {
@@ -460,116 +489,91 @@ export class CTFramework {
 
   static UpdateClassComponent(oldVNode, newVNode) {
     const component = oldVNode.component;
-    const prevProps = component.props;
-    const prevState = { ...component.state };
+    const queuedUpdate = CTFramework.queuedComponentUpdates.get(component);
+    CTFramework.queuedComponentUpdates.delete(component);
+    const prevProps = queuedUpdate?.prevProps ?? component.props;
+    const prevState = queuedUpdate?.prevState ?? CloneState(component.state);
 
     component.props = { ...(newVNode.props || {}), children: newVNode.children };
     newVNode.component = component;
     component.__hostVNode = newVNode;
+    newVNode.renderedVNode = oldVNode.renderedVNode;
+    newVNode.dom = oldVNode.dom;
 
-    if (!component.ShouldComponentUpdate(component.props, component.state)) {
-      newVNode.dom = oldVNode.dom;
-      newVNode.renderedVNode = oldVNode.renderedVNode;
-      component.vnode = oldVNode.renderedVNode;
-      return oldVNode.dom;
+    try {
+      if (!CTFramework.ShouldUpdate(component, prevProps, prevState, queuedUpdate?.force)) {
+        component.vnode = oldVNode.renderedVNode;
+        return oldVNode.dom;
+      }
+
+      const oldRenderedVNode = oldVNode.renderedVNode;
+      const newRenderedVNode = NormalizeNode(component.Render());
+      const updatedDom = CTFramework.UpdateDom(oldRenderedVNode, newRenderedVNode);
+
+      newVNode.renderedVNode = newRenderedVNode;
+      newVNode.dom = updatedDom;
+      newVNode.__ctMountMode = "subtree";
+      component.vnode = newRenderedVNode;
+      component.ComponentOnUpdate(prevProps, prevState);
+
+      return updatedDom;
+    } catch (error) {
+      return CTFramework.RenderErrorFallback(component, error);
     }
-
-    const oldRenderedVNode = oldVNode.renderedVNode;
-    const newRenderedVNode = NormalizeNode(component.Render());
-    const updatedDom = CTFramework.UpdateDom(oldRenderedVNode, newRenderedVNode);
-
-    newVNode.renderedVNode = newRenderedVNode;
-    newVNode.dom = updatedDom;
-    newVNode.__ctMountMode = "subtree";
-    component.vnode = newRenderedVNode;
-    component.ComponentOnUpdate(prevProps, prevState);
-
-    return updatedDom;
   }
 
-  static UpdateChildren(dom, oldChildren, newChildren) {
-    const oldKeyedChildren = new Map();
-    const oldUnkeyedChildren = [];
+  static ValidateKeys(children) {
+    const keys = new Set();
+    for (const child of children) {
+      if (child.key === null || child.key === undefined) continue;
+      if (keys.has(child.key)) throw new Error(`Duplicate child key: ${child.key}`);
+      keys.add(child.key);
+    }
+  }
 
-    oldChildren.forEach((child) => {
-      if (child?.key !== null && child?.key !== undefined) {
-        oldKeyedChildren.set(child.key, child);
-        return;
-      }
+  static UpdateChildren(dom, oldChildren, newChildren, anchor = null) {
+    CTFramework.ValidateKeys(newChildren);
+    const keyed = new Map();
+    const unkeyed = [];
+    for (const child of oldChildren) {
+      if (child.key !== null && child.key !== undefined) keyed.set(child.key, child);
+      else unkeyed.push(child);
+    }
+    const remaining = new Set(oldChildren);
+    let unkeyedIndex = 0;
 
-      oldUnkeyedChildren.push(child);
-    });
-
-    let unkeyedChildIndex = 0;
-
-    for (let index = 0; index < newChildren.length; index += 1) {
-      const newChild = newChildren[index];
-      const oldChild =
-        newChild?.key !== null && newChild?.key !== undefined
-          ? oldKeyedChildren.get(newChild.key) || null
-          : oldUnkeyedChildren[unkeyedChildIndex++] || null;
-
+    for (const child of newChildren) {
+      const oldChild = child.key !== null && child.key !== undefined
+        ? keyed.get(child.key) : unkeyed[unkeyedIndex++];
       if (oldChild) {
-        const oldChildDom = oldChild.dom;
-        const updatedChildDom = CTFramework.UpdateDom(oldChild, newChild);
-
-        if (oldChild.key !== null && oldChild.key !== undefined) {
-          oldKeyedChildren.delete(oldChild.key);
+        remaining.delete(oldChild);
+        const oldDom = oldChild.dom;
+        const nextDom = CTFramework.UpdateDom(oldChild, child);
+        if (nextDom !== oldDom) {
+          if (oldDom?.parentNode === dom) dom.replaceChild(nextDom, oldDom);
+          else if (nextDom.parentNode !== dom) dom.insertBefore(nextDom, anchor);
+          if (child.__ctMountMode === "subtree") CTFramework.OnMountSubtree(child);
+          else CTFramework.OnMount(child);
         }
-
-        if (updatedChildDom !== oldChildDom) {
-          if (oldChildDom?.parentNode === dom) {
-            dom.replaceChild(updatedChildDom, oldChildDom);
-          } else {
-            const referenceNode = dom.childNodes[index] || null;
-            dom.insertBefore(updatedChildDom, referenceNode);
-          }
-
-          if (newChild.__ctMountMode === "subtree") {
-            CTFramework.OnMountSubtree(newChild);
-          } else {
-            CTFramework.OnMount(newChild);
-          }
-
-          delete newChild.__ctMountMode;
-          continue;
-        }
-
-        const referenceNode = dom.childNodes[index];
-
-        if (!referenceNode) {
-          dom.appendChild(updatedChildDom);
-        } else if (referenceNode !== updatedChildDom) {
-          dom.insertBefore(updatedChildDom, referenceNode);
-        }
-
-        continue;
+      } else {
+        dom.insertBefore(CTFramework.CreateDom(child), anchor);
+        CTFramework.OnMount(child);
       }
-
-      const newChildDom = CTFramework.CreateDom(newChild);
-      const referenceNode = dom.childNodes[index] || null;
-
-      dom.insertBefore(newChildDom, referenceNode);
-      CTFramework.OnMount(newChild);
-      delete newChild.__ctMountMode;
+      delete child.__ctMountMode;
     }
 
-    for (let index = unkeyedChildIndex; index < oldUnkeyedChildren.length; index += 1) {
-      const oldChild = oldUnkeyedChildren[index];
-      CTFramework.OnUnmount(oldChild);
-
-      if (oldChild.dom?.parentNode === dom) {
-        dom.removeChild(oldChild.dom);
-      }
+    for (const child of remaining) {
+      CTFramework.OnUnmount(child);
+      if (child.dom?.parentNode === dom) dom.removeChild(child.dom);
     }
-
-    oldKeyedChildren.forEach((oldChild) => {
-      CTFramework.OnUnmount(oldChild);
-
-      if (oldChild.dom?.parentNode === dom) {
-        dom.removeChild(oldChild.dom);
-      }
-    });
+    // Work backwards from the slot anchor so adjacent static content and other
+    // slots stay in place. Move existing nodes without remounting components.
+    let reference = anchor;
+    for (let index = newChildren.length - 1; index >= 0; index--) {
+      const node = newChildren[index].dom;
+      if (node.nextSibling !== reference || node.parentNode !== dom) dom.insertBefore(node, reference);
+      reference = node;
+    }
   }
 
   static UpdateDomProperties(dom, oldProps = {}, newProps = {}) {
@@ -725,12 +729,11 @@ export class CTFramework {
       try {
         dom[name] = "";
       } catch {
-        dom.removeAttribute(name);
+        // Some native properties are read-only; their attribute can still be removed.
       }
-
-      return;
     }
 
+    // Reflected property setters may recreate an empty attribute.
     dom.removeAttribute(name);
   }
 
@@ -767,12 +770,12 @@ export class CTFramework {
 
       const value = values[index];
 
-      if (isTemplateMarker(value, "event")) {
+      if (IsTemplateMarker(value, "event")) {
         markup += `data-ct-template-event-${index}=""`;
         return;
       }
 
-      if (isTemplateMarker(value, "attribute")) {
+      if (IsTemplateMarker(value, "attribute")) {
         markup += `data-ct-template-attribute-${index}=""`;
         return;
       }
@@ -815,6 +818,7 @@ export class CTFramework {
     slots.forEach(({ index, node }) => {
       const value = values[index];
       const children = NormalizeNodes([value]);
+      CTFramework.ValidateKeys(children);
       const fragment = document.createDocumentFragment();
 
       children.forEach((child) => {
@@ -853,7 +857,7 @@ export class CTFramework {
       newVNode.templateSlots.push({ index: oldSlot.index, node: oldSlot.node, children });
     });
 
-    CTFramework.UpdateTemplateBindings(newVNode.templateBindingElements, newVNode.props.values);
+    CTFramework.UpdateTemplateBindings(newVNode.templateBindingElements, newVNode.props.values, oldVNode.props.values);
 
     return dom;
   }
@@ -865,64 +869,43 @@ export class CTFramework {
     return oldStrings.length === newStrings.length && oldStrings.every((value, index) => value === newStrings[index]);
   }
 
-  static UpdateTemplateBindings(elements, values) {
+  static UpdateTemplateBindings(elements, values, oldValues = []) {
     elements.forEach((element) => {
       Array.from(element.attributes).forEach((attribute) => {
         const eventMatch = attribute.name.match(/^data-ct-template-event-(\d+)$/);
         const attributeMatch = attribute.name.match(/^data-ct-template-attribute-(\d+)$/);
 
         if (eventMatch) {
-          const event = values[Number(eventMatch[1])];
-          CTFramework.UpdateEventHandler(element, `on${event.eventType}`, event.handler);
+          const index = Number(eventMatch[1]);
+          const event = values[index];
+          const oldEvent = oldValues[index];
+          if (oldEvent && oldEvent.eventType !== event?.eventType) {
+            CTFramework.UpdateEventHandler(element, `on${oldEvent.eventType}`, null);
+          }
+          if (event) CTFramework.UpdateEventHandler(element, `on${event.eventType}`, event.handler);
         }
 
         if (attributeMatch) {
-          const attributeValue = values[Number(attributeMatch[1])];
-          CTFramework.SetDomProperty(element, attributeValue.name, attributeValue.value);
+          const index = Number(attributeMatch[1]);
+          const attributeValue = values[index];
+          const oldAttribute = oldValues[index];
+          if (oldAttribute && oldAttribute.name !== attributeValue?.name) {
+            CTFramework.RemoveDomProperty(element, oldAttribute.name, oldAttribute.value);
+          }
+          if (!attributeValue) return;
+          const { name, value } = attributeValue;
+          if (name === "style") CTFramework.UpdateStyle(element, oldAttribute?.value, value);
+          else if (value === undefined || value === null || value === false) {
+            CTFramework.RemoveDomProperty(element, name, oldAttribute?.value);
+          } else CTFramework.SetDomProperty(element, name, value);
         }
       });
     });
   }
 
   static UpdateTemplateSlot(oldSlot, newChildren, newVNode) {
-    const oldChildren = oldSlot.children;
-    const childCount = Math.max(oldChildren.length, newChildren.length);
-
-    for (let index = 0; index < childCount; index += 1) {
-      const oldChild = oldChildren[index];
-      const newChild = newChildren[index];
-
-      if (!oldChild && newChild) {
-        const dom = CTFramework.CreateDom(newChild);
-        oldSlot.node.parentNode.insertBefore(dom, oldSlot.node);
-        CTFramework.OnMount(newChild);
-        newVNode.templateChildren.push(newChild);
-        continue;
-      }
-
-      if (oldChild && !newChild) {
-        CTFramework.OnUnmount(oldChild);
-        oldChild.dom?.remove();
-        continue;
-      }
-
-      const oldDom = oldChild.dom;
-      const updatedDom = CTFramework.UpdateDom(oldChild, newChild);
-
-      if (updatedDom !== oldDom && oldDom?.parentNode) {
-        oldDom.parentNode.replaceChild(updatedDom, oldDom);
-
-        if (newChild.__ctMountMode === "subtree") {
-          CTFramework.OnMountSubtree(newChild);
-        } else {
-          CTFramework.OnMount(newChild);
-        }
-
-        delete newChild.__ctMountMode;
-      }
-
-      newVNode.templateChildren.push(newChild);
-    }
+    CTFramework.UpdateChildren(oldSlot.node.parentNode, oldSlot.children, newChildren, oldSlot.node);
+    newVNode.templateChildren.push(...newChildren);
   }
 
   static OnMount(vnode) {
@@ -945,7 +928,7 @@ export class CTFramework {
       return;
     }
 
-    if (isTemplateVNode(vnode)) {
+    if (IsTemplateVNode(vnode)) {
       (vnode.templateChildren || []).forEach((child) => CTFramework.OnMount(child));
       return;
     }
@@ -956,11 +939,13 @@ export class CTFramework {
   }
 
   static OnUnmount(vnode) {
-    if (!vnode) {
+    if (!vnode || vnode.__ctUnmounted) {
       return;
     }
+    vnode.__ctUnmounted = true;
 
     if (IsClassComponent(vnode.tag)) {
+      CTFramework.DisposeComponent(vnode.component);
       CTFramework.OnUnmount(vnode.renderedVNode);
       vnode.component?.ComponentOnUnmount();
       return;
@@ -975,7 +960,7 @@ export class CTFramework {
       return;
     }
 
-    if (isTemplateVNode(vnode)) {
+    if (IsTemplateVNode(vnode)) {
       (vnode.templateChildren || []).forEach((child) => CTFramework.OnUnmount(child));
       CTFramework.ClearTemplateEventHandlers(vnode.dom);
       return;
@@ -985,7 +970,7 @@ export class CTFramework {
       CTFramework.OnUnmount(child);
     });
 
-    if (vnode.dom instanceof HTMLElement) {
+    if (vnode.dom instanceof Element) {
       const eventId = vnode.dom.getAttribute("data-ct-id");
 
       if (eventId && CTFramework.eventHandlers[eventId]) {
@@ -1008,13 +993,33 @@ export class CTFramework {
       return;
     }
 
-    if (isTemplateVNode(vnode)) {
+    if (IsTemplateVNode(vnode)) {
       (vnode.templateChildren || []).forEach((child) => CTFramework.OnMount(child));
       return;
     }
 
     (vnode.children || []).forEach((child) => {
       CTFramework.OnMount(child);
+    });
+  }
+
+  static DisposeComponent(component) {
+    if (!component) return;
+    component.__disposed = true;
+    CTFramework.queuedComponentUpdates.delete(component);
+    component.vnode = null;
+    component.__hostVNode = null;
+    component.__container = null;
+  }
+
+  static CreateDelegatedEvent(event, currentTarget) {
+    return new Proxy(event, {
+      get: (target, property) => {
+        if (property === "currentTarget") return currentTarget;
+        const value = Reflect.get(target, property, target);
+        return typeof value === "function" ? value.bind(target) : value;
+      },
+      set: (target, property, value) => Reflect.set(target, property, value, target)
     });
   }
 
@@ -1025,14 +1030,14 @@ export class CTFramework {
 
     CTFramework.supportedEvents.forEach((eventType) => {
       document.addEventListener(eventType, (event) => {
-        let target = event.target;
+        let target = event.target instanceof Element ? event.target : event.target?.parentElement;
 
-        while (target instanceof HTMLElement) {
+        while (target instanceof Element) {
           const eventId = target.getAttribute("data-ct-id");
           const handler = eventId ? CTFramework.eventHandlers[eventId]?.[event.type] : null;
 
           if (handler) {
-            handler(event);
+            handler(CTFramework.CreateDelegatedEvent(event, target));
 
             if (event.cancelBubble) {
               return;

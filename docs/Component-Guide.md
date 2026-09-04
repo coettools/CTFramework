@@ -60,6 +60,8 @@ this.ForceUpdate();
 
 Use `ForceUpdate` only when data outside `state` or `props` changed. Prefer `SetState` for normal UI changes.
 
+State changes immediately; DOM updates are batched into an animation frame. Callback updates receive the latest state, including earlier updates from the same event. `ForceUpdate` bypasses `ShouldComponentUpdate`. Calls to either method after unmount are ignored; still release timers, subscriptions, and requests in your cleanup hook.
+
 ## Lifecycle Methods
 
 Implement only the lifecycle methods needed by the component:
@@ -95,6 +97,24 @@ class LiveStatus extends Component {
 ```
 
 `Render()` is required. If it throws, CTFramework calls `ComponentOnCatch(error, info)` and replaces the view with its safe error fallback.
+
+During `ShouldComponentUpdate`, `this.props` and `this.state` hold the previous values; the arguments contain the proposed values. Returning `false` skips rendering, not the state/prop assignment. Keep this method free of side effects. `ComponentOnUpdate` receives the previous values after an update is accepted.
+
+A nested component's render failure stays in that component's view. A later state or parent update can render it again; the fallback does not leave a detached component behind.
+
+## Identity In Lists
+
+Stateful framework controls accept `Key` to identify an item within a dynamic list. Use a stable record identifier, not the current array position. Moving a keyed control keeps its instance and state; removing it runs cleanup. Keys must be unique within that list.
+
+```js
+return html`<section>${records.map((record) => Dropdown({
+  Key: record.Id,
+  Label: record.Name,
+  Options: ["Active", "Paused"],
+  Value: record.Status,
+  OnChange: (value) => UpdateStatus(record.Id, value)
+}))}</section>`;
+```
 
 ## Component Organization
 

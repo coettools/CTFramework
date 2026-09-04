@@ -53,7 +53,7 @@ export class WorkspacePreview extends Component {
         <div class="workspace-content">
           <header class="workspace-heading"><p class="workspace-eyebrow">Raw JavaScript components</p><h3>Tools for the work.</h3><p class="workspace-help">The same controls in every direction. Try the counter, search, and feedback.</p></header>
           <div class="workspace-controls" ${CT.Attr("id", this.GetId("counter"))}>${this.RenderCounter()}${this.RenderSettings()}</div>
-          <section ${CT.Attr("id", this.GetId("table"))} aria-label="Components table">${DataTable({ Data: Records, PageSize: 3, SearchPlaceholder: "Find a component...", Columns: [{ Key: "Name", Title: "Component" }, { Key: "Group", Title: "Group" }, { Key: "Status", Title: "Status", Render: (row, value) => Badge({ Text: value, Type: "success" }) }] })}</section>
+          <section ${CT.Attr("id", this.GetId("table"))} aria-label="Components table">${DataTable({ RowKey: "Name", Data: Records, PageSize: 3, SearchPlaceholder: "Find a component...", Columns: [{ Key: "Name", Title: "Component" }, { Key: "Group", Title: "Group" }, { Key: "Status", Title: "Status", Render: (row, value) => Badge({ Text: value, Type: "success" }) }] })}</section>
           <section class="workspace-feedback" ${CT.Attr("id", this.GetId("feedback"))} aria-label="Feedback examples">
             <div class="workspace-statuses">${Badge({ Text: "Ready", Type: "success" })}${Badge({ Text: "Pending", Type: "warning" })}${Badge({ Text: "Failed", Type: "danger" })}<button class="ct-button-secondary" ${CT.On("click", () => this.SetState({ PopupOpen: true }))}>Open popup</button></div>
             ${Alert({ Title: "Preview only", Message: "No project settings are saved or published.", Type: "info" })}

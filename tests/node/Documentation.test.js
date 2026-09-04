@@ -66,3 +66,20 @@ test("every UI component has a documented default CSS selector", async () => {
     assert.ok(css.includes(`.${className} {`), `${name} needs default CSS for its documented selector`);
   }
 });
+
+test("reviewed component options have individual usage guidance", async () => {
+  const document = await ReadDocument("Components.md");
+  const showcase = await Read("../browser/showcase/App.js");
+  for (const [name, options] of Object.entries({
+    DataTable: ["RowKey", "Searchable", "SearchText"],
+    Dropdown: ["Name", "Disabled", "Required"],
+    Tooltip: ["ShowOnFocus"],
+    Alert: ["Live"]
+  })) {
+    const section = ReadSection(document, name);
+    for (const option of options) {
+      assert.ok(section.includes(option), `${name}.${option} is undocumented`);
+      assert.ok(showcase.includes(`${option}:`), `${name}.${option} needs a showcase example`);
+    }
+  }
+});

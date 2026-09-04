@@ -289,11 +289,26 @@ Components add their own classes. Use these only when you need a focused overrid
 | `Dropdown` | `ct-dropdown` | Label and native graphite field with visible border. |
 | `Badge` | `ct-badge` | Compact corners and tinted success, warning or danger background. |
 | `Alert` | `ct-alert` | Raised surface with a status-colored left edge. |
-| `Dialog` | `ct-dialog` | Navy modal with neutral border; tall content scrolls in the backdrop without clipping local tooltips. |
+| `Dialog` | `ct-dialog` | Navy modal panel inside a native `dialog.ct-dialog-backdrop`; tall content scrolls in the full-screen dialog. |
 | `PopupWindow` | `ct-popup-window` | Fixed navy window with compact corners and bounded height. |
 | `Toast` | `ct-toast` | Raised notification with a status edge. |
-| `Tooltip` | `ct-tooltip` | Raised hover label positioned above surrounding content. |
+| `Tooltip` | `ct-tooltip` | Raised hover/focus label positioned above surrounding content. |
 | `FallbackView` | `ct-fallback` | Navy recovery panel with an accent or error edge. |
+
+Accordion headings use `ct-accordion-heading` with inherited font size and no
+extra margin. Style `ct-accordion-trigger` rather than replacing its heading or
+ARIA relationships. Disabled dropdowns use the same reduced opacity as buttons.
+
+Tooltip visibility is controlled by the component's `hidden` state, not a CSS
+`:hover` rule. Do not override `[hidden]` or force tooltips to display; that would
+undo click and Escape dismissal. Its `::before` area bridges the small pointer gap
+between the trigger and hint. Keep that bridge when overriding positioning.
+Hints have a viewport-bounded width and an inline margin adjustment at screen
+edges; avoid overriding those margins if you want the default edge protection.
+
+PopupWindow keeps its focus ring, bounded height, and scroll area. Alert's `Live`
+option changes announcements, not its `Type` colors. Use semantic behavior options
+in JavaScript and visual overrides in project CSS.
 
 ## Keep Styles In Sync
 

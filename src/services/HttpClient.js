@@ -6,23 +6,19 @@ export class HttpClient {
 
   Request(path, options = {}) {
     const requestOptions = { ...options };
-    const mergedHeaders = {
-      ...this.headers,
-      ...(options.headers || {})
-    };
+    const mergedHeaders = new Headers(this.headers);
+    new Headers(options.headers).forEach((value, name) => mergedHeaders.set(name, value));
 
     if (
       requestOptions.body !== undefined &&
       requestOptions.body !== null &&
-      !mergedHeaders["Content-Type"] &&
-      !mergedHeaders["content-type"] &&
       CTFrameworkCanSerializeJson(requestOptions.body)
     ) {
-      mergedHeaders["Content-Type"] = "application/json";
+      if (!mergedHeaders.has("Content-Type")) mergedHeaders.set("Content-Type", "application/json");
       requestOptions.body = JSON.stringify(requestOptions.body);
     }
 
-    if (Object.keys(mergedHeaders).length > 0) {
+    if ([...mergedHeaders].length > 0) {
       requestOptions.headers = mergedHeaders;
     }
 
@@ -64,10 +60,8 @@ export class HttpClient {
 
 const CTFrameworkCanSerializeJson = (value) => {
   return (
-    typeof value === "object" &&
-    !(value instanceof FormData) &&
-    !(value instanceof URLSearchParams) &&
-    !(value instanceof Blob) &&
-    !(value instanceof ArrayBuffer)
+    Array.isArray(value) ||
+    (value !== null && typeof value === "object" &&
+      (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null))
   );
 };

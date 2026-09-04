@@ -62,6 +62,16 @@ userStore.Destroy();
 
 `HttpClient` is a thin `fetch` wrapper. Plain object request bodies become JSON and receive `Content-Type: application/json`; `FormData`, `Blob`, `URLSearchParams`, and binary bodies are left intact.
 
+Arrays also become JSON. This happens even when you supply a content type yourself; your explicit header is preserved. For a non-JSON encoding, provide an already encoded string or native fetch body. Typed arrays, `DataView`, buffers, and streams are passed through without JSON conversion.
+
+Headers accept plain objects, native `Headers`, or `[name, value]` pairs. Request headers override client defaults case-insensitively:
+
+```js
+await httpClient.Post("/users", { Name: "Ada" }, {
+  headers: new Headers({ "content-type": "application/json" })
+});
+```
+
 ```js
 const httpClient = new HttpClient({
   baseUrl: "/api",
@@ -92,6 +102,8 @@ await httpClient.Post("/users", { Name: "Ada" }, { signal: abortController.signa
 
 `GetFormValues(formElement)` returns a plain object from named form controls. Repeated fields become arrays.
 
+All field names are own properties, including `constructor` and `__proto__`. Files stay `File` objects; use `FormData` directly when uploading a form.
+
 ```js
 const HandleSubmit = (event) => {
   event.preventDefault();
@@ -110,6 +122,8 @@ const view = html`
 ```
 
 ## Guid And Validation
+
+`Guid()` creates a version-4 UUID using the browser's cryptographic random source (`randomUUID`, or `getRandomValues` where needed). It requires Web Crypto and never falls back to `Math.random`. Use it for identifiers, not as a replacement for authentication or server-side authorization.
 
 ```js
 const id = Guid();

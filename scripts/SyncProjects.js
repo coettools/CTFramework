@@ -82,6 +82,7 @@ const RunNpm = (directory, script) => {
 
 const CheckProject = async (project) => {
   if (project.Settings.scripts?.check) {
+    if (project.Name === "wiki.ct-framework") RunNpm(frameworkDirectory, "test:wiki");
     RunNpm(project.Directory, "check");
     return "npm run check passed; browser verification still required";
   }

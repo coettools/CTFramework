@@ -9,6 +9,7 @@ export class Component {
   }
 
   SetState(newState) {
+    if (this.__disposed) return;
     const prevProps = this.props;
     const prevState = CloneState(this.state);
     const nextState = typeof newState === "function" ? newState(CloneState(this.state), this.props) : newState;
@@ -23,20 +24,15 @@ export class Component {
       this.state = nextState;
     }
 
-    Promise.resolve().then(() => {
-      CTFramework.ScheduleComponentUpdate(this, prevProps, prevState);
-    });
+    CTFramework.ScheduleComponentUpdate(this, prevProps, prevState);
   }
 
   ForceUpdate() {
+    if (this.__disposed) return;
     const prevProps = this.props;
     const prevState = CloneState(this.state);
 
-    Promise.resolve().then(() => {
-      CTFramework.ScheduleUpdate(() => {
-        CTFramework.Rerender(this, prevProps, prevState);
-      });
-    });
+    CTFramework.ScheduleComponentUpdate(this, prevProps, prevState, true);
   }
 
   ShouldComponentUpdate(nextProps, nextState) {
