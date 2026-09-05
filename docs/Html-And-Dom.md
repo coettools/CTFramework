@@ -29,7 +29,7 @@ Template handlers receive a delegated event view: `target` is the original click
 html`<button type="button" ${CT.On("click", (event) => console.log(event.currentTarget))}>Save</button>`;
 ```
 
-Template events support `click`, `dblclick`, `input`, `change`, `submit`, keyboard, mouse, pointer, focus, blur, and context-menu events.
+Template events support `click`, `dblclick`, `input`, `change`, `submit`, `keydown`, `keyup`, `keypress`, `mousedown`, `mouseup`, `pointerdown`, `pointerup`, `focusin`, `focusout`, and `contextmenu`. Use `focusin` and `focusout` for delegated focus behavior.
 
 ## Dynamic Attributes: CT.Attr
 
@@ -101,11 +101,13 @@ CT("#records").On("click", ".delete-record", (event, button) => {
 
 CTFramework automatically cleans up template event handlers when their component unmounts. For direct DOM behavior that must be removed earlier, keep the handler function and use the browser's `removeEventListener` on `CT("#save-button").Get()`.
 
+Selection `On` returns the selection, not an unsubscribe function, and there is no selection `Off` method. Its delegated form wraps your handler, so removing the original callback does not remove that wrapper. Prefer template bindings for component-owned markup, or register your own native listener when delegated behavior needs explicit early cleanup.
+
 ## Attributes And Dataset
 
 ```js
 CT("#email")
-  .Attr("aria-invalid", true)
+  .Attr("aria-invalid", "true")
   .Data("record-id", 42);
 
 const invalid = CT("#email").Attr("aria-invalid");
@@ -144,4 +146,6 @@ const isExpanded = CT("#panel").HasClass("is-expanded");
 CT(".temporary-notice").Remove();
 ```
 
-All class methods accept space-separated class names. `ToggleClass(name, force?)` uses normal toggle behavior without `force`, or explicitly adds/removes when it is `true`/`false`.
+`AddClass`, `RemoveClass`, and `ToggleClass` accept space-separated class names. `HasClass` expects one class name and returns true if any selected element has it. `ToggleClass(name, force?)` toggles without `force`, or explicitly adds/removes when it is `true`/`false`.
+
+Selection `Remove`, `Html`, and `Text` perform direct DOM changes, not component lifecycle cleanup. Use `SetState` for component-owned content and `CT.Unmount` for a mounted host.
