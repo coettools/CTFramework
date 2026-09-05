@@ -86,6 +86,45 @@ test("package-managed dependencies require an explicit update rather than a sile
   await assert.rejects(FindProjects(fixture.Root, fixture.Framework), /explicit dependency update/);
 });
 
+test("documentation strings and comments are not framework imports", async (context) => {
+  const fixture = await Fixture(context);
+  const consumer = await Consumer(fixture.Root, "guide");
+  await Write(consumer, "src/Guide.js", [
+    'export const Code = \'import CT from "@coettools/ctframework";\';',
+    'export const Debug = `import CT from "../vendor/ctframework.bundle.js";`;',
+    'export const Legacy = \'import CT from "../../CTFramework/src/Index.js";\';',
+    '// import CT from "@coettools/ctframework/bundle";',
+    '/* export { CT } from "../../CTFramework/src/Index.js"; */'
+  ].join("\n"));
+  const [project] = await FindProjects(fixture.Root, fixture.Framework);
+  assert.equal(project.Name, "guide");
+  assert.deepEqual(project.UsedBundles, ["ctframework.bundle.min.js"]);
+  assert.equal((await SynchronizeProjects(Options(fixture)))[0].Status, "Updated and checked");
+});
+
+test("real static, dynamic, and re-export package imports still require an update", async (context) => {
+  const fixture = await Fixture(context);
+  const consumer = await Consumer(fixture.Root, "site");
+  for (const source of [
+    'import CT from "@coettools/ctframework";',
+    'export { default as CT } from "@coettools/ctframework/bundle";',
+    'export const Load = () => import("@coettools/ctframework/bundle/debug");',
+    'import "@coettools/ctframework";'
+  ]) {
+    await Write(consumer, "src/Main.js", source);
+    await assert.rejects(FindProjects(fixture.Root, fixture.Framework), /explicit dependency update/);
+  }
+});
+
+test("real source imports and nonstandard vendor paths are not accepted as documentation", async (context) => {
+  const fixture = await Fixture(context);
+  const consumer = await Consumer(fixture.Root, "site");
+  await Write(consumer, "src/Main.js", 'import CT from "../../CTFramework/src/Index.js";');
+  await assert.rejects(FindProjects(fixture.Root, fixture.Framework), /replace framework source imports/);
+  await Write(consumer, "src/Main.js", 'import CT from "../lib/ctframework.bundle.min.js";');
+  await assert.rejects(FindProjects(fixture.Root, fixture.Framework), /standard vendor/);
+});
+
 test("linked vendor destinations are refused before other consumers are changed", async (context) => {
   const fixture = await Fixture(context);
   const first = await Consumer(fixture.Root, "first");

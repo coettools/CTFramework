@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { lstat, mkdir, readFile, readdir, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { build as Bundle } from "esbuild";
 
 const frameworkDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const bundleNames = ["ctframework.bundle.js", "ctframework.bundle.min.js"];
@@ -40,6 +41,32 @@ const ListSourceFiles = async (directory) => {
   return files;
 };
 
+const ReadSourceReferences = async (files) => {
+  const references = [];
+  for (const file of files) {
+    const contents = await readFile(file, "utf8");
+    if (!/\.(?:js|mjs)$/.test(file)) {
+      references.push(contents);
+      continue;
+    }
+    // Inspect imports without resolving or executing them; displayed code is not a dependency.
+    const result = await Bundle({
+      stdin: { contents, sourcefile: file, resolveDir: path.dirname(file), loader: "js" },
+      bundle: true,
+      external: ["*"],
+      format: "esm",
+      treeShaking: false,
+      write: false,
+      metafile: true,
+      logLevel: "silent"
+    });
+    for (const input of Object.values(result.metafile.inputs)) {
+      references.push(...input.imports.map((dependency) => dependency.path));
+    }
+  }
+  return references.join("\n");
+};
+
 export const FindProjects = async (workspace, framework) => {
   const projects = [];
   for (const entry of await readdir(workspace, { withFileTypes: true })) {
@@ -55,9 +82,9 @@ export const FindProjects = async (workspace, framework) => {
     const settings = await ReadJson(path.join(directory, "package.json"));
     const sources = await ListSourceFiles(path.join(directory, "src"));
     if (await GetInfo(path.join(directory, "index.html"))) sources.push(path.join(directory, "index.html"));
-    const contents = (await Promise.all(sources.map((file) => readFile(file, "utf8")))).join("\n");
+    const contents = await ReadSourceReferences(sources);
     if (/CTFramework\/src\//i.test(contents)) throw new Error(`${entry.name}: replace framework source imports with the built vendor distribution.`);
-    const dependencies = { ...settings.dependencies, ...settings.devDependencies, ...settings.peerDependencies };
+    const dependencies = { ...settings.dependencies, ...settings.devDependencies, ...settings.peerDependencies, ...settings.optionalDependencies };
     if (dependencies["@coettools/ctframework"] || contents.includes("@coettools/ctframework")) {
       throw new Error(`${entry.name}: package-managed CTFramework needs an explicit dependency update; not silently skipped.`);
     }
