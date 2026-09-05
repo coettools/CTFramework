@@ -70,6 +70,10 @@ The document needs a mount target:
 
 In the CTFramework repository, run `npm ci` once to install build dependencies, then `npm run build`. This creates two self-contained ES modules: `dist/ctframework.bundle.js` for local debugging and `dist/ctframework.bundle.min.js` for production. Both embed CTFramework's default CSS, so neither needs a source-folder import or separate CTFramework stylesheet. Copy the production file into a project's `vendor/` folder and keep `LICENSE` beside it as `LICENSE.ctframework`.
 
+These steps set up CTFramework for use in another application. A clone or fork of CTFramework contains the source, not generated `dist/`, so build it locally first. Build dependencies are not browser runtime dependencies.
+
+A clone or fork of the wiki already includes its framework bundle and license in `vendor/`. Follow the wiki README to run or build that application; no initial framework build or copy is needed. Replace those vendor files when updating CTFramework.
+
 The project's `index.html` loads its entry module:
 
 ```html
@@ -97,7 +101,7 @@ Package-managed projects may explicitly import `@coettools/ctframework/bundle` f
 
 ## Mount And Unmount
 
-`CT.Mount` accepts a component class plus props, a constructed component instance, or a CT view returned by `CT.Html` or a component function. The target can be a selector or an element.
+`CT.Mount` accepts a `Component` subclass plus props or a constructed component instance. The target can be a selector or an element. Return `CT.Html` or a control view from the component's `Render` method; the current runtime does not mount those views directly.
 
 ```js
 CT.Mount(App, "#app", { UserName: "Ada" });
@@ -105,7 +109,13 @@ CT.Mount(App, "#app", { UserName: "Ada" });
 const app = new App({ UserName: "Ada" });
 CT.Mount(app, document.querySelector("#app"));
 
-CT.Mount(html`<p>Ready.</p>`, "#status");
+class Status extends Component {
+  Render() {
+    return html`<p>Ready.</p>`;
+  }
+}
+
+CT.Mount(Status, "#status");
 
 CT.Unmount("#app");
 ```

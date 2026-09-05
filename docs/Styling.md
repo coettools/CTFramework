@@ -11,14 +11,18 @@ framework CSS download or import is needed. The module distribution includes its
 stylesheet in styles/Default.css.
 
 ```js
-import CT, { Card } from "./vendor/ctframework.bundle.min.js";
+import CT, { Card, Component } from "./vendor/ctframework.bundle.min.js";
 
-CT(() => {
-  CT.Mount(Card({
-    Title: "Project status",
-    Content: CT.Html`<p>Ready to work.</p>`
-  }), "#app");
-});
+class App extends Component {
+  Render() {
+    return Card({
+      Title: "Project status",
+      Content: CT.Html`<p>Ready to work.</p>`
+    });
+  }
+}
+
+CT(() => CT.Mount(App, "#app"));
 ```
 
 The stylesheet uses `@layer ctframework`. Normal, unlayered project CSS takes

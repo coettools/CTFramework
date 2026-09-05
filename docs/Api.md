@@ -44,7 +44,7 @@ import CT, {
 | `CT.Html` | Tagged template function for component markup. One root HTML element is required. |
 | `CT.On(eventType, handler)` | Adds an event marker inside an HTML start tag. |
 | `CT.Attr(name, value)` | Adds a dynamic attribute marker inside an HTML start tag. |
-| `CT.Mount(component, target, props?)` | Renders a component class, instance, or CT view into an element or selector. |
+| `CT.Mount(component, target, props?)` | Renders a `Component` subclass or instance into an element or selector. Return CT views from the component's `Render` method. |
 | `CT.Unmount(target)` | Removes a mounted component and runs its unmount lifecycle. |
 
 ```js
@@ -107,6 +107,7 @@ const router = new Router(routes, { UseHashRouting: false });
 | `Replace(path)` | Replaces the current browser history entry. |
 | `Resolve(path?)` | Returns the matching route or wildcard route. |
 | `Subscribe(listener)` | Registers a listener and returns an unsubscribe function. |
+| `Notify()` | Notifies subscribers using the stored current path and resolved route, without navigating. |
 | `Destroy()` | Removes browser listeners and subscriptions. |
 | `GetCurrentPath()` | Returns the normalized current route. |
 | `Router.NormalizePath(path)` | Normalizes a route path. |
