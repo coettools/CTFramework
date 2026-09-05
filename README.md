@@ -81,6 +81,8 @@ The hook never stages, commits, pushes, or deploys another project. It only repl
 
 Use `npm run sync:projects:preview` while developing to test uncommitted changes across projects. Use `npm run projects:check` to rebuild only the framework and detect stale consumer/vendor and dist files without replacing them. `npm run build` now writes only this library's dist; it no longer has a wiki-specific copying side effect.
 
+JavaScript discovery uses the existing build tool to inspect imports without resolving or executing application code. Package names and sample imports inside documentation strings or comments are not dependencies. Actual package imports and declared dependencies still require an explicit package update; they are not silently treated as vendor consumers.
+
 The latest local result, commit identity for committed runs, and file hashes are in `reports/ProjectSync.json` (ignored by Git). Browser verification and deployment are marked pending, never inferred from a successful build. If hooks are bypassed or unavailable, run the committed sync command manually. Do not consider an update finished while an affected consumer is stale, failing, or still awaiting the required verification/release.
 
 ## Documentation
