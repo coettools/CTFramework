@@ -495,7 +495,7 @@ Set `Visible` back to `true` to show the same notification again. Without `OnClo
 
 Use `FallbackView` when a route or expected resource is not available. CTFramework automatically shows a related error view when a component throws unexpectedly.
 
-`Router` uses hash paths such as `#/utilities` by default. This keeps a direct link or browser refresh on a static host from producing `Cannot GET /utilities`. Use `{ UseHashRouting: false }` only when the application's server is configured to return the frontend entry page for every client route.
+`Router` uses normal paths such as `/utilities`. Configure a real HTML entry or an explicit rewrite for each application page so direct links and refresh work. Keep missing assets as 404 responses. The framework's fallback renders client errors; it cannot replace a server's missing-page response. See [routing and hosting](Data-And-Services.md#routes-and-router).
 
 ```js
 ${FallbackView({

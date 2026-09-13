@@ -95,10 +95,11 @@ router.Subscribe((currentPath, route) => {
 router.Navigate("/utilities");
 ```
 
-`Router` uses hash paths such as `#/utilities` by default, preventing static hosts from returning `Cannot GET /utilities` after a refresh. Use clean history paths only when the server returns the application entry point for client routes:
+`Router` uses normal URL paths and browser history. Pages remain JavaScript classes: one `index.html` can load the whole application. Configure the host to serve that entry for application paths; CTFramework resolves the page class. Missing assets must still return 404. Use BasePath only when hosting the application in a subfolder:
 
 ```js
-const router = new Router(routes, { UseHashRouting: false });
+const router = new Router(routes, { BasePath: "/guide" });
+router.Navigate("/utilities"); // /guide/utilities
 ```
 
 | Method | Purpose |
@@ -109,10 +110,10 @@ const router = new Router(routes, { UseHashRouting: false });
 | `Subscribe(listener)` | Registers a listener and returns an unsubscribe function. |
 | `Notify()` | Notifies subscribers using the stored current path and resolved route, without navigating. |
 | `Destroy()` | Removes browser listeners and subscriptions. |
-| `GetCurrentPath()` | Returns the normalized current route. |
-| `Router.NormalizePath(path)` | Normalizes a route path. |
-| `Router.ToHashPath(path)` | Converts a path to `#/...`. |
-| `Router.ShouldUseHashRouting()` | Returns CTFramework’s default routing mode. |
+| `GetCurrentPath()` | Returns the normalized route without BasePath, or null outside that base. |
+| `Router.NormalizePath(path)` | Returns the normalized pathname; ignores query strings and fragments for matching. |
+
+BasePath defaults to `/`. Navigation preserves query strings and ordinary section fragments, rejects external/fragment-only destinations, and notifies on Back/Forward. See [Data And Services](Data-And-Services.md) for hosting and initial rendering.
 
 ## Store
 

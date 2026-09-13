@@ -24,7 +24,14 @@ export const CreateTestServer = (directory = projectDirectory) => http.createSer
   }
   try {
     let requestPath = decodeURIComponent(new URL(request.url || "/", "http://127.0.0.1").pathname);
-    if (requestPath === "/") requestPath = "/tests/browser/showcase/index.html";
+    const showcase = "/tests/browser/showcase";
+    if (["/", showcase, `${showcase}/index.html`].includes(requestPath)) {
+      response.writeHead(308, { Location: `${showcase}/${new URL(request.url, "http://127.0.0.1").search}` }).end();
+      return;
+    }
+    if (["/", "/notes", "/dom", "/utilities", "/components"].some((route) => requestPath === showcase + route)) {
+      requestPath = `${showcase}/index.html`;
+    }
     const segments = requestPath.slice(1).split("/");
     if (requestPath.includes("\\") || requestPath.includes(":") || requestPath.includes("\0") ||
         segments.some((part) => part.startsWith(".")) ||

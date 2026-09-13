@@ -84,6 +84,8 @@ test("the preview server exposes only local browser assets, not metadata or sibl
   for (const folder of ["src", "tests/browser", "tests/fixtures", ".git", "scripts"]) await mkdir(path.join(root, folder), { recursive: true });
   await writeFile(path.join(root, "src/Index.js"), "export const Safe = true;");
   await writeFile(path.join(root, "tests/fixtures/Sample.js"), "export const Sample = true;");
+  await mkdir(path.join(root, "tests/browser/showcase"), { recursive: true });
+  await writeFile(path.join(root, "tests/browser/showcase/index.html"), "<h1>Showcase</h1>");
   await writeFile(path.join(root, ".git/HEAD"), "private");
   await writeFile(path.join(root, "scripts/Private.js"), "private");
   await symlink(path.join(root, "scripts"), path.join(root, "src/linked"), "junction");
@@ -94,6 +96,10 @@ test("the preview server exposes only local browser assets, not metadata or sibl
   const origin = `http://127.0.0.1:${server.address().port}`;
   assert.equal((await fetch(`${origin}/src/Index.js`)).status, 200);
   assert.equal((await fetch(`${origin}/tests/fixtures/Sample.js`)).status, 200);
+  for (const route of ["/", "/tests/browser/showcase/", "/tests/browser/showcase/notes", "/tests/browser/showcase/components"]) {
+    assert.equal(await (await fetch(origin + route)).text(), "<h1>Showcase</h1>");
+  }
+  assert.equal((await fetch(`${origin}/tests/browser/showcase/missing.js`)).status, 404);
   for (const route of ["/.git/HEAD", "/wiki/.git/HEAD", "/scripts/Private.js", "/tests/node/Private.js", "/src/linked/Private.js", "/..%5cCTFramework-private%5cnote.txt", "/src/%2e%2e%5c.git%5cHEAD"]) {
     assert.equal((await fetch(origin + route)).status, 403, route);
   }

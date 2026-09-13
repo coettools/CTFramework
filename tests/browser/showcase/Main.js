@@ -12,7 +12,9 @@ const appRouter = new Router([
   Route("/dom", "dom"),
   Route("/utilities", "utilities"),
   Route("/components", "components")
-]);
+], { BasePath: new URL(".", import.meta.url).pathname });
+
+if (appRouter.currentPath === "/index.html") appRouter.Replace("/");
 
 CT(() => {
   const appElement = CT("#app").Get();

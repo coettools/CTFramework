@@ -23,19 +23,27 @@ unsubscribe();
 router.Destroy();
 ```
 
-The default mode uses hash paths (`#/settings`), so static hosts never need a server rewrite to avoid `Cannot GET /settings`. For a server that does return the frontend entry page for all routes:
+Routes use normal URL paths such as `/settings`. Navigate and Replace update browser history without reloading the document; Back and Forward notify subscribers. Subscribe does not render the initial page, so call your page-rendering function once after subscribing.
+
+Pages can remain JavaScript Component classes with one `index.html`. Register each path against its class using Route; Router resolves the class and notifies your application when the path changes. No separate HTML page is required.
+
+For direct links and refresh, configure your host to serve that same `index.html` for application paths. This is a server rewrite, not another router: CTFramework still selects the page. Missing scripts and images must return 404. A JavaScript fallback cannot repair a server's missing-page response.
+
+For an application hosted at `/guide/`, keep route records relative to that application:
 
 ```js
-const router = new Router(routes, { UseHashRouting: false });
+const router = new Router(routes, { BasePath: "/guide" });
+router.Navigate("/settings"); // URL: /guide/settings
 ```
 
 Static helpers:
 
 ```js
 Router.NormalizePath("settings/"); // "/settings"
-Router.ToHashPath("/settings"); // "#/settings"
-Router.ShouldUseHashRouting(); // true
+Router.NormalizePath("/settings?tab=profile#details"); // "/settings"
 ```
+
+BasePath defaults to `/`. GetCurrentPath returns the route without that prefix, or null outside its boundary. Resolve matches exact normalized pathnames, then `*` or `/*`; it does not parse route parameters. Query strings and ordinary section fragments are preserved by navigation but ignored for matching. Read them using the browser's URL APIs. Pass application paths, not external URLs or fragment-only navigation. Use native anchors for ordinary section links. Clean-path routing is the only mode; no hash-routing helpers or compatibility aliases are included.
 
 ## Store
 
