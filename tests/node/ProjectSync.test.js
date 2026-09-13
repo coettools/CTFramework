@@ -58,6 +58,46 @@ test("copies supported variants and license, then verifies rebuilt deployment fi
   assert.equal(Object.keys(results[0].Files).length, 3);
 });
 
+test("discovers full-stack client roots alongside direct consumers and runs checks inside client", async (context) => {
+  const fixture = await Fixture(context);
+  const client = await Consumer(fixture.Root, "full-stack/client");
+  await Consumer(fixture.Root, "wiki.ct-framework");
+  await Write(client, "package.json", JSON.stringify({ scripts: { check: "node --test" } }));
+  await Write(fixture.Root, "full-stack/server/package.json", JSON.stringify({ name: "api-tests" }));
+  const projects = await FindProjects(fixture.Root, fixture.Framework);
+  assert.deepEqual(projects.map(project => project.Name), ["full-stack/client", "wiki.ct-framework"]);
+  assert.equal(projects[0].Directory, client);
+  assert.equal(projects[0].Settings.scripts.check, "node --test");
+  const checked = [];
+  const results = await SynchronizeProjects(Options(fixture, { RunChecks: async project => {
+    checked.push(project.Directory);
+    for (const name of ["ctframework.bundle.min.js", "LICENSE.ctframework"]) {
+      await Write(project.Directory, `dist/vendor/${name}`, await readFile(path.join(project.Directory, "vendor", name)));
+    }
+    return "client rebuilt";
+  } }));
+  assert.ok(results.every(result => result.Status === "Updated and checked"));
+  assert.ok(checked.includes(client));
+  assert.equal(await readFile(path.join(client, "dist/vendor/ctframework.bundle.min.js"), "utf8"), "minified with embedded CSS");
+  await assert.rejects(readFile(path.join(fixture.Root, "full-stack/vendor/ctframework.bundle.min.js")), { code: "ENOENT" });
+});
+
+test("nested client package dependencies are not silently skipped", async (context) => {
+  const fixture = await Fixture(context);
+  await Write(fixture.Root, "full-stack/client/package.json", JSON.stringify({ dependencies: { "@coettools/ctframework": "0.1.0" } }));
+  await assert.rejects(FindProjects(fixture.Root, fixture.Framework), /full-stack\/client:.*explicit dependency update/);
+});
+
+test("linked client roots are refused before any vendor mutation", async (context) => {
+  const fixture = await Fixture(context);
+  const first = await Consumer(fixture.Root, "first");
+  const external = await Consumer(fixture.Root, "external");
+  await mkdir(path.join(fixture.Root, "full-stack"));
+  await symlink(external, path.join(fixture.Root, "full-stack/client"), process.platform === "win32" ? "junction" : "dir");
+  await assert.rejects(SynchronizeProjects(Options(fixture)), /linked path/);
+  assert.equal(await readFile(path.join(first, "vendor/ctframework.bundle.min.js"), "utf8"), "old bundle");
+});
+
 test("verify reports stale vendor files without changing them", async (context) => {
   const fixture = await Fixture(context);
   const consumer = await Consumer(fixture.Root, "site");

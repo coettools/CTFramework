@@ -69,11 +69,20 @@ const ReadSourceReferences = async (files) => {
 
 export const FindProjects = async (workspace, framework) => {
   const projects = [];
+  const candidates = [];
   for (const entry of await readdir(workspace, { withFileTypes: true })) {
     const directory = path.join(workspace, entry.name);
     if (directory === framework || entry.name.startsWith(".") || entry.name === "node_modules") continue;
     if (entry.isSymbolicLink()) throw new Error(`Linked workspace directory requires manual review: ${directory}`);
     if (!entry.isDirectory()) continue;
+    candidates.push({ Name: entry.name, Directory: directory });
+    // Full-stack projects keep their frontend's package, source and vendor in client/.
+    // Inspect that explicit application root without recursing into server or data trees.
+    const client = path.join(directory, "client");
+    await RequireSafePath(directory, client);
+    if ((await GetInfo(client))?.isDirectory()) candidates.push({ Name: `${entry.name}/client`, Directory: client });
+  }
+  for (const { Name: name, Directory: directory } of candidates) {
     const vendor = path.join(directory, "vendor");
     await RequireSafePath(directory, vendor);
     await RequireSafePath(directory, path.join(directory, "src"));
@@ -83,10 +92,10 @@ export const FindProjects = async (workspace, framework) => {
     const sources = await ListSourceFiles(path.join(directory, "src"));
     if (await GetInfo(path.join(directory, "index.html"))) sources.push(path.join(directory, "index.html"));
     const contents = await ReadSourceReferences(sources);
-    if (/CTFramework\/src\//i.test(contents)) throw new Error(`${entry.name}: replace framework source imports with the built vendor distribution.`);
+    if (/CTFramework\/src\//i.test(contents)) throw new Error(`${name}: replace framework source imports with the built vendor distribution.`);
     const dependencies = { ...settings.dependencies, ...settings.devDependencies, ...settings.peerDependencies, ...settings.optionalDependencies };
     if (dependencies["@coettools/ctframework"] || contents.includes("@coettools/ctframework")) {
-      throw new Error(`${entry.name}: package-managed CTFramework needs an explicit dependency update; not silently skipped.`);
+      throw new Error(`${name}: package-managed CTFramework needs an explicit dependency update; not silently skipped.`);
     }
     const usedBundles = bundleNames.filter((name) => contents.includes(name));
     const files = [];
@@ -95,9 +104,9 @@ export const FindProjects = async (workspace, framework) => {
     }
     if (!files.length) continue;
     for (const name of usedBundles) {
-      if (!contents.includes(`vendor/${name}`)) throw new Error(`${entry.name}: use the standard vendor/${name} import path.`);
+      if (!contents.includes(`vendor/${name}`)) throw new Error(`${directory}: use the standard vendor/${name} import path.`);
     }
-    projects.push({ Name: entry.name, Directory: directory, Files: [...files, "LICENSE.ctframework"], UsedBundles: usedBundles, Sources: sources, Settings: settings });
+    projects.push({ Name: name, Directory: directory, Files: [...files, "LICENSE.ctframework"], UsedBundles: usedBundles, Sources: sources, Settings: settings });
   }
   return projects.sort((left, right) => left.Name.localeCompare(right.Name));
 };
