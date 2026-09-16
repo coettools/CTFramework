@@ -22,12 +22,14 @@ export class Store {
     }
 
     this.Notify();
+
     return this.state;
   }
 
   ReplaceState(newState = {}) {
     this.state = newState;
     this.Notify();
+
     return this.state;
   }
 

@@ -43,7 +43,28 @@ Router.NormalizePath("settings/"); // "/settings"
 Router.NormalizePath("/settings?tab=profile#details"); // "/settings"
 ```
 
-BasePath defaults to `/`. GetCurrentPath returns the route without that prefix, or null outside its boundary. Resolve matches exact normalized pathnames, then `*` or `/*`; it does not parse route parameters. Query strings and ordinary section fragments are preserved by navigation but ignored for matching. Read them using the browser's URL APIs. Pass application paths, not external URLs or fragment-only navigation. Use native anchors for ordinary section links. Clean-path routing is the only mode; no hash-routing helpers or compatibility aliases are included.
+BasePath defaults to `/`. GetCurrentPath returns the route without that prefix, or null outside its boundary. Resolve tries literal paths first, then named-parameter routes in registration order, then `*` or `/*`. It returns the original route record. Query strings and ordinary section fragments are preserved by navigation but ignored for matching. Read them using the browser's URL APIs. Pass application paths, not external URLs or fragment-only navigation. Use native anchors for ordinary section links.
+
+### Named Parameters
+
+Use `:Name` for one required path segment. GetParameters returns the decoded values for the resolved route, without navigating:
+
+```js
+const router = new Router([
+  Route("/business/:Id", BusinessPage),
+  Route("*", MissingPage)
+]);
+const parameters = router.GetParameters("/business/123"); // { Id: "123" }
+
+const ShowPage = (path, route) => {
+  CT.Mount(route.component, "#page", router.GetParameters(path));
+};
+const unsubscribe = router.Subscribe(ShowPage);
+ShowPage(router.GetCurrentPath(), router.Resolve());
+// BusinessPage reads this.props.Id. Clean up unsubscribe and router on unmount.
+```
+
+Omit the path to read the current route. Literal, unmatched, and fallback routes return `{}`. Names are case-sensitive identifiers, unique within each pattern. Multiple parameters are supported, such as `/teams/:TeamId/members/:MemberId`. Optional parameters and regular-expression patterns are not supported. Malformed encoding, empty values, decoded separators, and control characters do not match. Values are decoded once and remain untrusted input: validate business IDs and permissions in your API.
 
 ## Store
 

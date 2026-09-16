@@ -94,7 +94,7 @@ Bind an event directly, or delegate from a containing element. Both return the s
 ```js
 CT("#save-button").On("click", SaveProfile);
 
-CT("#records").On("click", ".delete-record", (event, button) => {
+CT("#records").On("click", ".delete-record", (_, button) => {
   DeleteRecord(button.dataset.id);
 });
 ```

@@ -1,10 +1,20 @@
 const source = new URLSearchParams(location.search).has("source");
-const { default: CT, Component, DataTable, Accordion, Dropdown, Tooltip, PopupWindow, Dialog, SideNavigation, Alert, GetFormValues } = await import(source
-  ? "../../../src/Index.js" : "../../../dist/ctframework.bundle.min.js");
+const { default: CT, Component, DataTable, Accordion, Dropdown, Tooltip, PopupWindow, Dialog, SideNavigation, Alert, GetFormValues } = await import(source ? "../../../src/Index.js" : "../../../dist/ctframework.bundle.min.js");
 const html = CT.Html;
-const Assert = (condition, message) => { if (!condition) throw new Error(message); };
-const Frame = async () => { await new Promise(requestAnimationFrame); await new Promise(requestAnimationFrame); };
-const Update = async (app, state) => { app.SetState(state); await Frame(); };
+const Assert = (condition, message) => {
+  if (!condition) throw new Error(message);
+};
+
+const Frame = async () => {
+  await new Promise(requestAnimationFrame);
+  await new Promise(requestAnimationFrame);
+};
+
+const Update = async (app, state) => {
+  app.SetState(state);
+  await Frame();
+};
+
 // Internal vnode construction is used only to test stateful cells and panels.
 const Child = (type, props = {}) => ({ tag: type, props, key: null, children: [], dom: null });
 const mount = document.querySelector("#app");
@@ -19,26 +29,39 @@ const Check = async (name, run) => {
 };
 
 class Editor extends Component {
-  constructor(props) { super(props); this.state = { Text: props.Name }; }
+  constructor(props) {
+    super(props);
+    this.state = { Text: props.Name };
+  }
   Render() {
-    return html`<label>${this.props.Name}<input ${CT.Attr("aria-label", this.props.Name)} ${CT.Attr("value", this.state.Text)} ${CT.On("input", (event) => this.SetState({ Text: event.target.value }))}></label>`;
+    return html`<label>${this.props.Name}<input ${CT.Attr("aria-label", this.props.Name)} ${CT.Attr("value", this.state.Text)} ${CT.On("input", (event) => this.SetState({ Text: event.target.value }))} /></label>`;
   }
 }
 
 class View extends Component {
-  Render() { return this.props.Content; }
+  Render() {
+    return this.props.Content;
+  }
 }
 
 class Records extends Component {
   constructor(props) {
     super(props);
-    this.state = { Rows: [{ Id: 0, Name: "Alpha", Status: 1 }, { Id: 1, Name: "Beta", Status: 0 }, { Id: 2, Name: "Gamma", Status: 1 }], ReverseColumns: false };
+    this.state = {
+      Rows: [
+        { Id: 0, Name: "Alpha", Status: 1 },
+        { Id: 1, Name: "Beta", Status: 0 },
+        { Id: 2, Name: "Gamma", Status: 1 },
+      ],
+      ReverseColumns: false,
+    };
   }
   Render() {
     const columns = [
       { Key: "Name", Title: "Name", Render: (row) => Child(Editor, { Name: row.Name }) },
-      { Key: "Status", Title: "Status", Value: (row) => row.Status ? "Ready" : "Offline" }
+      { Key: "Status", Title: "Status", Value: (row) => (row.Status ? "Ready" : "Offline") },
     ];
+
     return html`<section>
       <h2>Record identity</h2>
       <button ${CT.On("click", () => this.SetState({ Rows: [...this.state.Rows].reverse() }))}>Reverse records</button>
@@ -52,14 +75,42 @@ class Records extends Component {
 class Controls extends Component {
   constructor(props) {
     super(props);
-    this.state = { Value: props?.InitialValue ?? "development", Disabled: false, Options: props?.Options ?? ["development", "production"], Open: false, Modal: false, Text: "Helpful description", Link: false, ActiveId: "overview", Result: "Not submitted" };
+    this.state = {
+      Value: props?.InitialValue ?? "development",
+      Disabled: false,
+      Options: props?.Options ?? ["development", "production"],
+      Open: false,
+      Modal: false,
+      Text: "Helpful description",
+      Link: false,
+      ActiveId: "overview",
+      Result: "Not submitted",
+    };
     this.Changes = 0;
   }
   Render() {
     return html`<section>
       <h2>Forms and keyboard</h2>
-      <form id="control-form" ${CT.On("submit", (event) => { event.preventDefault(); this.SetState({ Result: JSON.stringify(GetFormValues(event.currentTarget)) }); })}>
-        ${Dropdown({ Id: "environment", Name: "Environment", Label: "Environment", Required: true, Disabled: this.state.Disabled, Value: this.state.Value, Options: this.state.Options, OnChange: (value) => { this.Changes++; this.SetState({ Value: value }); } })}
+      <form
+        id="control-form"
+        ${CT.On("submit", (event) => {
+          event.preventDefault();
+          this.SetState({ Result: JSON.stringify(GetFormValues(event.currentTarget)) });
+        })}
+      >
+        ${Dropdown({
+          Id: "environment",
+          Name: "Environment",
+          Label: "Environment",
+          Required: true,
+          Disabled: this.state.Disabled,
+          Value: this.state.Value,
+          Options: this.state.Options,
+          OnChange: (value) => {
+            this.Changes++;
+            this.SetState({ Value: value });
+          },
+        })}
         <button type="submit">Submit form</button>
         <button type="reset">Reset form</button>
       </form>
@@ -67,20 +118,30 @@ class Controls extends Component {
       <p id="form-result">${this.state.Result}</p>
       <p id="selected">Selected: ${this.state.Value || "none"}</p>
       <p id="existing">Existing description</p>
-      ${Tooltip({ Text: this.state.Text, Content: this.state.Link
-        ? html`<a href="#app" aria-describedby="existing">Help link</a>`
-        : html`<button id="help" aria-describedby="existing">Help button</button>` })}
-      ${SideNavigation({ Title: "Test navigation", ActiveId: this.state.ActiveId, Items: [{ Id: "overview", Label: "Overview" }, { Id: "settings", Label: "Settings" }], OnNavigate: (item) => this.SetState({ ActiveId: item.Id }) })}
+      ${Tooltip({ Text: this.state.Text, Content: this.state.Link ? html`<a href="#app" aria-describedby="existing">Help link</a>` : html`<button id="help" aria-describedby="existing">Help button</button>` })}
+      ${SideNavigation({
+        Title: "Test navigation",
+        ActiveId: this.state.ActiveId,
+        Items: [
+          { Id: "overview", Label: "Overview" },
+          { Id: "settings", Label: "Settings" },
+        ],
+        OnNavigate: (item) => this.SetState({ ActiveId: item.Id }),
+      })}
       <button id="open-popup" ${CT.On("click", () => this.SetState({ Open: true }))}>Open popup</button>
-      ${PopupWindow({ Open: !this.state.Modal && this.state.Open, Title: "Tool window", Content: html`<label>Window notes<input id="window-notes"></label>`, OnClose: () => this.SetState({ Open: false }) })}
+      ${PopupWindow({ Open: !this.state.Modal && this.state.Open, Title: "Tool window", Content: html`<label>Window notes<input id="window-notes" /></label>`, OnClose: () => this.SetState({ Open: false }) })}
       <button id="after-popup">After popup</button>
       <button id="open-modal" ${CT.On("click", () => this.SetState({ Modal: true }))}>Open parent dialog</button>
-      ${Dialog({ Open: this.state.Modal, Title: "Parent dialog", OnClose: () => this.SetState({ Modal: false, Open: false }), Content: html`<section>
-        <button id="nested-opener" ${CT.On("click", () => this.SetState({ Open: true }))}>Open nested popup</button>
-        ${PopupWindow({ Open: this.state.Modal && this.state.Open, Title: "Nested window", Content: "Escape closes only this window.", OnClose: () => this.SetState({ Open: false }) })}
-      </section>` })}
-      ${Alert({ Title: "Saved", Message: "Routine status uses polite announcements.", Type: "success" })}
-      ${Alert({ Title: "Connection lost", Message: "Urgent status uses assertive announcements.", Type: "danger" })}
+      ${Dialog({
+        Open: this.state.Modal,
+        Title: "Parent dialog",
+        OnClose: () => this.SetState({ Modal: false, Open: false }),
+        Content: html`<section>
+          <button id="nested-opener" ${CT.On("click", () => this.SetState({ Open: true }))}>Open nested popup</button>
+          ${PopupWindow({ Open: this.state.Modal && this.state.Open, Title: "Nested window", Content: "Escape closes only this window.", OnClose: () => this.SetState({ Open: false }) })}
+        </section>`,
+      })}
+      ${Alert({ Title: "Saved", Message: "Routine status uses polite announcements.", Type: "success" })} ${Alert({ Title: "Connection lost", Message: "Urgent status uses assertive announcements.", Type: "danger" })}
     </section>`;
   }
 }
@@ -132,6 +193,7 @@ try {
       const panel = document.getElementById(trigger.getAttribute("aria-controls"));
       Assert(panel?.getAttribute("aria-labelledby") === trigger.id && trigger.parentElement.tagName === "H3", "Broken panel relationship");
     }
+
     CT.Unmount(extra);
     extra.remove();
   });
@@ -161,6 +223,7 @@ try {
       Assert(app.state.Value === "development" && app.Changes === cycle + 1, "Reset state or listener count incorrect");
       await Update(app, { Value: "production" });
     }
+
     form.addEventListener("reset", (event) => event.preventDefault(), { once: true });
     form.reset();
     await Frame();
@@ -175,7 +238,13 @@ try {
     Assert(app.Changes === 4, "Reset listener survived unmount");
   });
   await Check("Dropdown reset preserves numeric zero and original option types", async () => {
-    const app = new Controls({ InitialValue: 0, Options: [{ Value: 0, Label: "Zero" }, { Value: 1, Label: "One" }] });
+    const app = new Controls({
+      InitialValue: 0,
+      Options: [
+        { Value: 0, Label: "Zero" },
+        { Value: 1, Label: "One" },
+      ],
+    });
     CT.Mount(app, mount);
     const form = mount.querySelector("form");
     Assert(form.querySelector("select").value === "0" && form.checkValidity(), "Zero was treated as an empty value");
@@ -238,9 +307,21 @@ try {
   });
   await Check("Tooltip reconnects when a child replaces its own control", async () => {
     class ChangingTarget extends Component {
-      constructor(props) { super(props); this.state = { Link: false, Description: "original" }; }
+      constructor(props) {
+        super(props);
+        this.state = { Link: false, Description: "original" };
+      }
       Render() {
-        return this.state.Link ? html`<a href="#app" ${CT.Attr("aria-describedby", this.state.Description)} ${CT.On("click", (event) => { event.preventDefault(); this.SetState({ Description: "changed" }); })}>New target</a>`
+        return this.state.Link
+          ? html`<a
+              href="#app"
+              ${CT.Attr("aria-describedby", this.state.Description)}
+              ${CT.On("click", (event) => {
+                event.preventDefault();
+                this.SetState({ Description: "changed" });
+              })}
+              >New target</a
+            >`
           : html`<button ${CT.On("click", () => this.SetState({ Link: true }))}>Replace target</button>`;
       }
     }
@@ -298,7 +379,7 @@ try {
     opener.focus();
     opener.click();
     await Frame();
-    const popup = mount.querySelector('dialog .ct-popup-window');
+    const popup = mount.querySelector("dialog .ct-popup-window");
     Assert(popup.contains(document.activeElement), "Nested popup did not take focus");
     document.activeElement.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
     await Frame();

@@ -10,13 +10,23 @@ const publicExports = Object.keys(CTFramework)
 
 test("standalone bundle exports the complete public API", () => {
   assert.equal(CT, CTFrameworkBundle.CT);
-  assert.deepEqual(Object.keys(CTFrameworkBundle).filter((name) => name !== "default").sort(), publicExports);
+  assert.deepEqual(
+    Object.keys(CTFrameworkBundle)
+      .filter((name) => name !== "default")
+      .sort(),
+    publicExports,
+  );
   publicExports.forEach((name) => assert.equal(typeof CTFrameworkBundle[name], typeof CTFramework[name]));
 });
 
 test("minified standalone bundle exports the complete public API", () => {
   assert.equal(MinifiedCT, MinifiedCTFrameworkBundle.CT);
-  assert.deepEqual(Object.keys(MinifiedCTFrameworkBundle).filter((name) => name !== "default").sort(), publicExports);
+  assert.deepEqual(
+    Object.keys(MinifiedCTFrameworkBundle)
+      .filter((name) => name !== "default")
+      .sort(),
+    publicExports,
+  );
   publicExports.forEach((name) => assert.equal(typeof MinifiedCTFrameworkBundle[name], typeof CTFramework[name]));
 });
 

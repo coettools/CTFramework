@@ -4,11 +4,12 @@ import { CT } from "../CTFramework.js";
 import { Guid } from "../utils/Guid.js";
 
 const html = CT.Html;
-const FocusableSelector = 'button, input, select, textarea, a[href], [tabindex]';
+const FocusableSelector = "button, input, select, textarea, a[href], [tabindex]";
 
 export class TooltipComponent extends Component {
   constructor(props) {
     super(props);
+
     this._id = `ct-tooltip-${Guid()}`;
     this._root = null;
     this._target = null;
@@ -24,16 +25,27 @@ export class TooltipComponent extends Component {
         this.Dismiss();
       }
     };
+
     this._handlers = {
-      pointerenter: () => { this._hovered = true; this._dismissed = false; this.SyncVisibility(); },
-      pointerleave: () => { this._hovered = false; this.SyncVisibility(); },
+      pointerenter: () => {
+        this._hovered = true;
+        this._dismissed = false;
+        this.SyncVisibility();
+      },
+      pointerleave: () => {
+        this._hovered = false;
+        this.SyncVisibility();
+      },
       focusin: (event) => {
         if (!this._root.contains(event.relatedTarget)) this._dismissed = false;
         this._focused = true;
         this.SyncVisibility();
       },
-      focusout: (event) => { this._focused = this._root.contains(event.relatedTarget); this.SyncVisibility(); },
-      click: () => this.Dismiss()
+      focusout: (event) => {
+        this._focused = this._root.contains(event.relatedTarget);
+        this.SyncVisibility();
+      },
+      click: () => this.Dismiss(),
     };
   }
 
@@ -52,7 +64,7 @@ export class TooltipComponent extends Component {
 
   SyncVisibility() {
     const tooltip = this._root?.querySelector(`#${this._id}`);
-    const visible = Boolean(this.props.Text && !this._dismissed && (this._hovered || this._focused && this.props.ShowOnFocus !== false));
+    const visible = Boolean(this.props.Text && !this._dismissed && (this._hovered || (this._focused && this.props.ShowOnFocus !== false)));
     if (tooltip) tooltip.hidden = !visible;
     document.removeEventListener("keydown", this._onEscape, true);
     window.removeEventListener("resize", this._onPosition);
@@ -75,6 +87,7 @@ export class TooltipComponent extends Component {
       tooltip.classList.add("is-flipped");
       bounds = tooltip.getBoundingClientRect();
     }
+
     tooltip.style.marginLeft = `${Math.max(8 - bounds.left, Math.min(0, viewport.clientWidth - 8 - bounds.right))}px`;
     tooltip.style.marginTop = `${Math.max(8 - bounds.top, Math.min(0, viewport.clientHeight - 8 - bounds.bottom))}px`;
   }
@@ -102,8 +115,8 @@ export class TooltipComponent extends Component {
       this._observer = new MutationObserver(() => this.SyncTarget());
       this._observer.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ["aria-describedby", "disabled"] });
     }
-    const target = this.props.Text
-      ? [...root.querySelectorAll(FocusableSelector)].find((element) => !element.matches(":disabled")) || root : null;
+
+    const target = this.props.Text ? [...root.querySelectorAll(FocusableSelector)].find((element) => !element.matches(":disabled")) || root : null;
     if (this._target !== target) {
       this.RemoveDescription();
       this._target = target;
@@ -117,16 +130,24 @@ export class TooltipComponent extends Component {
       const description = [...new Set([...ids, this._id])].join(" ");
       if (current !== description) target.setAttribute("aria-describedby", description);
     }
+
     this._focused = root.contains(document.activeElement);
     this.SyncVisibility();
   }
 
-  ComponentOnMount() { this.SyncTarget(); }
-  ComponentOnUpdate() { queueMicrotask(() => this.SyncTarget()); }
-  ComponentOnUnmount() { this.Detach(); }
+  ComponentOnMount() {
+    this.SyncTarget();
+  }
+  ComponentOnUpdate() {
+    queueMicrotask(() => this.SyncTarget());
+  }
+  ComponentOnUnmount() {
+    this.Detach();
+  }
 
   Render() {
     const { Content = null, Position = "top", Text = "" } = this.props;
+
     return html`
       <span class="ct-tooltip">
         ${Content}

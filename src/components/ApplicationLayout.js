@@ -3,12 +3,7 @@ import { CT } from "../CTFramework.js";
 const html = CT.Html;
 
 export const ApplicationLayout = ({ Content = null, Footer = null, Header = null, SideNavigation = null } = {}) => {
-  const classNames = [
-    "ct-application-layout",
-    Header ? "has-header" : "",
-    Footer ? "has-footer" : "",
-    SideNavigation ? "has-side-navigation" : ""
-  ].filter(Boolean).join(" ");
+  const classNames = ["ct-application-layout", Header ? "has-header" : "", Footer ? "has-footer" : "", SideNavigation ? "has-side-navigation" : ""].filter(Boolean).join(" ");
 
   return html`
     <main ${CT.Attr("className", classNames)}>

@@ -14,7 +14,7 @@ if (!existsSync(gitDirectory)) {
 
 execFileSync("git", ["config", "core.hooksPath", ".githooks"], {
   cwd: projectDirectory,
-  stdio: "inherit"
+  stdio: "inherit",
 });
 
 if (process.platform !== "win32") {

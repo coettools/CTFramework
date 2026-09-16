@@ -6,11 +6,17 @@ import { SideNavigationComponent } from "../../src/components/SideNavigation.js"
 test("SideNavigation shows every item and preserves the list through collapse cycles", () => {
   const options = {
     ActiveId: "services",
-    Items: [{ Id: "overview", Label: "Overview" }, { Id: "services", Label: "Services" }]
+    Items: [
+      { Id: "overview", Label: "Overview" },
+      { Id: "services", Label: "Services" },
+    ],
   };
   assert.equal(SideNavigation(options).tag, SideNavigationComponent);
   const navigation = new SideNavigationComponent(options);
-  navigation.SetState = (update) => { navigation.state = { ...navigation.state, ...update(navigation.state) }; };
+  navigation.SetState = (update) => {
+    navigation.state = { ...navigation.state, ...update(navigation.state) };
+  };
+
   assert.deepEqual(navigation.state, { IsOpen: true });
 
   for (let cycle = 0; cycle < 3; cycle += 1) {

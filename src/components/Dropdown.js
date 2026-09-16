@@ -7,6 +7,7 @@ const html = CT.Html;
 export class DropdownComponent extends Component {
   constructor(props) {
     super(props);
+
     this._initialValue = String(props.Value ?? "");
     this._form = null;
     this._select = null;
@@ -38,14 +39,19 @@ export class DropdownComponent extends Component {
       this._form = select.form;
       this._form?.addEventListener("reset", this._onReset);
     }
+
     const value = select.value;
     const initialValue = this.GetResetValue(select);
     for (const option of select.options) option.defaultSelected = option.value === initialValue;
     select.value = value;
   }
 
-  ComponentOnMount() { this.SyncForm(); }
-  ComponentOnUpdate() { queueMicrotask(() => this.SyncForm()); }
+  ComponentOnMount() {
+    this.SyncForm();
+  }
+  ComponentOnUpdate() {
+    queueMicrotask(() => this.SyncForm());
+  }
   ComponentOnUnmount() {
     for (const timer of this._resetTimers) clearTimeout(timer);
     this._resetTimers.clear();
@@ -55,11 +61,11 @@ export class DropdownComponent extends Component {
   }
 
   GetOptionValue(option) {
-    return option !== null && typeof option === "object" ? option.Value : option ?? "";
+    return option !== null && typeof option === "object" ? option.Value : (option ?? "");
   }
 
   GetOptionLabel(option) {
-    return option !== null && typeof option === "object" ? option.Label ?? option.Value : option ?? "";
+    return option !== null && typeof option === "object" ? (option.Label ?? option.Value) : (option ?? "");
   }
 
   HandleChange(event) {

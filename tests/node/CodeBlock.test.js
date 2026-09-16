@@ -11,6 +11,7 @@ const CreateControl = (props = {}) => {
   control.SetState = (update) => {
     control.state = { ...control.state, ...(typeof update === "function" ? update(control.state) : update) };
   };
+
   return control;
 };
 
@@ -19,8 +20,8 @@ test("code highlighting preserves every character in all supported languages", (
     csharp: CSharpCode,
     javascript: '// Example\nconst Save = async () => {\n  return { Count: 42, Text: "a\\\"b", Ready: true };\n};\n',
     html: '<!-- Example -->\n<button title="a > b" disabled>Save &amp; close</button>',
-    css: '/* Example */\n.card {\n  --accent: #2ab0b5;\n  padding: 1.5rem;\n}',
-    json: '{ "Count": -1.25e+2, "Ready": true, "Items": [null, "hello"] }'
+    css: "/* Example */\n.card {\n  --accent: #2ab0b5;\n  padding: 1.5rem;\n}",
+    json: '{ "Count": -1.25e+2, "Ready": true, "Items": [null, "hello"] }',
   };
   for (const [language, code] of Object.entries(examples)) {
     const tokens = HighlightCode(code, language);
@@ -28,6 +29,7 @@ test("code highlighting preserves every character in all supported languages", (
     assert.ok(tokens.some((token) => token.Type !== "plain"));
     assert.deepEqual(HighlightCode(code, language), tokens, "Repeated calls must not retain regex state");
   }
+
   assert.equal(HighlightCode('"Count": 1', "json")[0].Type, "property");
   assert.equal(HighlightCode("const", "javascript")[0].Type, "keyword");
 });
@@ -37,11 +39,12 @@ test("C# keywords, identifiers, directives, comments, and numbers use existing s
     keyword: ["using", "namespace", "public", "record", "string", "int", "async", "await", "init", "required", "#nullable", "  #region"],
     number: ["true", "false", "null", "42", "1_000", "0xFFul", "0b_1010", "12.5m", "1.25e-3D", ".5f"],
     comment: ["// public string", "/// <summary>Details</summary>", "/* class\nstring */", "/* unfinished"],
-    plain: ["@class", "@return", "undefined", "function", "instanceof"]
+    plain: ["@class", "@return", "undefined", "function", "instanceof"],
   };
   for (const [type, values] of Object.entries(samples)) {
     for (const value of values) assert.deepEqual(HighlightCode(value, "csharp"), [{ Text: value, Type: type }], value);
   }
+
   assert.equal(HighlightCode("Create(name)", "csharp")[0].Type, "function");
   assert.equal(HighlightCode("name: value", "csharp")[0].Type, "property");
   assert.equal(HighlightCode("// comment\npublic", "csharp").at(-1).Type, "keyword");
@@ -49,17 +52,27 @@ test("C# keywords, identifiers, directives, comments, and numbers use existing s
 
 test("C# string forms remain intact, including raw delimiters and unfinished source", () => {
   const strings = [
-    '"hello \\"world\\""', "'\\n'", '""', '@"C:\\tools\\new"',
-    '@"First\n  ""quoted"" line"', '$"Hello, {name}!"', '$@"C:\\{name}"', '@$"C:\\{name}"',
+    '"hello \\"world\\""',
+    "'\\n'",
+    '""',
+    '@"C:\\tools\\new"',
+    '@"First\n  ""quoted"" line"',
+    '$"Hello, {name}!"',
+    '$@"C:\\{name}"',
+    '@$"C:\\{name}"',
     '"""<p class="text">// literal</p>"""',
     '""""\n  """quoted"""\n  /* literal */\n""""',
     '$$"""\n  { "Name": "{{name}}" }\n"""',
-    '"unfinished', '@"unfinished', '$"unfinished', '"""unfinished',
-    '"'.repeat(10000)
+    '"unfinished',
+    '@"unfinished',
+    '$"unfinished',
+    '"""unfinished',
+    '"'.repeat(10000),
   ];
   for (const value of strings) {
     assert.deepEqual(HighlightCode(value, "csharp"), [{ Text: value, Type: "string" }], value.slice(0, 80));
   }
+
   const code = 'var text = """\r\n  <script>not code</script>\r\n""";\r\nreturn text;\r\n';
   assert.equal(ReadText(HighlightCode(code, "csharp")), code);
   assert.equal(GetCodeLines(code, "csharp").map(ReadText).join("\n"), code.replaceAll("\r\n", "\n"));
@@ -81,18 +94,20 @@ test("C# language names share highlighting, labels, cache, and the long-input fa
     const code = '"'.repeat(100001);
     assert.deepEqual(HighlightCode(code, language), [{ Text: code, Type: "plain" }]);
   }
+
   control.props = { Code: CSharpCode, Language: "text" };
   assert.doesNotMatch(JSON.stringify(control.Render()), /ct-code-token-/);
 });
 
 test("blank lines, indentation, templates, and unknown languages remain readable", () => {
-  const code = '\tconst view = html`<p>\r\n  ${name}\r\n</p>`;\r\n\r\n';
+  const code = "\tconst view = html`<p>\r\n  ${name}\r\n</p>`;\r\n\r\n";
   assert.equal(GetCodeLines(code, "javascript").map(ReadText).join("\n"), code.replaceAll("\r\n", "\n"));
   assert.deepEqual(GetCodeLines("", "text"), [[]]);
   for (const language of ["text", "python", "constructor", "__proto__", undefined]) {
     assert.equal(GetCodeLanguage(language), "text");
     assert.deepEqual(HighlightCode(code, language), [{ Text: code, Type: "plain" }]);
   }
+
   const longCode = "x".repeat(100001);
   assert.deepEqual(HighlightCode(longCode, "javascript"), [{ Text: longCode, Type: "plain" }]);
 });
@@ -116,17 +131,23 @@ test("CodeBlock is public and recomputes tokens only when code or language chang
 test("Copy writes the original source, handles denial, and ignores completion after unmount", async (context) => {
   const code = CSharpCode.replaceAll("\n", "\r\n") + '\r\n\tvar path = @"C:\\tools\\new";\r\n\r\n';
   let copied = null;
-  let write = async (value) => { copied = value; };
+  let write = async (value) => {
+    copied = value;
+  };
+
   const descriptor = Object.getOwnPropertyDescriptor(globalThis, "navigator");
   Object.defineProperty(globalThis, "navigator", { configurable: true, value: { clipboard: { writeText: (value) => write(value) } } });
-  context.after(() => descriptor ? Object.defineProperty(globalThis, "navigator", descriptor) : delete globalThis.navigator);
+  context.after(() => (descriptor ? Object.defineProperty(globalThis, "navigator", descriptor) : delete globalThis.navigator));
   const control = CreateControl({ Code: code, Language: "csharp" });
   await control.CopyCode();
   assert.equal(copied, code);
   assert.equal(control.state.CopiedCode, code);
   control.props = { Code: "new code" };
   assert.doesNotMatch(JSON.stringify(control.Render()), /"Copied"/);
-  write = async () => { throw new Error("Permission denied"); };
+  write = async () => {
+    throw new Error("Permission denied");
+  };
+
   await control.CopyCode();
   assert.equal(control.state.CopyErrorCode, "new code");
   assert.equal(control.state.IsCopying, false);
@@ -138,7 +159,10 @@ test("Copy writes the original source, handles denial, and ignores completion af
   globalThis.navigator.clipboard = { writeText: (value) => write(value) };
 
   let finish;
-  write = () => new Promise((resolve) => { finish = resolve; });
+  write = () =>
+    new Promise((resolve) => {
+      finish = resolve;
+    });
   const pending = control.CopyCode();
   control.ComponentOnUnmount();
   const state = control.state;

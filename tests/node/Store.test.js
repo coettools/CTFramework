@@ -6,7 +6,7 @@ import { Store } from "../../src/Index.js";
 test("Store merges state updates and notifies subscribers", () => {
   const appStore = new Store({
     count: 0,
-    title: "CTFramework"
+    title: "CTFramework",
   });
 
   let receivedState = null;
@@ -16,12 +16,12 @@ test("Store merges state updates and notifies subscribers", () => {
   });
 
   const updatedState = appStore.SetState((currentState) => ({
-    count: currentState.count + 1
+    count: currentState.count + 1,
   }));
 
   assert.deepEqual(updatedState, {
     count: 1,
-    title: "CTFramework"
+    title: "CTFramework",
   });
   assert.deepEqual(receivedState, updatedState);
 
@@ -32,17 +32,17 @@ test("Store merges state updates and notifies subscribers", () => {
 test("Store can replace the full state object", () => {
   const appStore = new Store({
     count: 2,
-    mode: "draft"
+    mode: "draft",
   });
 
   const replacedState = appStore.ReplaceState({
     count: 8,
-    mode: "ready"
+    mode: "ready",
   });
 
   assert.deepEqual(replacedState, {
     count: 8,
-    mode: "ready"
+    mode: "ready",
   });
   assert.deepEqual(appStore.GetState(), replacedState);
 });

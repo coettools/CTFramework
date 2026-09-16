@@ -4,6 +4,6 @@ export const CreateComponent = (component, props = {}) => {
     props,
     children: [],
     key: props.Key ?? null,
-    dom: null
+    dom: null,
   };
 };

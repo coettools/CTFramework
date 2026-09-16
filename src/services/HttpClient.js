@@ -9,11 +9,7 @@ export class HttpClient {
     const mergedHeaders = new Headers(this.headers);
     new Headers(options.headers).forEach((value, name) => mergedHeaders.set(name, value));
 
-    if (
-      requestOptions.body !== undefined &&
-      requestOptions.body !== null &&
-      CTFrameworkCanSerializeJson(requestOptions.body)
-    ) {
+    if (requestOptions.body !== undefined && requestOptions.body !== null && CTFrameworkCanSerializeJson(requestOptions.body)) {
       if (!mergedHeaders.has("Content-Type")) mergedHeaders.set("Content-Type", "application/json");
       requestOptions.body = JSON.stringify(requestOptions.body);
     }
@@ -33,7 +29,7 @@ export class HttpClient {
     return this.Request(path, {
       ...options,
       method: "POST",
-      body
+      body,
     });
   }
 
@@ -41,7 +37,7 @@ export class HttpClient {
     return this.Request(path, {
       ...options,
       method: "PUT",
-      body
+      body,
     });
   }
 
@@ -49,7 +45,7 @@ export class HttpClient {
     return this.Request(path, {
       ...options,
       method: "PATCH",
-      body
+      body,
     });
   }
 
@@ -59,9 +55,5 @@ export class HttpClient {
 }
 
 const CTFrameworkCanSerializeJson = (value) => {
-  return (
-    Array.isArray(value) ||
-    (value !== null && typeof value === "object" &&
-      (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null))
-  );
+  return Array.isArray(value) || (value !== null && typeof value === "object" && (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null));
 };

@@ -7,12 +7,14 @@ const html = CT.Html;
 export class DialogComponent extends Component {
   constructor(props) {
     super(props);
+
     this._dialog = null;
     this._returnFocus = null;
     this._onCancel = (event) => {
       event.preventDefault();
       this.Close();
     };
+
     this._onKeyDown = (event) => this.HandleKeyDown(event);
   }
 
@@ -22,11 +24,12 @@ export class DialogComponent extends Component {
 
   HandleKeyDown(event) {
     if (event.key !== "Tab" || event.target.closest("dialog") !== this._dialog) return;
-    const controls = [...this._dialog.querySelectorAll('button, input, select, textarea, a[href], [tabindex]')]
-      .filter((element) => !element.matches(":disabled") && element.tabIndex >= 0 && element.getClientRects().length > 0 && !element.closest("[inert]"));
+    const controls = [...this._dialog.querySelectorAll("button, input, select, textarea, a[href], [tabindex]")].filter(
+      (element) => !element.matches(":disabled") && element.tabIndex >= 0 && element.getClientRects().length > 0 && !element.closest("[inert]"),
+    );
     const first = controls[0];
     const last = controls.at(-1);
-    if (event.shiftKey && document.activeElement === first || !event.shiftKey && document.activeElement === last) {
+    if ((event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last)) {
       event.preventDefault();
       (event.shiftKey ? last : first)?.focus();
     }
@@ -78,14 +81,29 @@ export class DialogComponent extends Component {
     const { Actions = [], Content = null, Open = false, Title = "Dialog" } = this.props;
 
     return html`
-      <dialog class="ct-dialog-backdrop" ${CT.Attr("aria-label", Title)} ${CT.On("click", (event) => { if (event.target === event.currentTarget) this.Close(); })}>
-        ${Open ? html`
-        <section class="ct-dialog">
-          <header class="ct-dialog-header"><h2>${Title}</h2><button type="button" class="ct-button-secondary" aria-label="Close dialog" ${CT.On("click", () => this.Close())}>Close</button></header>
-          <div class="ct-dialog-content">${Content}</div>
-          ${Actions.length ? html`<footer class="ct-dialog-actions">${Actions.map((action) => html`<button type="button" ${CT.Attr("className", action.ClassName || "")} ${CT.On("click", () => action.OnClick?.())}>${action.Label}</button>`)}</footer>` : null}
-        </section>
-        ` : null}
+      <dialog
+        class="ct-dialog-backdrop"
+        ${CT.Attr("aria-label", Title)}
+        ${CT.On("click", (event) => {
+          if (event.target === event.currentTarget) this.Close();
+        })}
+      >
+        ${Open
+          ? html`
+              <section class="ct-dialog">
+                <header class="ct-dialog-header">
+                  <h2>${Title}</h2>
+                  <button type="button" class="ct-button-secondary" aria-label="Close dialog" ${CT.On("click", () => this.Close())}>Close</button>
+                </header>
+                <div class="ct-dialog-content">${Content}</div>
+                ${Actions.length
+                  ? html`<footer class="ct-dialog-actions">
+                      ${Actions.map((action) => html`<button type="button" ${CT.Attr("className", action.ClassName || "")} ${CT.On("click", () => action.OnClick?.())}>${action.Label}</button>`)}
+                    </footer>`
+                  : null}
+              </section>
+            `
+          : null}
       </dialog>
     `;
   }

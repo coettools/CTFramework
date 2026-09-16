@@ -8,25 +8,44 @@ const CreateWindowMock = (context, pathname = "/") => {
   const entries = [new URL(pathname, "https://example.test")];
   let position = 0;
   const mock = {
-    get location() { return entries[position]; },
+    get location() {
+      return entries[position];
+    },
     history: {
-      pushState(state, title, path) {
+      pushState(_, _2, path) {
         entries.splice(++position, entries.length, new URL(path, entries[position - 1]));
       },
-      replaceState(state, title, path) { entries[position] = new URL(path, entries[position]); },
-      back() { if (position > 0) { position--; listeners.get("popstate")?.(); } },
-      forward() { if (position < entries.length - 1) { position++; listeners.get("popstate")?.(); } }
+      replaceState(_, _2, path) {
+        entries[position] = new URL(path, entries[position]);
+      },
+      back() {
+        if (position > 0) {
+          position--;
+          listeners.get("popstate")?.();
+        }
+      },
+      forward() {
+        if (position < entries.length - 1) {
+          position++;
+          listeners.get("popstate")?.();
+        }
+      },
     },
-    addEventListener(name, handler) { listeners.set(name, handler); },
-    removeEventListener(name, handler) { if (listeners.get(name) === handler) listeners.delete(name); },
+    addEventListener(name, handler) {
+      listeners.set(name, handler);
+    },
+    removeEventListener(name, handler) {
+      if (listeners.get(name) === handler) listeners.delete(name);
+    },
     listeners,
-    entries
+    entries,
   };
   globalThis.window = mock;
   context.after(() => {
     if (originalWindow === undefined) delete globalThis.window;
     else globalThis.window = originalWindow;
   });
+
   return mock;
 };
 
@@ -38,6 +57,7 @@ test("Router normalizes clean paths and ignores query/fragment when matching", (
   for (const path of ["#/notes", "//external.test", "https://external.test", "javascript:alert(1)", "/\\external", "/a\nb"]) {
     assert.throws(() => Router.NormalizePath(path), /application path/);
   }
+
   assert.equal(Router.ToHashPath, undefined);
   assert.equal(Router.ShouldUseHashRouting, undefined);
 });
@@ -95,7 +115,53 @@ test("Router does not navigate invalid or external destinations", (context) => {
     assert.throws(() => router.Navigate(path), /application path/);
     assert.throws(() => router.Replace(path), /application path/);
   }
+
   assert.equal(browser.entries.length, 1);
   assert.equal(router.Resolve(), null);
+  router.Destroy();
+});
+
+test("Router resolves named parameters after literal paths and before the fallback", (context) => {
+  CreateWindowMock(context, "/business/abc/edit");
+  const dynamic = Route("/business/:Id/edit", "edit");
+  const router = new Router([Route("*", "missing"), dynamic, Route("/business/new/edit", "new")]);
+  assert.equal(router.Resolve(), dynamic);
+  assert.deepEqual(router.GetParameters(), { Id: "abc" });
+  assert.equal(router.Resolve("/business/new/edit").component, "new");
+  assert.deepEqual(router.GetParameters("/business/new/edit"), {});
+  router.Navigate("/business/Horta%20Town/edit?mode=full#heading");
+  assert.deepEqual(router.GetParameters(), { Id: "Horta Town" });
+  assert.equal(router.Resolve("/business/abc/edit/extra").component, "missing");
+  assert.deepEqual(router.GetParameters("/unknown"), {});
+  router.Destroy();
+});
+
+test("Router decodes each parameter once, rejects malformed segments, and supports BasePath", (context) => {
+  const browser = CreateWindowMock(context, "/app/islands/Faial/businesses/Caf%C3%A9");
+  const router = new Router([Route("/islands/:Island/businesses/:Name", "business"), Route("*", "missing")], { BasePath: "/app" });
+  assert.deepEqual(router.GetParameters(), { Island: "Faial", Name: "Caf\u00e9" });
+  for (const value of ["", "%", "%ZZ", "%E0%A4", "%2F", "%5C", "%00", "%1F", "%7F"]) {
+    assert.equal(router.Resolve(`/islands/Faial/businesses/${value}`).component, "missing");
+  }
+
+  assert.deepEqual(router.GetParameters("/islands/Faial/businesses/%252F"), { Island: "Faial", Name: "%2F" });
+  browser.history.pushState({}, "", "/outside");
+  router.HandlePopState();
+  assert.deepEqual(router.GetParameters(), {});
+  router.Destroy();
+});
+
+test("Router parameter names are unique identifiers and cannot mutate object prototypes", (context) => {
+  CreateWindowMock(context);
+  const router = new Router([Route("/:__proto__/:constructor", "safe")]);
+  const parameters = router.GetParameters("/one/two");
+  assert.equal(Object.getPrototypeOf(parameters), Object.prototype);
+  assert.equal(parameters.__proto__, "one");
+  assert.equal(parameters.constructor, "two");
+  for (const path of ["/:Id/:Id", "/:", "/:bad-name", "/:1Id"]) {
+    router.routes = [Route(path, "invalid")];
+    assert.throws(() => router.Resolve("/one/two"), /unique names/);
+  }
+
   router.Destroy();
 });

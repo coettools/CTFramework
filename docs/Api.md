@@ -106,7 +106,8 @@ router.Navigate("/utilities"); // /guide/utilities
 | --- | --- |
 | `Navigate(path)` | Adds a browser history entry and notifies subscribers. |
 | `Replace(path)` | Replaces the current browser history entry. |
-| `Resolve(path?)` | Returns the matching route or wildcard route. |
+| `Resolve(path?)` | Returns the original route record: literal first, named parameters next, wildcard last. |
+| `GetParameters(path?)` | Returns decoded named values such as `{ Id: "123" }` for `/business/:Id`; otherwise `{}`. |
 | `Subscribe(listener)` | Registers a listener and returns an unsubscribe function. |
 | `Notify()` | Notifies subscribers using the stored current path and resolved route, without navigating. |
 | `Destroy()` | Removes browser listeners and subscriptions. |

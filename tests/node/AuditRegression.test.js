@@ -13,6 +13,7 @@ test("HTTP headers are case insensitive and explicit JSON headers still serializ
   context.mock.method(globalThis, "fetch", async (url, options) => {
     const request = new Request(new URL(url, "https://example.test"), options);
     requests.push(request);
+
     return new Response();
   });
   const client = new HttpClient({ headers: new Headers({ Authorization: "old", "Content-Type": "application/json" }) });
@@ -24,7 +25,13 @@ test("HTTP headers are case insensitive and explicit JSON headers still serializ
     await new HttpClient().Post("/test", body);
     assert.deepEqual(new Uint8Array(await requests.at(-1).arrayBuffer()), bytes);
   }
-  const stream = new ReadableStream({ start: (controller) => { controller.enqueue(bytes); controller.close(); } });
+
+  const stream = new ReadableStream({
+    start: (controller) => {
+      controller.enqueue(bytes);
+      controller.close();
+    },
+  });
   await new HttpClient().Post("/test", stream, { duplex: "half" });
   assert.deepEqual(new Uint8Array(await requests.at(-1).arrayBuffer()), bytes);
   await new HttpClient().Post("/test", new URLSearchParams({ Name: "Test" }));
@@ -38,7 +45,10 @@ test("form field names cannot collide with the result prototype", (context) => {
     data.append(name, "first");
     data.append(name, "second");
   }
-  context.mock.method(globalThis, "FormData", function () { return data; });
+
+  context.mock.method(globalThis, "FormData", function () {
+    return data;
+  });
   const values = GetFormValues(null);
   assert.equal(Object.getPrototypeOf(values), Object.prototype);
   for (const name of ["constructor", "__proto__", "toString", "hasOwnProperty"]) {
@@ -48,12 +58,16 @@ test("form field names cannot collide with the result prototype", (context) => {
 });
 
 test("Guid uses cryptographic randomness, including without randomUUID", (context) => {
-  context.mock.method(Math, "random", () => { throw new Error("Insecure random source"); });
+  context.mock.method(Math, "random", () => {
+    throw new Error("Insecure random source");
+  });
   const expression = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
   assert.match(Guid(), expression);
   const original = globalThis.crypto.randomUUID;
   globalThis.crypto.randomUUID = undefined;
-  context.after(() => { globalThis.crypto.randomUUID = original; });
+  context.after(() => {
+    globalThis.crypto.randomUUID = original;
+  });
   assert.match(Guid(), expression);
   assert.equal(new Set(Array.from({ length: 100 }, () => Guid())).size, 100);
 });
@@ -85,24 +99,33 @@ test("the preview server exposes only local browser assets, not metadata or sibl
   await writeFile(path.join(root, "src/Index.js"), "export const Safe = true;");
   await writeFile(path.join(root, "tests/fixtures/Sample.js"), "export const Sample = true;");
   await mkdir(path.join(root, "tests/browser/showcase"), { recursive: true });
-  await writeFile(path.join(root, "tests/browser/showcase/index.html"), "<h1>Showcase</h1>");
+  await writeFile(path.join(root, "tests/browser/showcase/index.html"), "<head><title>Showcase</title></head><h1>Showcase</h1>");
   await writeFile(path.join(root, ".git/HEAD"), "private");
   await writeFile(path.join(root, "scripts/Private.js"), "private");
   await symlink(path.join(root, "scripts"), path.join(root, "src/linked"), "junction");
   const server = CreateTestServer(root);
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-  context.after(() => new Promise((resolve) => { server.close(resolve); server.closeAllConnections(); }));
+  context.after(
+    () =>
+      new Promise((resolve) => {
+        server.close(resolve);
+        server.closeAllConnections();
+      }),
+  );
   assert.equal(server.address().address, "127.0.0.1");
   const origin = `http://127.0.0.1:${server.address().port}`;
   assert.equal((await fetch(`${origin}/src/Index.js`)).status, 200);
   assert.equal((await fetch(`${origin}/tests/fixtures/Sample.js`)).status, 200);
-  for (const route of ["/", "/tests/browser/showcase/", "/tests/browser/showcase/notes", "/tests/browser/showcase/components"]) {
-    assert.equal(await (await fetch(origin + route)).text(), "<h1>Showcase</h1>");
+  for (const route of ["/", "/tests/browser/showcase/", "/tests/browser/showcase/notes", "/tests/browser/showcase/components", "/tests/browser/showcase/utilities/Faial"]) {
+    assert.equal(await (await fetch(origin + route)).text(), '<head><base href="/tests/browser/showcase/"><title>Showcase</title></head><h1>Showcase</h1>');
   }
+
+  assert.equal((await fetch(`${origin}/tests/browser/showcase/utilities/missing.js`)).status, 404);
   assert.equal((await fetch(`${origin}/tests/browser/showcase/missing.js`)).status, 404);
   for (const route of ["/.git/HEAD", "/wiki/.git/HEAD", "/scripts/Private.js", "/tests/node/Private.js", "/src/linked/Private.js", "/..%5cCTFramework-private%5cnote.txt", "/src/%2e%2e%5c.git%5cHEAD"]) {
     assert.equal((await fetch(origin + route)).status, 403, route);
   }
+
   assert.equal((await fetch(`${origin}/src/%ZZ`)).status, 400);
   assert.equal((await fetch(`${origin}/src/Index.js`, { method: "POST" })).status, 405);
   assert.equal(await (await fetch(`${origin}/src/Index.js`, { method: "HEAD" })).text(), "");

@@ -7,6 +7,7 @@ const html = CT.Html;
 export class DataTableComponent extends Component {
   constructor(props) {
     super(props);
+
     this.state = { SearchTerm: "", CurrentPage: 1 };
   }
 
@@ -19,6 +20,7 @@ export class DataTableComponent extends Component {
       .filter((column) => column.Searchable !== false)
       .map((column) => {
         const value = this.GetCellValue(row, column);
+
         return column.SearchText ? column.SearchText(row, value) : value;
       })
       .filter((value) => ["string", "number", "boolean"].includes(typeof value))
@@ -28,6 +30,7 @@ export class DataTableComponent extends Component {
 
   GetRowKey(row) {
     const rowKey = this.props.RowKey ?? "Id";
+
     return typeof rowKey === "function" ? rowKey(row) : row?.[rowKey];
   }
 
@@ -35,7 +38,7 @@ export class DataTableComponent extends Component {
     const keys = new Set();
     for (const item of items) {
       const key = getKey(item);
-      if (!(typeof key === "string" && key.length > 0 || typeof key === "number" && Number.isFinite(key))) {
+      if (!((typeof key === "string" && key.length > 0) || (typeof key === "number" && Number.isFinite(key)))) {
         throw new Error(`DataTable ${name} must provide a non-empty string or finite number for every item.`);
       }
       if (keys.has(key)) throw new Error(`DataTable ${name} must be unique. Duplicate: ${key}`);
@@ -52,6 +55,7 @@ export class DataTableComponent extends Component {
 
   GetPageSize() {
     const pageSize = Number(this.props.PageSize);
+
     return Number.isInteger(pageSize) && pageSize > 0 ? pageSize : 10;
   }
 
@@ -83,20 +87,32 @@ export class DataTableComponent extends Component {
         <div class="ct-data-table-toolbar">
           <label class="ct-data-table-search">
             <span>Search</span>
-            <input type="search" ${CT.Attr("placeholder", SearchPlaceholder)} ${CT.Attr("value", this.state.SearchTerm)} ${CT.On("input", (event) => this.HandleSearch(event))}>
+            <input type="search" ${CT.Attr("placeholder", SearchPlaceholder)} ${CT.Attr("value", this.state.SearchTerm)} ${CT.On("input", (event) => this.HandleSearch(event))} />
           </label>
           <span class="ct-status">${filteredRows.length} records</span>
         </div>
         <div class="ct-data-table-scroll">
           <table>
-            <thead><tr>${Columns.map((column) => ({ ...html`<th scope="col">${column.Title ?? column.Key}</th>`, key: column.Key }))}</tr></thead>
+            <thead>
+              <tr>
+                ${Columns.map((column) => ({ ...html`<th scope="col">${column.Title ?? column.Key}</th>`, key: column.Key }))}
+              </tr>
+            </thead>
             <tbody>
               ${rows.length
-                ? rows.map((row) => ({ ...html`<tr>${Columns.map((column) => {
-                    const value = this.GetCellValue(row, column);
-                    return { ...html`<td>${column.Render ? column.Render(row, value) : value ?? ""}</td>`, key: column.Key };
-                  })}</tr>`, key: this.GetRowKey(row) }))
-                : html`<tr><td class="ct-data-table-empty" ${CT.Attr("colSpan", Math.max(1, Columns.length))}>${EmptyText}</td></tr>`}
+                ? rows.map((row) => ({
+                    ...html`<tr>
+                      ${Columns.map((column) => {
+                        const value = this.GetCellValue(row, column);
+
+                        return { ...html`<td>${column.Render ? column.Render(row, value) : (value ?? "")}</td>`, key: column.Key };
+                      })}
+                    </tr>`,
+                    key: this.GetRowKey(row),
+                  }))
+                : html`<tr>
+                    <td class="ct-data-table-empty" ${CT.Attr("colSpan", Math.max(1, Columns.length))}>${EmptyText}</td>
+                  </tr>`}
             </tbody>
           </table>
         </div>

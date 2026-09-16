@@ -1,10 +1,20 @@
 const source = new URLSearchParams(location.search).has("source");
-const { default: CT, Component, Dropdown, Dialog, Toast, GetFormValues } = await import(source
-  ? "../../../src/Index.js" : "../../../dist/ctframework.bundle.min.js");
+const { default: CT, Component, Dropdown, Dialog, Toast, GetFormValues } = await import(source ? "../../../src/Index.js" : "../../../dist/ctframework.bundle.min.js");
 const html = CT.Html;
-const Assert = (condition, message) => { if (!condition) throw new Error(message); };
-const Frame = async () => { await new Promise(requestAnimationFrame); await new Promise(requestAnimationFrame); };
-const Update = async (app, state) => { app.SetState(state); await Frame(); };
+const Assert = (condition, message) => {
+  if (!condition) throw new Error(message);
+};
+
+const Frame = async () => {
+  await new Promise(requestAnimationFrame);
+  await new Promise(requestAnimationFrame);
+};
+
+const Update = async (app, state) => {
+  app.SetState(state);
+  await Frame();
+};
+
 // Internal vnode construction is confined to runtime tests, not application examples.
 const Child = (type, props = {}) => ({ tag: type, props, key: props.Key ?? null, children: [], dom: null });
 const Keyed = (key, vnode) => ({ ...vnode, key });
@@ -27,10 +37,14 @@ class Item extends Component {
     this.state = { Text: props.Name };
     props.Instances?.set(props.Name, this);
   }
-  ComponentOnMount() { this.props.Counts.Mounts++; }
-  ComponentOnUnmount() { this.props.Counts.Unmounts++; }
+  ComponentOnMount() {
+    this.props.Counts.Mounts++;
+  }
+  ComponentOnUnmount() {
+    this.props.Counts.Unmounts++;
+  }
   Render() {
-    return html`<label>${this.props.Name}<input ${CT.Attr("value", this.state.Text)} ${CT.On("input", (event) => this.SetState({ Text: event.target.value }))}></label>`;
+    return html`<label>${this.props.Name}<input ${CT.Attr("value", this.state.Text)} ${CT.On("input", (event) => this.SetState({ Text: event.target.value }))} /></label>`;
   }
 }
 
@@ -42,19 +56,31 @@ class List extends Component {
     this.Counts = { Mounts: 0, Unmounts: 0 };
   }
   Render() {
-    return html`<section><b>Before</b>${this.state.Names.map((name) => {
-      const child = Child(Item, { Key: this.props.Wrapped ? null : name, Name: name, Instances: this.Instances, Counts: this.Counts });
-      return this.props.Wrapped ? Keyed(name, html`<article>${child}</article>`) : child;
-    })}<b>After</b></section>`;
+    return html`<section>
+      <b>Before</b>${this.state.Names.map((name) => {
+        const child = Child(Item, { Key: this.props.Wrapped ? null : name, Name: name, Instances: this.Instances, Counts: this.Counts });
+
+        return this.props.Wrapped ? Keyed(name, html`<article>${child}</article>`) : child;
+      })}<b>After</b>
+    </section>`;
   }
 }
 
 class Guarded extends Component {
-  constructor(props) { super(props); this.state = { Count: 0 }; this.Renders = 0; props.Capture?.(this); }
+  constructor(props) {
+    super(props);
+    this.state = { Count: 0 };
+    this.Renders = 0;
+    props.Capture?.(this);
+  }
   ShouldComponentUpdate(nextProps, nextState) {
     return nextProps.Title !== this.props.Title || nextState.Count !== this.state.Count;
   }
-  Render() { this.Renders++; return html`<p>${this.props.Title}: ${this.state.Count}</p>`; }
+  Render() {
+    this.Renders++;
+
+    return html`<p>${this.props.Title}: ${this.state.Count}</p>`;
+  }
 }
 
 class InteractiveChecks extends Component {
@@ -66,11 +92,17 @@ class InteractiveChecks extends Component {
     return html`<section class="ct-panel">
       <h2>Interactive checks</h2>
       ${Dropdown({ Id: "environment", Label: "Environment", Value: this.state.Environment, Options: ["production", "development"], OnChange: (value) => this.SetState({ Environment: value }) })}
-      <label>Notes<input id="notes" ${CT.Attr("value", this.state.Text)} ${CT.On("input", (event) => this.SetState({ Text: event.currentTarget.value }))}></label>
+      <label>Notes<input id="notes" ${CT.Attr("value", this.state.Text)} ${CT.On("input", (event) => this.SetState({ Text: event.currentTarget.value }))} /></label>
       <p id="selection">Selected: ${this.state.Environment || "none"}; Notes: ${this.state.Text}</p>
       <button id="open-dialog" ${CT.On("click", () => this.SetState({ Open: true }))}>Open dialog</button>
       <button id="show-toast" ${CT.On("click", () => this.SetState({ Visible: true }))}>Show toast</button>
-      ${Dialog({ Open: this.state.Open, Title: "Keyboard dialog", Content: html`<label>Dialog input<input id="dialog-input"></label>`, Actions: [{ Label: "Confirm", OnClick: () => this.SetState({ Open: false }) }], OnClose: () => this.SetState({ Open: false }) })}
+      ${Dialog({
+        Open: this.state.Open,
+        Title: "Keyboard dialog",
+        Content: html`<label>Dialog input<input id="dialog-input" /></label>`,
+        Actions: [{ Label: "Confirm", OnClick: () => this.SetState({ Open: false }) }],
+        OnClose: () => this.SetState({ Open: false }),
+      })}
       ${Toast({ Visible: this.state.Visible, Message: "Saved", OnClose: () => this.SetState({ Visible: false }) })}
     </section>`;
   }
@@ -89,13 +121,14 @@ try {
       await Update(app, { Names: ["B", "A"] });
       Assert(app.Instances.get("A") === first && mount.querySelectorAll("input")[1] === input && input.value === "A edited", "Reordering lost instance, input DOM, or state");
       Assert(app.Counts.Mounts === 2 && app.Counts.Unmounts === 0, "Reordering ran lifecycle mount/unmount hooks");
-      Assert(mount.firstChild.firstChild.textContent === "Before" && mount.firstChild.lastChild.textContent === "After", "Slot crossed static boundaries");
+      Assert(mount.firstElementChild.firstElementChild.textContent === "Before" && mount.firstElementChild.lastElementChild.textContent === "After", "Slot crossed static boundaries");
       await Update(app, { Names: ["C", "A"] });
       Assert(app.Counts.Mounts === 3 && app.Counts.Unmounts === 1, "Insertion/deletion lifecycle counts are incorrect");
       await Update(app, { Names: [] });
       Assert(app.Counts.Unmounts === 3, "Removing list did not clean up children");
     });
   }
+
   await Check("State guards, batching, skipped updates, and ForceUpdate", async () => {
     const app = new Guarded({ Title: "Count" });
     CT.Mount(app, mount);
@@ -112,40 +145,71 @@ try {
   await Check("Prop guards and parent/child updates in the same frame", async () => {
     let child;
     class Parent extends Component {
-      constructor() { super(); this.state = { Title: "Before" }; }
-      Render() { return html`<section>${Child(Guarded, { Title: this.state.Title, Capture: (value) => { child = value; } })}</section>`; }
+      constructor() {
+        super();
+        this.state = { Title: "Before" };
+      }
+      Render() {
+        return html`<section>
+          ${Child(Guarded, {
+            Title: this.state.Title,
+            Capture: (value) => {
+              child = value;
+            },
+          })}
+        </section>`;
+      }
     }
     const app = new Parent();
     CT.Mount(app, mount);
     app.SetState({ Title: "After" });
     child.SetState({ Count: 1 });
     await Frame();
-    Assert(mount.textContent === "After: 1" && child.Renders === 2, "Prop guard or coalesced child update failed");
+    Assert(mount.textContent.trim() === "After: 1" && child.Renders === 2, "Prop guard or coalesced child update failed");
   });
   await Check("Nested render failure recovers on a later parent update", async () => {
     let child;
     let catches = 0;
     class Fragile extends Component {
-      constructor() { super(); this.state = { Fail: false }; child = this; }
-      ComponentOnCatch() { catches++; }
-      Render() { if (this.state.Fail && !this.props.Recover) throw new Error("Expected test failure"); return html`<p>Recovered child</p>`; }
+      constructor() {
+        super();
+        this.state = { Fail: false };
+        child = this;
+      }
+      ComponentOnCatch() {
+        catches++;
+      }
+      Render() {
+        if (this.state.Fail && !this.props.Recover) throw new Error("Expected test failure");
+
+        return html`<p>Recovered child</p>`;
+      }
     }
     class Parent extends Component {
-      constructor() { super(); this.state = { Recover: false }; }
-      Render() { return html`<section>${Child(Fragile, { Recover: this.state.Recover })}</section>`; }
+      constructor() {
+        super();
+        this.state = { Recover: false };
+      }
+      Render() {
+        return html`<section>${Child(Fragile, { Recover: this.state.Recover })}</section>`;
+      }
     }
     const app = new Parent();
     CT.Mount(app, mount);
     await Update(child, { Fail: true });
     Assert(mount.querySelector(".ct-fallback") && catches === 1, "Missing child fallback");
     await Update(app, { Recover: true });
-    Assert(mount.textContent === "Recovered child" && !mount.querySelector(".ct-fallback"), "Fallback retained stale host DOM");
+    Assert(mount.textContent.trim() === "Recovered child" && !mount.querySelector(".ct-fallback"), "Fallback retained stale host DOM");
   });
   await Check("Initial root failures remain owned and can be unmounted", async () => {
     let unmounts = 0;
     class Broken extends Component {
-      Render() { throw new Error("Expected initial failure"); }
-      ComponentOnUnmount() { unmounts++; }
+      Render() {
+        throw new Error("Expected initial failure");
+      }
+      ComponentOnUnmount() {
+        unmounts++;
+      }
     }
     const app = new Broken();
     CT.Mount(app, mount);
@@ -169,27 +233,47 @@ try {
   });
   await Check("Null attributes, changing names, style removal, and boolean reset", async () => {
     class Attributes extends Component {
-      constructor() { super(); this.state = { Value: "page", Name: "data-before", Disabled: true, Style: { color: "red" } }; }
-      Render() { return html`<button ${CT.Attr("role", undefined)} ${CT.Attr("aria-current", this.state.Value)} ${CT.Attr(this.state.Name, this.state.Value)} ${CT.Attr("className", this.state.Value)} ${CT.Attr("disabled", this.state.Disabled)} ${CT.Attr("style", this.state.Style)}>Attributes</button>`; }
+      constructor() {
+        super();
+        this.state = { Value: "page", Name: "data-before", Disabled: true, Style: { color: "red" } };
+      }
+      Render() {
+        return html`<button
+          ${CT.Attr("role", undefined)}
+          ${CT.Attr("aria-current", this.state.Value)}
+          ${CT.Attr(this.state.Name, this.state.Value)}
+          ${CT.Attr("className", this.state.Value)}
+          ${CT.Attr("disabled", this.state.Disabled)}
+          ${CT.Attr("style", this.state.Style)}
+        >
+          Attributes
+        </button>`;
+      }
     }
     const app = new Attributes();
     CT.Mount(app, mount);
     const button = mount.querySelector("button");
     Assert(!button.hasAttribute("role"), "An initially absent reflected attribute was created");
     await Update(app, { Value: null, Name: "data-after", Disabled: false, Style: null });
-    Assert(!button.hasAttribute("aria-current") && !button.hasAttribute("data-before") && !button.hasAttribute("data-after") && !button.hasAttribute("class") && !button.disabled && !button.style.color, "An absent binding left a value behind");
+    Assert(
+      !button.hasAttribute("aria-current") && !button.hasAttribute("data-before") && !button.hasAttribute("data-after") && !button.hasAttribute("class") && !button.disabled && !button.style.color,
+      "An absent binding left a value behind",
+    );
   });
   await Check("Remounting a retained view still cleans up each mount", () => {
     const counts = { Mounts: 0, Unmounts: 0 };
     const view = Child(Item, { Name: "Reusable", Counts: counts });
     class Reusable extends Component {
-      Render() { return html`<section>${view}</section>`; }
+      Render() {
+        return html`<section>${view}</section>`;
+      }
     }
     const app = new Reusable();
     for (let index = 0; index < 2; index++) {
       CT.Mount(app, mount);
       CT.Unmount(mount);
     }
+
     Assert(counts.Mounts === 2 && counts.Unmounts === 2, "A retained vnode skipped its second cleanup");
   });
   await Check("SVG clicks delegate to the correct currentTarget", async () => {
@@ -197,7 +281,24 @@ try {
     let nativeTarget;
     let bubbles = 0;
     class Events extends Component {
-      Render() { return html`<section ${CT.On("click", () => { bubbles++; })}><button ${CT.On("click", (event) => { buttonTarget = event.currentTarget; nativeTarget = event.target; event.preventDefault(); event.stopPropagation(); })}><svg><path d="M0 0 L10 10"></path></svg></button></section>`; }
+      Render() {
+        return html`<section
+          ${CT.On("click", () => {
+            bubbles++;
+          })}
+        >
+          <button
+            ${CT.On("click", (event) => {
+              buttonTarget = event.currentTarget;
+              nativeTarget = event.target;
+              event.preventDefault();
+              event.stopPropagation();
+            })}
+          >
+            <svg><path d="M0 0 L10 10"></path></svg>
+          </button>
+        </section>`;
+      }
     }
     CT.Mount(new Events(), mount);
     const target = mount.querySelector("path");

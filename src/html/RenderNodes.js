@@ -6,7 +6,7 @@ export const CreateTextNode = (value) => {
     props: { nodeValue: String(value) },
     children: [],
     key: null,
-    dom: null
+    dom: null,
   };
 };
 

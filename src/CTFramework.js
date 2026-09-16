@@ -1,13 +1,6 @@
 import { Component } from "./components/Component.js";
 import { Guid } from "./utils/Guid.js";
-import {
-  IsClassComponent,
-  IsFunctionalComponent,
-  IsTextNode,
-  NormalizeNodes,
-  NormalizeNode,
-  CloneState
-} from "./html/RenderNodes.js";
+import { IsClassComponent, IsFunctionalComponent, IsTextNode, NormalizeNodes, NormalizeNode, CloneState } from "./html/RenderNodes.js";
 
 export const CreateTemplate = (strings, ...values) => {
   return {
@@ -16,7 +9,7 @@ export const CreateTemplate = (strings, ...values) => {
     children: [],
     templateChildren: [],
     key: null,
-    dom: null
+    dom: null,
   };
 };
 
@@ -51,6 +44,7 @@ export class CTSelection {
 
   Find(selector) {
     const elements = this.elements.flatMap((element) => CTFramework.FindAll(selector, element));
+
     return CT.CreateSelection(elements);
   }
 
@@ -129,23 +123,7 @@ export class CTFramework {
   static eventHandlers = {};
   static pendingUpdates = [];
   static queuedComponentUpdates = new Map();
-  static supportedEvents = [
-    "click",
-    "dblclick",
-    "input",
-    "change",
-    "submit",
-    "keydown",
-    "keyup",
-    "keypress",
-    "mousedown",
-    "mouseup",
-    "pointerdown",
-    "pointerup",
-    "focusin",
-    "focusout",
-    "contextmenu"
-  ];
+  static supportedEvents = ["click", "dblclick", "input", "change", "submit", "keydown", "keyup", "keypress", "mousedown", "mouseup", "pointerdown", "pointerup", "focusin", "focusout", "contextmenu"];
   static isEventDelegationReady = false;
 
   static Render(component, container) {
@@ -257,6 +235,7 @@ export class CTFramework {
     const nextState = component.state;
     component.props = prevProps;
     component.state = prevState;
+
     try {
       return force || component.ShouldComponentUpdate(nextProps, nextState);
     } finally {
@@ -295,6 +274,7 @@ export class CTFramework {
       if (component.__container?.__ctRootComponent === component) {
         component.__container.__ctRootVNode = newVNode;
       }
+
       component.ComponentOnUpdate(prevProps, prevState);
     } catch (error) {
       CTFramework.RenderErrorFallback(component, error);
@@ -365,6 +345,7 @@ export class CTFramework {
     reload.addEventListener("click", () => window.location.reload());
 
     section.append(eyebrow, title, message, detail, reload);
+
     return section;
   }
 
@@ -373,6 +354,7 @@ export class CTFramework {
     if (IsTextNode(vnode)) {
       const textNode = document.createTextNode(vnode.props.nodeValue);
       vnode.dom = textNode;
+
       return textNode;
     }
 
@@ -404,6 +386,7 @@ export class CTFramework {
         component.vnode = renderedVNode;
         const dom = CTFramework.CreateDom(renderedVNode);
         vnode.dom = dom;
+
         return dom;
       } catch (error) {
         return CTFramework.RenderErrorFallback(component, error);
@@ -427,6 +410,7 @@ export class CTFramework {
       const newDom = CTFramework.CreateDom(newVNode);
       newVNode.__ctMountMode = "self";
       CTFramework.OnUnmount(oldVNode);
+
       return newDom;
     }
     if (IsTemplateVNode(oldVNode) || IsTemplateVNode(newVNode)) {
@@ -437,6 +421,7 @@ export class CTFramework {
       const newDom = CTFramework.CreateDom(newVNode);
       newVNode.__ctMountMode = "self";
       CTFramework.OnUnmount(oldVNode);
+
       return newDom;
     }
 
@@ -455,6 +440,7 @@ export class CTFramework {
       newVNode.dom = oldVNode.dom;
       newVNode.component = oldVNode.component;
       newVNode.renderedVNode = oldVNode.renderedVNode;
+
       return newVNode.dom;
     }
 
@@ -503,6 +489,7 @@ export class CTFramework {
     try {
       if (!CTFramework.ShouldUpdate(component, prevProps, prevState, queuedUpdate?.force)) {
         component.vnode = oldVNode.renderedVNode;
+
         return oldVNode.dom;
       }
 
@@ -539,12 +526,12 @@ export class CTFramework {
       if (child.key !== null && child.key !== undefined) keyed.set(child.key, child);
       else unkeyed.push(child);
     }
+
     const remaining = new Set(oldChildren);
     let unkeyedIndex = 0;
 
     for (const child of newChildren) {
-      const oldChild = child.key !== null && child.key !== undefined
-        ? keyed.get(child.key) : unkeyed[unkeyedIndex++];
+      const oldChild = child.key !== null && child.key !== undefined ? keyed.get(child.key) : unkeyed[unkeyedIndex++];
       if (oldChild) {
         remaining.delete(oldChild);
         const oldDom = oldChild.dom;
@@ -559,6 +546,7 @@ export class CTFramework {
         dom.insertBefore(CTFramework.CreateDom(child), anchor);
         CTFramework.OnMount(child);
       }
+
       delete child.__ctMountMode;
     }
 
@@ -566,6 +554,7 @@ export class CTFramework {
       CTFramework.OnUnmount(child);
       if (child.dom?.parentNode === dom) dom.removeChild(child.dom);
     }
+
     // Work backwards from the slot anchor so adjacent static content and other
     // slots stay in place. Move existing nodes without remounting components.
     let reference = anchor;
@@ -582,16 +571,19 @@ export class CTFramework {
     propertyChanges.forEach(({ name, oldValue, value }) => {
       if (name === "style") {
         CTFramework.UpdateStyle(dom, oldValue, value);
+
         return;
       }
 
       if (name.startsWith("on")) {
         CTFramework.UpdateEventHandler(dom, name, value);
+
         return;
       }
 
       if (value === undefined || value === null || value === false) {
         CTFramework.RemoveDomProperty(dom, name, oldValue);
+
         return;
       }
 
@@ -612,7 +604,7 @@ export class CTFramework {
         changes.push({
           name,
           oldValue: oldProps[name],
-          value: newProps[name]
+          value: newProps[name],
         });
       }
     });
@@ -668,21 +660,25 @@ export class CTFramework {
   static SetDomProperty(dom, name, value) {
     if (name === "className") {
       dom.setAttribute("class", value);
+
       return;
     }
 
     if (name === "htmlFor") {
       dom.setAttribute("for", value);
+
       return;
     }
 
     if (name === "value") {
       dom.value = value ?? "";
+
       return;
     }
 
     if (name === "checked") {
       dom.checked = Boolean(value);
+
       return;
     }
 
@@ -698,6 +694,7 @@ export class CTFramework {
 
     if (name in dom && name !== "list") {
       dom[name] = value;
+
       return;
     }
 
@@ -707,21 +704,25 @@ export class CTFramework {
   static RemoveDomProperty(dom, name, oldValue) {
     if (name === "className") {
       dom.removeAttribute("class");
+
       return;
     }
 
     if (name === "htmlFor") {
       dom.removeAttribute("for");
+
       return;
     }
 
     if (name === "value") {
       dom.value = "";
+
       return;
     }
 
     if (name === "checked") {
       dom.checked = false;
+
       return;
     }
 
@@ -740,6 +741,7 @@ export class CTFramework {
   static UpdateStyle(dom, oldStyle = {}, newStyle = {}) {
     if (typeof oldStyle === "string" || typeof newStyle === "string") {
       dom.setAttribute("style", newStyle || "");
+
       return;
     }
 
@@ -772,11 +774,13 @@ export class CTFramework {
 
       if (IsTemplateMarker(value, "event")) {
         markup += `data-ct-template-event-${index}=""`;
+
         return;
       }
 
       if (IsTemplateMarker(value, "attribute")) {
         markup += `data-ct-template-attribute-${index}=""`;
+
         return;
       }
 
@@ -785,9 +789,7 @@ export class CTFramework {
 
     template.innerHTML = markup;
 
-    const roots = Array.from(template.content.childNodes).filter(
-      (node) => node.nodeType !== Node.TEXT_NODE || node.textContent.trim()
-    );
+    const roots = Array.from(template.content.childNodes).filter((node) => node.nodeType !== Node.TEXT_NODE || node.textContent.trim());
 
     if (roots.length !== 1 || roots[0].nodeType !== Node.ELEMENT_NODE) {
       throw new Error(`CT.Html requires one root HTML element. Received: ${markup.trim()}`);
@@ -842,6 +844,7 @@ export class CTFramework {
       const newDom = CTFramework.CreateTemplateDom(newVNode);
       CTFramework.OnUnmount(oldVNode);
       newVNode.__ctMountMode = "self";
+
       return newDom;
     }
 
@@ -916,11 +919,13 @@ export class CTFramework {
     if (IsClassComponent(vnode.tag)) {
       vnode.component?.ComponentOnMount();
       CTFramework.OnMount(vnode.renderedVNode);
+
       return;
     }
 
     if (IsFunctionalComponent(vnode.tag)) {
       CTFramework.OnMount(vnode.renderedVNode);
+
       return;
     }
 
@@ -930,6 +935,7 @@ export class CTFramework {
 
     if (IsTemplateVNode(vnode)) {
       (vnode.templateChildren || []).forEach((child) => CTFramework.OnMount(child));
+
       return;
     }
 
@@ -942,17 +948,20 @@ export class CTFramework {
     if (!vnode || vnode.__ctUnmounted) {
       return;
     }
+
     vnode.__ctUnmounted = true;
 
     if (IsClassComponent(vnode.tag)) {
       CTFramework.DisposeComponent(vnode.component);
       CTFramework.OnUnmount(vnode.renderedVNode);
       vnode.component?.ComponentOnUnmount();
+
       return;
     }
 
     if (IsFunctionalComponent(vnode.tag)) {
       CTFramework.OnUnmount(vnode.renderedVNode);
+
       return;
     }
 
@@ -963,6 +972,7 @@ export class CTFramework {
     if (IsTemplateVNode(vnode)) {
       (vnode.templateChildren || []).forEach((child) => CTFramework.OnUnmount(child));
       CTFramework.ClearTemplateEventHandlers(vnode.dom);
+
       return;
     }
 
@@ -986,6 +996,7 @@ export class CTFramework {
 
     if (IsClassComponent(vnode.tag) || IsFunctionalComponent(vnode.tag)) {
       CTFramework.OnMount(vnode.renderedVNode);
+
       return;
     }
 
@@ -995,6 +1006,7 @@ export class CTFramework {
 
     if (IsTemplateVNode(vnode)) {
       (vnode.templateChildren || []).forEach((child) => CTFramework.OnMount(child));
+
       return;
     }
 
@@ -1017,9 +1029,10 @@ export class CTFramework {
       get: (target, property) => {
         if (property === "currentTarget") return currentTarget;
         const value = Reflect.get(target, property, target);
+
         return typeof value === "function" ? value.bind(target) : value;
       },
-      set: (target, property, value) => Reflect.set(target, property, value, target)
+      set: (target, property, value) => Reflect.set(target, property, value, target),
     });
   }
 
@@ -1068,22 +1081,26 @@ export class CTFramework {
 
   static Find(selector, scope = document) {
     const root = CTFramework.ResolveTarget(scope);
+
     return root?.querySelector ? root.querySelector(selector) : null;
   }
 
   static FindAll(selector, scope = document) {
     const root = CTFramework.ResolveTarget(scope);
+
     return root?.querySelectorAll ? Array.from(root.querySelectorAll(selector)) : [];
   }
 
   static Closest(element, selector) {
     const target = CTFramework.ResolveElement(element);
+
     return target?.closest ? target.closest(selector) : null;
   }
 
   static Ready(callback) {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", callback, { once: true });
+
       return;
     }
 
@@ -1099,6 +1116,7 @@ export class CTFramework {
 
     if (typeof selectorOrHandler === "function") {
       resolvedTarget.addEventListener(eventType, selectorOrHandler);
+
       return () => {
         resolvedTarget.removeEventListener(eventType, selectorOrHandler);
       };
@@ -1111,11 +1129,7 @@ export class CTFramework {
         return;
       }
 
-      if (
-        resolvedTarget !== document &&
-        resolvedTarget !== window &&
-        !resolvedTarget.contains(matchedElement)
-      ) {
+      if (resolvedTarget !== document && resolvedTarget !== window && !resolvedTarget.contains(matchedElement)) {
         return;
       }
 
@@ -1151,6 +1165,7 @@ export class CTFramework {
     }
 
     target.innerHTML = value ?? "";
+
     return target;
   }
 
@@ -1166,6 +1181,7 @@ export class CTFramework {
     }
 
     target.textContent = value ?? "";
+
     return target;
   }
 
@@ -1182,10 +1198,12 @@ export class CTFramework {
 
     if (value === null || value === false) {
       target.removeAttribute(name);
+
       return target;
     }
 
     target.setAttribute(name, value === true ? "" : String(value));
+
     return target;
   }
 
@@ -1204,10 +1222,12 @@ export class CTFramework {
 
     if (value === null) {
       delete target.dataset[dataKey];
+
       return target;
     }
 
     target.dataset[dataKey] = String(value);
+
     return target;
   }
 
@@ -1313,6 +1333,7 @@ export class CTFramework {
     }
 
     target.parentNode.removeChild(target);
+
     return target;
   }
 
@@ -1342,6 +1363,7 @@ export class CTFramework {
 
   static ResolveElement(target) {
     const resolvedTarget = CTFramework.ResolveTarget(target);
+
     return resolvedTarget instanceof Element ? resolvedTarget : null;
   }
 
@@ -1368,6 +1390,7 @@ export class CTFramework {
 export const CT = (target, scope) => {
   if (typeof target === "function") {
     CT.Ready(target);
+
     return;
   }
 
@@ -1380,11 +1403,9 @@ CT.On = (eventType, handler) => ({ __ctTemplateMarker: "event", eventType, handl
 CT.Attr = (name, value) => ({ __ctTemplateMarker: "attribute", name, value });
 CT.Ready = (callback) => CTFramework.Ready(callback);
 CT.Mount = (component, container, props = {}) => {
-  const componentInstance =
-    typeof component === "function" && component.prototype instanceof Component
-      ? new component(props)
-      : component;
+  const componentInstance = typeof component === "function" && component.prototype instanceof Component ? new component(props) : component;
 
   return CTFramework.Render(componentInstance, container);
 };
+
 CT.Unmount = (container) => CTFramework.Unmount(CTFramework.ResolveTarget(container));

@@ -10,5 +10,5 @@ export const CSharpCode = [
   "    {",
   '        return $"Hello, {name}!";',
   "    }",
-  "}"
+  "}",
 ].join("\n");

@@ -5,6 +5,7 @@ import { CT, Guid, MaxLength, Required, Route } from "../../src/Index.js";
 
 test("CT exposes the cleaned template API", () => {
   const handler = () => {};
+
   const vnode = CT.Html`<button ${CT.On("click", handler)}>${"Save"}</button>`;
 
   assert.equal(typeof CT, "function");

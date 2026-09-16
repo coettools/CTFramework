@@ -10,12 +10,12 @@ test("HttpClient merges headers and serializes JSON bodies", async (testContext)
   globalThis.fetch = async (requestUrl, requestOptions) => {
     requestSnapshot = {
       requestUrl,
-      requestOptions
+      requestOptions,
     };
 
     return {
       ok: true,
-      status: 200
+      status: 200,
     };
   };
 
@@ -26,8 +26,8 @@ test("HttpClient merges headers and serializes JSON bodies", async (testContext)
   const client = new HttpClient({
     baseUrl: "/api",
     headers: {
-      Accept: "application/json"
-    }
+      Accept: "application/json",
+    },
   });
 
   await client.Post(
@@ -35,9 +35,9 @@ test("HttpClient merges headers and serializes JSON bodies", async (testContext)
     { name: "CTFramework" },
     {
       headers: {
-        Authorization: "Bearer token"
-      }
-    }
+        Authorization: "Bearer token",
+      },
+    },
   );
 
   assert.equal(requestSnapshot.requestUrl, "/api/notes");
@@ -55,12 +55,12 @@ test("HttpClient leaves FormData bodies untouched", async (testContext) => {
   globalThis.fetch = async (requestUrl, requestOptions) => {
     requestSnapshot = {
       requestUrl,
-      requestOptions
+      requestOptions,
     };
 
     return {
       ok: true,
-      status: 200
+      status: 200,
     };
   };
 
@@ -72,7 +72,7 @@ test("HttpClient leaves FormData bodies untouched", async (testContext) => {
   formData.append("name", "CTFramework");
 
   const client = new HttpClient({
-    baseUrl: "/api"
+    baseUrl: "/api",
   });
 
   await client.Post("/upload", formData);

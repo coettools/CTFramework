@@ -2,11 +2,12 @@ import CT, { CodeBlock, Component, Dialog, Dropdown } from "../../../dist/ctfram
 import { CSharpCode } from "../../fixtures/CSharpCode.js";
 
 const html = CT.Html;
-const Sample = '// A small helper\nconst Add = (left, right) => {\n  return left + right;\n};\n\nconsole.log(Add(2, 3));';
+const Sample = "// A small helper\nconst Add = (left, right) => {\n  return left + right;\n};\n\nconsole.log(Add(2, 3));";
 const UnsafeSample = '<script>alert("never execute")</script>\n<img src="missing" onerror="alert(1)">\n\n  <p>&amp; <strong>Keep this as text.</strong></p>\n';
 const Assert = (condition, message) => {
   if (!condition) throw new Error(message);
 };
+
 const Settle = async () => {
   await Promise.resolve();
   await new Promise(requestAnimationFrame);
@@ -21,8 +22,7 @@ class CodeBlockChecks extends Component {
   Render() {
     return html`
       <section class="ct-panel">
-        <label>Source<textarea id="source" rows="7" ${CT.Attr("value", this.state.Code)}
-          ${CT.On("input", (event) => this.SetState({ Code: event.target.value }))}></textarea></label>
+        <label>Source<textarea id="source" rows="7" ${CT.Attr("value", this.state.Code)} ${CT.On("input", (event) => this.SetState({ Code: event.target.value }))}></textarea></label>
         ${Dropdown({ Id: "language", Label: "Language", Value: this.state.Language, Options: ["javascript", "csharp", "html", "css", "json", "text"], OnChange: (value) => this.SetState({ Language: value }) })}
         <button type="button" ${CT.On("click", () => this.SetState({ Code: CSharpCode, Language: "csharp" }))}>Load C# example</button>
         <button type="button" ${CT.On("click", () => this.SetState({ IsDialogOpen: true }))}>Open code dialog</button>
@@ -35,7 +35,7 @@ class CodeBlockChecks extends Component {
           Open: this.state.IsDialogOpen,
           Title: "C# in a dialog",
           Content: CodeBlock({ Title: "Greeting.cs", Code: CSharpCode, Language: "csharp" }),
-          OnClose: () => this.SetState({ IsDialogOpen: false })
+          OnClose: () => this.SetState({ IsDialogOpen: false }),
         })}
       </section>
     `;
@@ -44,6 +44,7 @@ class CodeBlockChecks extends Component {
 
 CT(async () => {
   const result = document.querySelector("#result");
+
   try {
     const app = new CodeBlockChecks();
     CT.Mount(app, "#app");
@@ -66,8 +67,14 @@ CT(async () => {
     app.SetState({ Code: CSharpCode, Language: "csharp" });
     await Settle();
     Assert(viewport.textContent === CSharpCode && document.querySelector("#primary .ct-code-language").textContent === "C#", "C# source and caption must render from the production bundle.");
-    Assert([...viewport.querySelectorAll(".ct-code-token-keyword")].some((token) => token.textContent === "public"), "C# keywords must use the default syntax colours.");
-    Assert([...viewport.querySelectorAll(".ct-code-token-string")].some((token) => token.textContent === '$"Hello, {name}!"'), "C# interpolated strings must retain their prefix and contents.");
+    Assert(
+      [...viewport.querySelectorAll(".ct-code-token-keyword")].some((token) => token.textContent === "public"),
+      "C# keywords must use the default syntax colours.",
+    );
+    Assert(
+      [...viewport.querySelectorAll(".ct-code-token-string")].some((token) => token.textContent === '$"Hello, {name}!"'),
+      "C# interpolated strings must retain their prefix and contents.",
+    );
     app.SetState({ IsDialogOpen: true });
     await Settle();
     const dialog = document.querySelector(".ct-dialog").getBoundingClientRect();

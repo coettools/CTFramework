@@ -6,6 +6,7 @@ const Assert = (condition, message) => {
     throw new Error(message);
   }
 };
+
 const Update = async (app, state) => {
   app.SetState(state);
   await Promise.resolve();
@@ -26,9 +27,9 @@ class RenderingChecks extends Component {
           Label: "Environment",
           Value: this.state.Value,
           Options: this.state.Options,
-          OnChange: (value) => this.SetState({ Value: value })
+          OnChange: (value) => this.SetState({ Value: value }),
         })}
-        <label>Notes<input id="notes" ${CT.Attr("value", this.state.Text)} ${CT.On("input", (event) => this.SetState({ Text: event.target.value }))}></label>
+        <label>Notes<input id="notes" ${CT.Attr("value", this.state.Text)} ${CT.On("input", (event) => this.SetState({ Text: event.target.value }))} /></label>
         <p>Selected: ${this.state.Value}</p>
         <p>Notes: ${this.state.Text}</p>
       </section>
@@ -38,6 +39,7 @@ class RenderingChecks extends Component {
 
 CT(async () => {
   const result = document.querySelector("#result");
+
   try {
     const app = new RenderingChecks();
     CT.Mount(app, "#app");
@@ -46,7 +48,13 @@ CT(async () => {
     await Update(app, { Value: "staging", Options: ["staging", "preview"] });
     Assert(select.value === "staging", "New options must exist before applying an updated value.");
     Assert(select === document.querySelector("#environment"), "Updates must preserve the select element.");
-    await Update(app, { Value: 0, Options: [{ Value: 0, Label: "Zero" }, { Value: 1, Label: "One" }] });
+    await Update(app, {
+      Value: 0,
+      Options: [
+        { Value: 0, Label: "Zero" },
+        { Value: 1, Label: "One" },
+      ],
+    });
     Assert(select.value === "0", "Numeric zero must remain selectable.");
     await Update(app, { Value: "production", Options: ["development", "production"] });
     result.textContent = "4 rendering checks passed. Try changing the environment and typing notes.";

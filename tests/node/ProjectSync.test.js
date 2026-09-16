@@ -11,6 +11,7 @@ const Write = async (root, file, text) => {
   await mkdir(path.dirname(target), { recursive: true });
   await writeFile(target, text);
 };
+
 const Fixture = async (context) => {
   const root = await mkdtemp(path.join(os.tmpdir(), "ctframework-sync-"));
   context.after(async () => {
@@ -22,14 +23,18 @@ const Fixture = async (context) => {
   await Write(framework, "dist/ctframework.bundle.js", "debug with embedded CSS");
   await Write(framework, "dist/ctframework.bundle.min.js", "minified with embedded CSS");
   await Write(framework, "LICENSE", "license notice");
+
   return { Root: root, Framework: framework };
 };
+
 const Consumer = async (root, name) => {
   const directory = path.join(root, name);
   await Write(directory, "src/Main.js", 'import CT from "../vendor/ctframework.bundle.min.js";');
   await Write(directory, "vendor/ctframework.bundle.min.js", "old bundle");
+
   return directory;
 };
+
 const Options = (fixture, extra = {}) => ({ FrameworkDirectory: fixture.Framework, WorkspaceDirectory: fixture.Root, RunChecks: async () => "fixture checks passed", ...extra });
 
 test("discovers current and future sibling consumers without a hard-coded wiki path", async (context) => {
@@ -37,19 +42,27 @@ test("discovers current and future sibling consumers without a hard-coded wiki p
   await Consumer(fixture.Root, "wiki.ct-framework");
   await Consumer(fixture.Root, "future-project");
   await Write(fixture.Root, "assets/logo.txt", "not a consumer");
-  assert.deepEqual((await FindProjects(fixture.Root, fixture.Framework)).map((project) => project.Name), ["future-project", "wiki.ct-framework"]);
+  assert.deepEqual(
+    (await FindProjects(fixture.Root, fixture.Framework)).map((project) => project.Name),
+    ["future-project", "wiki.ct-framework"],
+  );
 });
 
 test("copies supported variants and license, then verifies rebuilt deployment files", async (context) => {
   const fixture = await Fixture(context);
   const consumer = await Consumer(fixture.Root, "site");
   await Write(consumer, "vendor/ctframework.bundle.js", "old debug");
-  const results = await SynchronizeProjects(Options(fixture, { RunChecks: async () => {
-    for (const name of ["ctframework.bundle.min.js", "LICENSE.ctframework"]) {
-      await Write(consumer, `dist/vendor/${name}`, await readFile(path.join(consumer, "vendor", name)));
-    }
-    return "fixture rebuilt";
-  } }));
+  const results = await SynchronizeProjects(
+    Options(fixture, {
+      RunChecks: async () => {
+        for (const name of ["ctframework.bundle.min.js", "LICENSE.ctframework"]) {
+          await Write(consumer, `dist/vendor/${name}`, await readFile(path.join(consumer, "vendor", name)));
+        }
+
+        return "fixture rebuilt";
+      },
+    }),
+  );
   assert.equal(results[0].Status, "Updated and checked");
   assert.equal(results[0].Browser, "Pending");
   assert.equal(results[0].Release, "Not deployed");
@@ -65,18 +78,26 @@ test("discovers full-stack client roots alongside direct consumers and runs chec
   await Write(client, "package.json", JSON.stringify({ scripts: { check: "node --test" } }));
   await Write(fixture.Root, "full-stack/server/package.json", JSON.stringify({ name: "api-tests" }));
   const projects = await FindProjects(fixture.Root, fixture.Framework);
-  assert.deepEqual(projects.map(project => project.Name), ["full-stack/client", "wiki.ct-framework"]);
+  assert.deepEqual(
+    projects.map((project) => project.Name),
+    ["full-stack/client", "wiki.ct-framework"],
+  );
   assert.equal(projects[0].Directory, client);
   assert.equal(projects[0].Settings.scripts.check, "node --test");
   const checked = [];
-  const results = await SynchronizeProjects(Options(fixture, { RunChecks: async project => {
-    checked.push(project.Directory);
-    for (const name of ["ctframework.bundle.min.js", "LICENSE.ctframework"]) {
-      await Write(project.Directory, `dist/vendor/${name}`, await readFile(path.join(project.Directory, "vendor", name)));
-    }
-    return "client rebuilt";
-  } }));
-  assert.ok(results.every(result => result.Status === "Updated and checked"));
+  const results = await SynchronizeProjects(
+    Options(fixture, {
+      RunChecks: async (project) => {
+        checked.push(project.Directory);
+        for (const name of ["ctframework.bundle.min.js", "LICENSE.ctframework"]) {
+          await Write(project.Directory, `dist/vendor/${name}`, await readFile(path.join(project.Directory, "vendor", name)));
+        }
+
+        return "client rebuilt";
+      },
+    }),
+  );
+  assert.ok(results.every((result) => result.Status === "Updated and checked"));
   assert.ok(checked.includes(client));
   assert.equal(await readFile(path.join(client, "dist/vendor/ctframework.bundle.min.js"), "utf8"), "minified with embedded CSS");
   await assert.rejects(readFile(path.join(fixture.Root, "full-stack/vendor/ctframework.bundle.min.js")), { code: "ENOENT" });
@@ -116,7 +137,13 @@ test("a stale deployment or failed project check is not reported as synchronized
   assert.equal(results[0].Status, "Failed");
   assert.match(results[0].Error, /Stale dist/);
   assert.equal(results[1].Status, "Updated and checked");
-  const failed = await SynchronizeProjects(Options(fixture, { RunChecks: async () => { throw new Error("project tests failed"); } }));
+  const failed = await SynchronizeProjects(
+    Options(fixture, {
+      RunChecks: async () => {
+        throw new Error("project tests failed");
+      },
+    }),
+  );
   assert.ok(failed.every((result) => result.Status === "Failed" && result.Error === "project tests failed"));
 });
 
@@ -129,13 +156,17 @@ test("package-managed dependencies require an explicit update rather than a sile
 test("documentation strings and comments are not framework imports", async (context) => {
   const fixture = await Fixture(context);
   const consumer = await Consumer(fixture.Root, "guide");
-  await Write(consumer, "src/Guide.js", [
-    'export const Code = \'import CT from "@coettools/ctframework";\';',
-    'export const Debug = `import CT from "../vendor/ctframework.bundle.js";`;',
-    'export const Legacy = \'import CT from "../../CTFramework/src/Index.js";\';',
-    '// import CT from "@coettools/ctframework/bundle";',
-    '/* export { CT } from "../../CTFramework/src/Index.js"; */'
-  ].join("\n"));
+  await Write(
+    consumer,
+    "src/Guide.js",
+    [
+      "export const Code = 'import CT from \"@coettools/ctframework\";';",
+      'export const Debug = `import CT from "../vendor/ctframework.bundle.js";`;',
+      "export const Legacy = 'import CT from \"../../CTFramework/src/Index.js\";';",
+      '// import CT from "@coettools/ctframework/bundle";',
+      '/* export { CT } from "../../CTFramework/src/Index.js"; */',
+    ].join("\n"),
+  );
   const [project] = await FindProjects(fixture.Root, fixture.Framework);
   assert.equal(project.Name, "guide");
   assert.deepEqual(project.UsedBundles, ["ctframework.bundle.min.js"]);
@@ -149,7 +180,7 @@ test("real static, dynamic, and re-export package imports still require an updat
     'import CT from "@coettools/ctframework";',
     'export { default as CT } from "@coettools/ctframework/bundle";',
     'export const Load = () => import("@coettools/ctframework/bundle/debug");',
-    'import "@coettools/ctframework";'
+    'import "@coettools/ctframework";',
   ]) {
     await Write(consumer, "src/Main.js", source);
     await assert.rejects(FindProjects(fixture.Root, fixture.Framework), /explicit dependency update/);

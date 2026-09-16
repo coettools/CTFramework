@@ -49,7 +49,7 @@ ${DataTable({
     {
       Key: "Status",
       Title: "Status",
-      Render: (row, value) => Badge({
+      Render: (_, value) => Badge({
         Text: value,
         Type: value === "Ready" ? "success" : "warning"
       })
@@ -91,8 +91,8 @@ DataTable({
     {
       Key: "Status",
       Title: "Status",
-      SearchText: (row, value) => value === 1 ? "Ready" : "Offline",
-      Render: (row, value) => Badge({ Text: value === 1 ? "Ready" : "Offline" })
+      SearchText: (_, value) => value === 1 ? "Ready" : "Offline",
+      Render: (_, value) => Badge({ Text: value === 1 ? "Ready" : "Offline" })
     },
     { Key: "InternalCode", Title: "Reference", Searchable: false }
   ]

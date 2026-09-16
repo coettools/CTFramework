@@ -1,6 +1,5 @@
 import CT, {
   Accordion,
-  ApplicationLayout,
   Alert,
   Badge,
   Card,
@@ -19,7 +18,7 @@ import CT, {
   Required,
   SideNavigation,
   Toast,
-  Tooltip
+  Tooltip,
 } from "../../../src/Index.js";
 import { CSharpCode } from "../../fixtures/CSharpCode.js";
 import { CarouselImages } from "../../fixtures/CarouselImages.js";
@@ -63,7 +62,7 @@ export class App extends Component {
       activeSystemArea: "runtime",
       isDialogOpen: false,
       isPopupOpen: false,
-      isToastVisible: false
+      isToastVisible: false,
     };
 
     this.unsubscribeStore = null;
@@ -86,7 +85,7 @@ export class App extends Component {
         }
 
         this.props.store.SetState((storeState) => ({
-          notes: [...storeState.notes, note]
+          notes: [...storeState.notes, note],
         }));
 
         event.target.reset();
@@ -94,7 +93,7 @@ export class App extends Component {
       },
       removeNote: (index) => {
         this.props.store.SetState((storeState) => ({
-          notes: storeState.notes.filter((note, noteIndex) => noteIndex !== index)
+          notes: storeState.notes.filter((_, noteIndex) => noteIndex !== index),
         }));
       },
       toggleDomBox: () => {
@@ -107,7 +106,7 @@ export class App extends Component {
           .Attr("data-last-update", timestamp)
           .Css({
             borderColor: nextIsActive ? "var(--ct-color-success)" : "var(--ct-color-border)",
-            backgroundColor: nextIsActive ? "var(--ct-color-surface-raised)" : "var(--ct-color-surface)"
+            backgroundColor: nextIsActive ? "var(--ct-color-surface-raised)" : "var(--ct-color-surface)",
           })
           .Text(`Helper update: ${timestamp}`);
       },
@@ -118,7 +117,7 @@ export class App extends Component {
         const isValidLength = MaxLength(sampleValue, 16);
 
         this.SetState({
-          utilityResult: `Guid: ${id} | Required: ${isRequired} | MaxLength(16): ${isValidLength}`
+          utilityResult: `Guid: ${id} | Required: ${isRequired} | MaxLength(16): ${isValidLength}`,
         });
       },
       runHttpClient: async () => {
@@ -137,7 +136,7 @@ export class App extends Component {
       closeDialog: () => this.SetState({ isDialogOpen: false }),
       togglePopup: () => this.SetState((state) => ({ isPopupOpen: !state.isPopupOpen })),
       showToast: () => this.SetState({ isToastVisible: true }),
-      closeToast: () => this.SetState({ isToastVisible: false })
+      closeToast: () => this.SetState({ isToastVisible: false }),
     };
 
     this.componentData = [
@@ -146,7 +145,7 @@ export class App extends Component {
       { Name: "Relay", Status: "Ready", Owner: "Communications" },
       { Name: "Indexer", Status: "Offline", Owner: "Systems" },
       { Name: "Console", Status: "Ready", Owner: "Operations" },
-      { Name: "Bridge", Status: "Warning", Owner: "Communications" }
+      { Name: "Bridge", Status: "Warning", Owner: "Communications" },
     ];
 
     this.componentColumns = [
@@ -155,34 +154,95 @@ export class App extends Component {
       {
         Key: "Status",
         Title: "Status",
-        SearchText: (row, value) => `${value} service`,
-        Render: (row, value) => Badge({ Text: `${value} service`, Type: value === "Ready" ? "success" : value === "Warning" ? "warning" : "danger" })
-      }
+        SearchText: (_, value) => `${value} service`,
+        Render: (_, value) => Badge({ Text: `${value} service`, Type: value === "Ready" ? "success" : value === "Warning" ? "warning" : "danger" }),
+      },
     ];
 
     this.componentExamples = [
-      { Id: "image-carousel", Title: "ImageCarousel", Content: CodeBlock({ Title: "Usage", Code: 'ImageCarousel({\n  Label: "Project gallery",\n  Images: [\n    { Src: "./images/ridge.jpg", Alt: "Mountain ridges", Caption: "Northern ridge" },\n    { Src: "./images/coast.jpg", Alt: "Coast at dusk", Caption: "Coastal dusk" }\n  ],\n  Loop: true,\n  Fit: "contain",\n  OnChange: (index, image) => console.log(index, image.Caption)\n});' }) },
-      { Id: "application-layout", Title: "ApplicationLayout", Content: CodeBlock({ Title: "ApplicationLayout", Code: "ApplicationLayout({\n  Header: html`<strong>Operations</strong>`,\n  SideNavigation: SideNavigation({\n    Title: \"Workspace\",\n    Items: navigationItems\n  }),\n  Content: html`<section><h1>Overview</h1></section>`\n});" }) },
-      { Id: "accordion", Title: "Accordion", Content: CodeBlock({ Title: "Accordion", Code: "Accordion({\n  OpenIds: [\"details\"],\n  Items: [\n    {\n      Id: \"details\",\n      Title: \"Details\",\n      Content: html`<p>Deployment information.</p>`\n    }\n  ]\n});" }) },
-      { Id: "alert", Title: "Alert", Content: CodeBlock({ Title: "Alert", Code: "Alert({\n  Title: \"Saved\",\n  Message: \"Changes are available.\",\n  Type: \"success\",\n  Live: \"polite\"\n});" }) },
-      { Id: "badge", Title: "Badge", Content: CodeBlock({ Title: "Badge", Code: "Badge({\n  Text: \"Ready\",\n  Type: \"success\"\n});" }) },
-      { Id: "card", Title: "Card", Content: CodeBlock({ Title: "Card", Code: "Card({\n  Title: \"Deployment\",\n  Content: html`<p>Ready</p>`,\n  Footer: html`<button type=\"button\">Open</button>`\n});" }) },
+      {
+        Id: "image-carousel",
+        Title: "ImageCarousel",
+        Content: CodeBlock({
+          Title: "Usage",
+          Code: 'ImageCarousel({\n  Label: "Project gallery",\n  Images: [\n    { Src: "./images/ridge.jpg", Alt: "Mountain ridges", Caption: "Northern ridge" },\n    { Src: "./images/coast.jpg", Alt: "Coast at dusk", Caption: "Coastal dusk" }\n  ],\n  Loop: true,\n  Fit: "contain",\n  OnChange: (index, image) => console.log(index, image.Caption)\n});',
+        }),
+      },
+      {
+        Id: "application-layout",
+        Title: "ApplicationLayout",
+        Content: CodeBlock({
+          Title: "ApplicationLayout",
+          Code: 'ApplicationLayout({\n  Header: html`<strong>Operations</strong>`,\n  SideNavigation: SideNavigation({\n    Title: "Workspace",\n    Items: navigationItems\n  }),\n  Content: html`<section><h1>Overview</h1></section>`\n});',
+        }),
+      },
+      {
+        Id: "accordion",
+        Title: "Accordion",
+        Content: CodeBlock({ Title: "Accordion", Code: 'Accordion({\n  OpenIds: ["details"],\n  Items: [\n    {\n      Id: "details",\n      Title: "Details",\n      Content: html`<p>Deployment information.</p>`\n    }\n  ]\n});' }),
+      },
+      { Id: "alert", Title: "Alert", Content: CodeBlock({ Title: "Alert", Code: 'Alert({\n  Title: "Saved",\n  Message: "Changes are available.",\n  Type: "success",\n  Live: "polite"\n});' }) },
+      { Id: "badge", Title: "Badge", Content: CodeBlock({ Title: "Badge", Code: 'Badge({\n  Text: "Ready",\n  Type: "success"\n});' }) },
+      { Id: "card", Title: "Card", Content: CodeBlock({ Title: "Card", Code: 'Card({\n  Title: "Deployment",\n  Content: html`<p>Ready</p>`,\n  Footer: html`<button type="button">Open</button>`\n});' }) },
       {
         Id: "code-block",
         Title: "CodeBlock",
         Content: html`<section>
           ${CodeBlock({ Title: "Usage", Code: 'CodeBlock({\n  Title: "Greeting.cs",\n  Language: "csharp",\n  Code: source,\n  LineNumbers: true,\n  Wrap: false,\n  Copy: true\n});' })}
           ${CodeBlock({ Title: "Greeting.cs", Language: "csharp", Code: CSharpCode })}
-        </section>`
+        </section>`,
       },
-      { Id: "data-table", Title: "DataTable", Content: CodeBlock({ Title: "DataTable", Code: "const records = [\n  { Id: 1, Name: \"Gateway\", Status: 1, Reference: \"gw\" },\n  { Id: 2, Name: \"Archive\", Status: 0, Reference: \"ar\" }\n];\nconst StatusLabel = (value) => value === 1 ? \"Ready\" : \"Offline\";\n\nDataTable({\n  Data: records,\n  RowKey: (row) => row.Id,\n  PageSize: 10,\n  Columns: [\n    { Key: \"Name\", Title: \"Name\", Value: (row) => `Service ${row.Name}` },\n    {\n      Key: \"Status\",\n      Title: \"Status\",\n      SearchText: (row, value) => StatusLabel(value),\n      Render: (row, value) => Badge({ Text: StatusLabel(value) })\n    },\n    { Key: \"Reference\", Title: \"Reference\", Searchable: false }\n  ]\n});" }) },
-      { Id: "dialog", Title: "Dialog", Content: CodeBlock({ Title: "Dialog", Code: "Dialog({\n  Open: this.state.IsOpen,\n  Title: \"Confirm\",\n  Content: html`<p>Save these changes?</p>`,\n  OnClose: () => this.SetState({ IsOpen: false })\n});" }) },
-      { Id: "dropdown", Title: "Dropdown", Content: CodeBlock({ Title: "Dropdown", Code: "return html`<form ${CT.On(\"submit\", (event) => {\n  event.preventDefault();\n  console.log(GetFormValues(event.currentTarget));\n})}>\n  ${Dropdown({\n    Id: \"environment\",\n    Name: \"Environment\",\n    Label: \"Environment\",\n    Required: true,\n    Disabled: false,\n    Value: this.state.Environment,\n    Options: [\"development\", \"production\"],\n    OnChange: (value) => this.SetState({ Environment: value })\n  })}\n  <button type=\"submit\">Submit</button>\n  <button type=\"reset\">Reset</button>\n</form>`;" }) },
-      { Id: "fallback-view", Title: "FallbackView", Content: CodeBlock({ Title: "FallbackView", Code: "FallbackView({\n  Title: \"Page not found\",\n  OnAction: () => router.Navigate(\"/\")\n});" }) },
-      { Id: "popup-window", Title: "PopupWindow", Content: CodeBlock({ Title: "PopupWindow", Code: "PopupWindow({\n  Open: this.state.IsPopupOpen,\n  Position: \"bottom-right\",\n  Title: \"Output\",\n  Content: html`<p>Build complete.</p>`,\n  OnClose: () => this.SetState({ IsPopupOpen: false })\n});" }) },
-      { Id: "side-navigation", Title: "SideNavigation", Content: CodeBlock({ Title: "SideNavigation", Code: "SideNavigation({\n  Title: \"Workspace\",\n  ActiveId: this.state.ActiveId,\n  Items: [\n    { Id: \"overview\", Label: \"Overview\" },\n    { Id: \"settings\", Label: \"Settings\" }\n  ],\n  OnNavigate: (item) => this.SetState({ ActiveId: item.Id })\n});" }) },
-      { Id: "tooltip", Title: "Tooltip", Content: CodeBlock({ Title: "Tooltip", Code: "Tooltip({\n  Text: \"Save the current changes\",\n  Position: \"top\",\n  ShowOnFocus: true,\n  Content: html`<button type=\"button\">Save</button>`\n});" }) },
-      { Id: "toast", Title: "Toast", Content: CodeBlock({ Title: "Toast", Code: "Toast({\n  Visible: this.state.IsToastVisible,\n  Title: \"Saved\",\n  Message: \"Changes are available.\",\n  Type: \"success\",\n  OnClose: () => this.SetState({ IsToastVisible: false })\n});" }) }
+      {
+        Id: "data-table",
+        Title: "DataTable",
+        Content: CodeBlock({
+          Title: "DataTable",
+          Code: 'const records = [\n  { Id: 1, Name: "Gateway", Status: 1, Reference: "gw" },\n  { Id: 2, Name: "Archive", Status: 0, Reference: "ar" }\n];\nconst StatusLabel = (value) => value === 1 ? "Ready" : "Offline";\n\nDataTable({\n  Data: records,\n  RowKey: (row) => row.Id,\n  PageSize: 10,\n  Columns: [\n    { Key: "Name", Title: "Name", Value: (row) => `Service ${row.Name}` },\n    {\n      Key: "Status",\n      Title: "Status",\n      SearchText: (row, value) => StatusLabel(value),\n      Render: (row, value) => Badge({ Text: StatusLabel(value) })\n    },\n    { Key: "Reference", Title: "Reference", Searchable: false }\n  ]\n});',
+        }),
+      },
+      {
+        Id: "dialog",
+        Title: "Dialog",
+        Content: CodeBlock({ Title: "Dialog", Code: 'Dialog({\n  Open: this.state.IsOpen,\n  Title: "Confirm",\n  Content: html`<p>Save these changes?</p>`,\n  OnClose: () => this.SetState({ IsOpen: false })\n});' }),
+      },
+      {
+        Id: "dropdown",
+        Title: "Dropdown",
+        Content: CodeBlock({
+          Title: "Dropdown",
+          Code: 'return html`<form ${CT.On("submit", (event) => {\n  event.preventDefault();\n  console.log(GetFormValues(event.currentTarget));\n})}>\n  ${Dropdown({\n    Id: "environment",\n    Name: "Environment",\n    Label: "Environment",\n    Required: true,\n    Disabled: false,\n    Value: this.state.Environment,\n    Options: ["development", "production"],\n    OnChange: (value) => this.SetState({ Environment: value })\n  })}\n  <button type="submit">Submit</button>\n  <button type="reset">Reset</button>\n</form>`;',
+        }),
+      },
+      { Id: "fallback-view", Title: "FallbackView", Content: CodeBlock({ Title: "FallbackView", Code: 'FallbackView({\n  Title: "Page not found",\n  OnAction: () => router.Navigate("/")\n});' }) },
+      {
+        Id: "popup-window",
+        Title: "PopupWindow",
+        Content: CodeBlock({
+          Title: "PopupWindow",
+          Code: 'PopupWindow({\n  Open: this.state.IsPopupOpen,\n  Position: "bottom-right",\n  Title: "Output",\n  Content: html`<p>Build complete.</p>`,\n  OnClose: () => this.SetState({ IsPopupOpen: false })\n});',
+        }),
+      },
+      {
+        Id: "side-navigation",
+        Title: "SideNavigation",
+        Content: CodeBlock({
+          Title: "SideNavigation",
+          Code: 'SideNavigation({\n  Title: "Workspace",\n  ActiveId: this.state.ActiveId,\n  Items: [\n    { Id: "overview", Label: "Overview" },\n    { Id: "settings", Label: "Settings" }\n  ],\n  OnNavigate: (item) => this.SetState({ ActiveId: item.Id })\n});',
+        }),
+      },
+      {
+        Id: "tooltip",
+        Title: "Tooltip",
+        Content: CodeBlock({ Title: "Tooltip", Code: 'Tooltip({\n  Text: "Save the current changes",\n  Position: "top",\n  ShowOnFocus: true,\n  Content: html`<button type="button">Save</button>`\n});' }),
+      },
+      {
+        Id: "toast",
+        Title: "Toast",
+        Content: CodeBlock({
+          Title: "Toast",
+          Code: 'Toast({\n  Visible: this.state.IsToastVisible,\n  Title: "Saved",\n  Message: "Changes are available.",\n  Type: "success",\n  OnClose: () => this.SetState({ IsToastVisible: false })\n});',
+        }),
+      },
     ];
 
     this.views = {
@@ -192,19 +252,17 @@ export class App extends Component {
           { path: "/notes", label: "Notes" },
           { path: "/dom", label: "DOM" },
           { path: "/utilities", label: "Utilities" },
-          { path: "/components", label: "Components" }
+          { path: "/components", label: "Components" },
         ];
 
         return html`
           <nav class="top-nav">
             ${navigationItems.map(
               (item) => html`
-                <button
-                  type="button"
-                  ${CT.Attr("className", this.state.currentPath === item.path ? "nav-link ct-button-success" : "nav-link ct-button-secondary")}
-                  ${CT.On("click", () => this.actions.setPath(item.path))}
-                >${item.label}</button>
-              `
+                <button type="button" ${CT.Attr("className", this.state.currentPath === item.path ? "nav-link ct-button-success" : "nav-link ct-button-secondary")} ${CT.On("click", () => this.actions.setPath(item.path))}>
+                  ${item.label}
+                </button>
+              `,
             )}
           </nav>
         `;
@@ -213,18 +271,15 @@ export class App extends Component {
         <section class="ct-panel">
           ${PanelHeading({
             title: "Component state",
-            body: "A small class component can own state updates without bringing in a large framework runtime."
+            body: "A small class component can own state updates without bringing in a large framework runtime.",
           })}
-          <div class="stats-grid">
-            ${StatCard({ label: "Current count", value: this.state.count })}
-            ${StatCard({ label: "Saved notes", value: this.state.notes.length })}
-          </div>
+          <div class="stats-grid">${StatCard({ label: "Current count", value: this.state.count })} ${StatCard({ label: "Saved notes", value: this.state.notes.length })}</div>
           <div class="button-row">
             <button type="button" ${CT.On("click", () => this.actions.incrementCount(1))}>Increment</button>
             <button type="button" class="ct-button-secondary" ${CT.On("click", () => this.actions.incrementCount(-1))}>Decrement</button>
           </div>
           ${UsageExample({
-            Code: "class App extends Component {\n  constructor(props) {\n    super(props);\n    this.state = { Count: 0 };\n  }\n\n  Increase() {\n    this.SetState((state) => ({ Count: state.Count + 1 }));\n  }\n\n  Render() {\n    return html`\n      <button type=\"button\" ${CT.On(\"click\", () => this.Increase())}>\n        ${this.state.Count}\n      </button>\n    `;\n  }\n}"
+            Code: 'class App extends Component {\n  constructor(props) {\n    super(props);\n    this.state = { Count: 0 };\n  }\n\n  Increase() {\n    this.SetState((state) => ({ Count: state.Count + 1 }));\n  }\n\n  Render() {\n    return html`\n      <button type="button" ${CT.On("click", () => this.Increase())}>\n        ${this.state.Count}\n      </button>\n    `;\n  }\n}',
           })}
         </section>
       `,
@@ -232,10 +287,10 @@ export class App extends Component {
         <section class="ct-panel">
           ${PanelHeading({
             title: "Store + form helpers",
-            body: "This view uses the small Store and GetFormValues helper to keep form logic plain and easy to trace."
+            body: "This view uses the small Store and GetFormValues helper to keep form logic plain and easy to trace.",
           })}
           <form class="note-form" ${CT.On("submit", this.actions.addNote)}>
-            <input id="note-input" name="note" type="text" placeholder="Add a note">
+            <input id="note-input" name="note" type="text" placeholder="Add a note" />
             <button type="submit">Add note</button>
           </form>
           <ul class="notes-list">
@@ -245,11 +300,11 @@ export class App extends Component {
                   <span>${note}</span>
                   <button type="button" class="ct-button-secondary ct-error" ${CT.On("click", () => this.actions.removeNote(index))}>Remove</button>
                 </li>
-              `
+              `,
             )}
           </ul>
           ${UsageExample({
-            Code: 'const values = GetFormValues(event.target);\nstore.SetState((state) => ({\n  notes: [...state.notes, values.note]\n}));'
+            Code: "const values = GetFormValues(event.target);\nstore.SetState((state) => ({\n  notes: [...state.notes, values.note]\n}));",
           })}
         </section>
       `,
@@ -257,14 +312,12 @@ export class App extends Component {
         <section class="ct-panel">
           ${PanelHeading({
             title: "CT helper layer",
-            body: "Direct DOM helpers are there when a full component rerender would be overkill."
+            body: "Direct DOM helpers are there when a full component rerender would be overkill.",
           })}
           <div id="dom-box" class="dom-box">Helper target</div>
-          <button type="button" ${CT.On("click", this.actions.toggleDomBox)}>
-            Run DOM helper update
-          </button>
+          <button type="button" ${CT.On("click", this.actions.toggleDomBox)}>Run DOM helper update</button>
           ${UsageExample({
-            Code: 'CT("#dom-box")\n  .ToggleClass("is-active", true)\n  .Attr("data-last-update", timestamp)\n  .Text("Updated");'
+            Code: 'CT("#dom-box")\n  .ToggleClass("is-active", true)\n  .Attr("data-last-update", timestamp)\n  .Text("Updated");',
           })}
         </section>
       `,
@@ -272,19 +325,21 @@ export class App extends Component {
         <section class="ct-panel">
           ${PanelHeading({
             title: "Utilities + HTTP",
-            body: "Guid, Required, MaxLength and HttpClient run here without any external service dependency."
+            body: "Guid, Required, MaxLength and HttpClient run here without any external service dependency.",
           })}
           <div class="button-row">
-            <button type="button" ${CT.On("click", this.actions.runGuidAndValidators)}>
-              Run Guid + validators
-            </button>
-            <button type="button" class="ct-button-secondary" ${CT.On("click", this.actions.runHttpClient)}>
-              Run HttpClient.Get
-            </button>
+            <button type="button" ${CT.On("click", this.actions.runGuidAndValidators)}>Run Guid + validators</button>
+            <button type="button" class="ct-button-secondary" ${CT.On("click", this.actions.runHttpClient)}>Run HttpClient.Get</button>
           </div>
           <p class="utility-result">${this.state.utilityResult}</p>
+          <h3>Named URL parameters</h3>
+          <button type="button" ${CT.On("click", () => this.props.router.Navigate("/utilities/Faial"))}>Open Faial route</button>
+          <p role="status">Route parameters: ${JSON.stringify(this.props.router.GetParameters())}</p>
           ${UsageExample({
-            Code: 'const id = Guid();\nconst isValid = Required(value) && MaxLength(value, 16);\nconst response = await httpClient.Get(url);'
+            Code: 'const router = new Router([Route("/utilities/:Name", UtilitiesPage)]);\nrouter.Navigate("/utilities/Faial");\nrouter.GetParameters(); // { Name: "Faial" }',
+          })}
+          ${UsageExample({
+            Code: "const id = Guid();\nconst isValid = Required(value) && MaxLength(value, 16);\nconst response = await httpClient.Get(url);",
           })}
         </section>
       `,
@@ -292,7 +347,7 @@ export class App extends Component {
         <section class="ct-panel component-showcase">
           ${PanelHeading({
             title: "CTFramework components",
-            body: "Every component below is production code, uses the default CTFramework CSS, and remains configurable through plain JavaScript objects."
+            body: "Every component below is production code, uses the default CTFramework CSS, and remains configurable through plain JavaScript objects.",
           })}
           <div class="component-layout">
             ${SideNavigation({
@@ -301,9 +356,9 @@ export class App extends Component {
               Items: [
                 { Id: "runtime", Label: "Runtime" },
                 { Id: "services", Label: "Services" },
-                { Id: "operations", Label: "Operations" }
+                { Id: "operations", Label: "Operations" },
               ],
-              OnNavigate: this.actions.selectSystemArea
+              OnNavigate: this.actions.selectSystemArea,
             })}
             <div class="component-main">
               ${Card({
@@ -311,32 +366,36 @@ export class App extends Component {
                 Content: html`
                   <div class="component-card-content">
                     ${Alert({ Title: "Default styles active", Message: "This screen uses CTFramework CSS without its own component theme.", Type: "success" })}
-                    <form ${CT.On("submit", (event) => {
-                      event.preventDefault();
-                      this.SetState({ environmentResult: JSON.stringify(GetFormValues(event.currentTarget)) });
-                    })}>
-                    ${Dropdown({
-                      Id: "environment-select",
-                      Name: "Environment",
-                      Required: true,
-                      Disabled: this.state.environmentDisabled,
-                      Label: "Environment",
-                      Placeholder: "Choose an environment",
-                      Value: this.state.selectedEnvironment,
-                      Options: [
-                        { Value: "development", Label: "Development" },
-                        { Value: "staging", Label: "Staging" },
-                        { Value: "production", Label: "Production" }
-                      ],
-                      OnChange: this.actions.selectEnvironment
-                    })}
-                    <p class="ct-status">${this.state.selectedEnvironment || "No environment selected"}</p>
-                    <div class="button-row">
-                      <button type="submit">Read form values</button>
-                      <button type="reset" class="ct-button-secondary">Reset environment</button>
-                      <button type="button" class="ct-button-secondary" ${CT.On("click", () => this.SetState({ environmentDisabled: !this.state.environmentDisabled }))}>${this.state.environmentDisabled ? "Enable dropdown" : "Disable dropdown"}</button>
-                    </div>
-                    <p class="ct-status">${this.state.environmentResult}</p>
+                    <form
+                      ${CT.On("submit", (event) => {
+                        event.preventDefault();
+                        this.SetState({ environmentResult: JSON.stringify(GetFormValues(event.currentTarget)) });
+                      })}
+                    >
+                      ${Dropdown({
+                        Id: "environment-select",
+                        Name: "Environment",
+                        Required: true,
+                        Disabled: this.state.environmentDisabled,
+                        Label: "Environment",
+                        Placeholder: "Choose an environment",
+                        Value: this.state.selectedEnvironment,
+                        Options: [
+                          { Value: "development", Label: "Development" },
+                          { Value: "staging", Label: "Staging" },
+                          { Value: "production", Label: "Production" },
+                        ],
+                        OnChange: this.actions.selectEnvironment,
+                      })}
+                      <p class="ct-status">${this.state.selectedEnvironment || "No environment selected"}</p>
+                      <div class="button-row">
+                        <button type="submit">Read form values</button>
+                        <button type="reset" class="ct-button-secondary">Reset environment</button>
+                        <button type="button" class="ct-button-secondary" ${CT.On("click", () => this.SetState({ environmentDisabled: !this.state.environmentDisabled }))}>
+                          ${this.state.environmentDisabled ? "Enable dropdown" : "Disable dropdown"}
+                        </button>
+                      </div>
+                      <p class="ct-status">${this.state.environmentResult}</p>
                     </form>
                   </div>
                 `,
@@ -347,7 +406,7 @@ export class App extends Component {
                     <button type="button" class="ct-button-success" ${CT.On("click", this.actions.showToast)}>Show toast</button>
                     ${Tooltip({ Text: "Hover or focus for help. Escape dismisses this hint.", Content: html`<button type="button" class="ct-button-secondary">Hover for help</button>` })}
                   </div>
-                `
+                `,
               })}
               ${DataTable({ RowKey: "Name", Data: this.componentData, Columns: this.componentColumns, PageSize: 3 })}
             </div>
@@ -365,22 +424,22 @@ export class App extends Component {
             OnClose: this.actions.closeDialog,
             Actions: [
               { Label: "Cancel", ClassName: "ct-button-secondary", OnClick: this.actions.closeDialog },
-              { Label: "Confirm", ClassName: "ct-button-success", OnClick: this.actions.closeDialog }
-            ]
+              { Label: "Confirm", ClassName: "ct-button-success", OnClick: this.actions.closeDialog },
+            ],
           })}
           ${PopupWindow({
             Open: this.state.isPopupOpen,
             Position: "bottom-right",
             Title: "Runtime window",
             Content: html`<p class="ct-muted">A non-blocking popup window can remain visible while the page is usable.</p>`,
-            OnClose: this.actions.togglePopup
+            OnClose: this.actions.togglePopup,
           })}
           ${Toast({
             Visible: this.state.isToastVisible,
             Title: "Deployment queued",
             Message: "The toast is controlled by the parent component state.",
             Type: "success",
-            OnClose: this.actions.closeToast
+            OnClose: this.actions.closeToast,
           })}
         </section>
       `,
@@ -391,25 +450,22 @@ export class App extends Component {
         return activeView && this.views[activeView]
           ? this.views[activeView]()
           : FallbackView({
-          Title: "Page not found",
-          Message: `The route ${this.state.currentPath} is not available in this application.`,
-          ActionLabel: "Return to dashboard",
-          OnAction: () => this.props.router.Navigate("/")
-          });
+              Title: "Page not found",
+              Message: `The route ${this.state.currentPath} is not available in this application.`,
+              ActionLabel: "Return to dashboard",
+              OnAction: () => this.props.router.Navigate("/"),
+            });
       },
       app: () => html`
         <main class="ct-shell showcase-shell">
           <header class="ct-panel hero">
             <p class="ct-eyebrow">CTFramework</p>
             <h1>Raw JavaScript components without the framework weight</h1>
-            <p class="hero-copy ct-muted">
-              This showcase stays outside src so the framework can stay production-clean while still proving the runtime works.
-            </p>
+            <p class="hero-copy ct-muted">This showcase stays outside src so the framework can stay production-clean while still proving the runtime works.</p>
           </header>
-          ${this.views.navigation()}
-          ${this.views.current()}
+          ${this.views.navigation()} ${this.views.current()}
         </main>
-      `
+      `,
     };
   }
 

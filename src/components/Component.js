@@ -35,7 +35,7 @@ export class Component {
     CTFramework.ScheduleComponentUpdate(this, prevProps, prevState, true);
   }
 
-  ShouldComponentUpdate(nextProps, nextState) {
+  ShouldComponentUpdate(_, _2) {
     return true;
   }
 
@@ -44,7 +44,7 @@ export class Component {
   }
 
   ComponentOnMount() {}
-  ComponentOnUpdate(prevProps, prevState) {}
+  ComponentOnUpdate(_, _2) {}
   ComponentOnUnmount() {}
-  ComponentOnCatch(error, info) {}
+  ComponentOnCatch(_, _2) {}
 }

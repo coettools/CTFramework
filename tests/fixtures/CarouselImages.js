@@ -1,4 +1,5 @@
-const CreateLandscape = (sky, light, far, near, horizon) => `data:image/svg+xml,${encodeURIComponent(`
+const CreateLandscape = (sky, light, far, near, horizon) =>
+  `data:image/svg+xml,${encodeURIComponent(`
   <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
     <defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="${sky}"/><stop offset="1" stop-color="${light}"/></linearGradient></defs>
     <path fill="url(#sky)" d="M0 0h1200v675H0z"/>
@@ -14,16 +15,16 @@ export const CarouselImages = [
   {
     Src: CreateLandscape("#0a2637", "#9ed8db", "#436c80", "#183e52", "#092a3d"),
     Alt: "Blue mountain ridges beneath a pale moon",
-    Caption: "Northern ridge"
+    Caption: "Northern ridge",
   },
   {
     Src: CreateLandscape("#452c38", "#f1be83", "#9d6570", "#654d62", "#263b52"),
     Alt: "Rose-coloured peaks above a dark coastline at dusk",
-    Caption: "Coastal dusk"
+    Caption: "Coastal dusk",
   },
   {
     Src: CreateLandscape("#163f41", "#d7dfb2", "#71948a", "#356158", "#1b423e"),
     Alt: "Green highland ridges beneath a soft yellow sky",
-    Caption: "Highland mist"
-  }
+    Caption: "Highland mist",
+  },
 ];

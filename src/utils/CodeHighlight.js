@@ -1,6 +1,14 @@
 const Languages = new Set(["javascript", "csharp", "html", "css", "json"]);
-const Keywords = new Set("async await break case catch class const continue debugger default delete do else export extends finally for from function if import in instanceof let new of return static super switch this throw try typeof var void while yield".split(" "));
-const CSharpKeywords = new Set("abstract add alias and as ascending async await base bool break by byte case catch char checked class const continue decimal default delegate descending do double dynamic else enum equals event explicit extern field file finally fixed float for foreach from get global goto group if implicit in init int interface internal into is join let lock long managed nameof namespace new nint not notnull nuint object on operator or orderby out override params partial private protected public readonly record ref remove required return sbyte scoped sealed select set short sizeof stackalloc static string struct switch this throw try typeof uint ulong unchecked unmanaged unsafe ushort using value var virtual void volatile when where while with yield".split(" "));
+const Keywords = new Set(
+  "async await break case catch class const continue debugger default delete do else export extends finally for from function if import in instanceof let new of return static super switch this throw try typeof var void while yield".split(
+    " ",
+  ),
+);
+const CSharpKeywords = new Set(
+  "abstract add alias and as ascending async await base bool break by byte case catch char checked class const continue decimal default delegate descending do double dynamic else enum equals event explicit extern field file finally fixed float for foreach from get global goto group if implicit in init int interface internal into is join let lock long managed nameof namespace new nint not notnull nuint object on operator or orderby out override params partial private protected public readonly record ref remove required return sbyte scoped sealed select set short sizeof stackalloc static string struct switch this throw try typeof uint ulong unchecked unmanaged unsafe ushort using value var virtual void volatile when where while with yield".split(
+    " ",
+  ),
+);
 const Literals = new Set(["true", "false", "null", "undefined"]);
 const Strings = "\"(?:\\\\[\\s\\S]|[^\"\\\\])*\"|'(?:\\\\[\\s\\S]|[^'\\\\])*'";
 const Comments = "/\\*[\\s\\S]*?(?:\\*/|(?![\\s\\S]))";
@@ -11,10 +19,10 @@ const Patterns = {
   javascript: new RegExp(`${Comments}|//[^\\r\\n]*|${Strings}|\x60(?:\\\\[\\s\\S]|[^\x60\\\\])*\x60|\\b(?:0[xX][\\da-fA-F]+|\\d+(?:\\.\\d+)?)\\b|[a-zA-Z_$][\\w$]*`, "g"),
   html: new RegExp(`<!--[\\s\\S]*?(?:-->|$)|${Strings}|</?[a-zA-Z][\\w:-]*|/?>|[a-zA-Z_:][\\w:.-]*|&(?:#\\w+|\\w+);`, "g"),
   css: new RegExp(`${Comments}|${Strings}|--[\\w-]+|[a-zA-Z-]+|#[\\da-fA-F]{3,8}\\b|\\b\\d+(?:\\.\\d+)?(?:%|[a-z]+)?|@[\\w-]+`, "g"),
-  json: new RegExp(`\"(?:\\\\[\\s\\S]|[^\"\\\\])*\"|\\b(?:true|false|null)\\b|-?\\b\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?\\b`, "g")
+  json: new RegExp(`\"(?:\\\\[\\s\\S]|[^\"\\\\])*\"|\\b(?:true|false|null)\\b|-?\\b\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?\\b`, "g"),
 };
 
-export const GetCodeLanguage = (language) => language === "c#" || language === "cs" ? "csharp" : Languages.has(language) ? language : "text";
+export const GetCodeLanguage = (language) => (language === "c#" || language === "cs" ? "csharp" : Languages.has(language) ? language : "text");
 
 const GetTokenType = (value, language, following) => {
   if (value.startsWith("/*") || value.startsWith("//") || value.startsWith("<!--")) return "comment";
@@ -26,6 +34,7 @@ const GetTokenType = (value, language, following) => {
     if (["true", "false", "null"].includes(value) || /^(?:\d|\.\d)/.test(value)) return "number";
     if (CSharpKeywords.has(value) || /^\s*#/.test(value)) return "keyword";
     if (/^\s*:/.test(following)) return "property";
+
     return /^\s*\(/.test(following) ? "function" : "plain";
   }
   if (language === "html") return value.startsWith("&") ? "number" : value.includes("<") || value.includes(">") ? "keyword" : /^\s*=/.test(following) ? "property" : "plain";
@@ -34,6 +43,7 @@ const GetTokenType = (value, language, following) => {
   if (Keywords.has(value)) return "keyword";
   if (/^\s*:/.test(following)) return "property";
   if (/^\s*\(/.test(following)) return "function";
+
   return "plain";
 };
 
@@ -58,6 +68,7 @@ export const HighlightCode = (code, language) => {
       position = plain.lastIndex;
       continue;
     }
+
     let value = match[0];
     if (resolvedLanguage === "csharp" && /^\$*"{3,}$/.test(value)) {
       // Raw strings close with the opening quote count; do not scan their contents as code.
@@ -66,10 +77,13 @@ export const HighlightCode = (code, language) => {
       matcher.lastIndex = end < 0 ? code.length : end + delimiter.length;
       value = code.slice(match.index, matcher.lastIndex);
     }
+
     position = matcher.lastIndex;
     tokens.push({ Text: value, Type: GetTokenType(value, resolvedLanguage, code.slice(position)) });
   }
+
   if (position < code.length) tokens.push({ Text: code.slice(position), Type: "plain" });
+
   return tokens;
 };
 
@@ -81,5 +95,6 @@ export const GetCodeLines = (code, language) => {
       if (text) lines[lines.length - 1].push({ Text: text, Type: token.Type });
     });
   }
+
   return lines;
 };

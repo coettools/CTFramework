@@ -23,5 +23,5 @@ export const ShowcaseApiCoverage = [
   "MaxLength",
   "SideNavigation",
   "Toast",
-  "Tooltip"
+  "Tooltip",
 ];

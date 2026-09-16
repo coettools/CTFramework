@@ -4,11 +4,14 @@ import test from "node:test";
 import * as CTFramework from "../../src/Index.js";
 
 const Read = (file) => readFile(new URL(file, import.meta.url), "utf8");
-const publicExports = Object.keys(CTFramework).filter((name) => name !== "default").sort();
+const publicExports = Object.keys(CTFramework)
+  .filter((name) => name !== "default")
+  .sort();
 
 const ReadSection = (document, heading) => {
   const section = document.split(`\n## ${heading}\n`)[1];
   assert.ok(section, `Missing documentation section: ${heading}`);
+
   return section.split("\n## ")[0];
 };
 
@@ -16,10 +19,9 @@ const ReadDocument = async (file) => (await Read(`../../docs/${file}`)).replace(
 
 const ReadComponentExports = async () => {
   const source = await Read("../../src/Index.js");
-  const names = [...source.matchAll(/import\s*\{([^}]+)\}\s*from\s*"\.\/components\/[^"]+"/g)]
-    .flatMap((match) => match[1].split(",").map((name) => name.trim()))
-    .filter((name) => name !== "Component" && publicExports.includes(name));
+  const names = [...source.matchAll(/import\s*\{([^}]+)\}\s*from\s*"\.\/components\/[^"]+"/g)].flatMap((match) => match[1].split(",").map((name) => name.trim())).filter((name) => name !== "Component" && publicExports.includes(name));
   assert.ok(names.length > 0, "The public entry module must expose UI components");
+
   return names.sort();
 };
 
@@ -28,7 +30,13 @@ for (const file of ["Api.md", "Guide.md"]) {
     const document = await ReadDocument(file);
     const declaration = document.match(/import CT,\s*\{([^}]+)\}\s*from "@coettools\/ctframework"/);
     assert.ok(declaration, `${file} needs a complete public import example`);
-    const names = ["CT", ...declaration[1].split(",").map((name) => name.trim()).filter(Boolean)];
+    const names = [
+      "CT",
+      ...declaration[1]
+        .split(",")
+        .map((name) => name.trim())
+        .filter(Boolean),
+    ];
     assert.deepEqual(names.sort(), publicExports, `${file} has missing, duplicate, or stale imports`);
   });
 }
@@ -51,7 +59,10 @@ test("every UI component has an API entry and an individual usage example", asyn
   for (const name of names) {
     const section = ReadSection(document, name);
     const examples = [...section.matchAll(/```js\n([\s\S]*?)```/g)].map((match) => match[1]);
-    assert.ok(examples.some((example) => example.includes(`${name}({`)), `${name} needs its own usage example`);
+    assert.ok(
+      examples.some((example) => example.includes(`${name}({`)),
+      `${name} needs its own usage example`,
+    );
   }
 });
 
@@ -74,7 +85,7 @@ test("reviewed component options have individual usage guidance", async () => {
     DataTable: ["RowKey", "Searchable", "SearchText"],
     Dropdown: ["Name", "Disabled", "Required"],
     Tooltip: ["ShowOnFocus"],
-    Alert: ["Live"]
+    Alert: ["Live"],
   })) {
     const section = ReadSection(document, name);
     for (const option of options) {

@@ -4,7 +4,8 @@ Run `npm run check`, then `npm run test:browser`. Open
 http://127.0.0.1:4170/tests/browser/showcase/.
 
 The showcase uses CTFramework's Router with a BasePath. Pages share one index.html;
-the test server serves that entry for the registered showcase paths.
+the test server serves that entry for the registered showcase paths and supplies
+its base URL so relative assets also load on nested parameter routes.
 
 1. Select Counter, Notes, DOM, Utilities, and Components. URLs must use normal
    paths under /tests/browser/showcase/, without a hash prefix.
@@ -15,3 +16,5 @@ the test server serves that entry for the registered showcase paths.
 4. On Notes, type a complete note and add it. Navigate to Counter, increment, then
    use Back and Forward. The shared store retains notes until a full refresh.
 5. Missing scripts or unknown showcase paths must return 404, not the entry HTML.
+6. In Utilities, click Open Faial route. GetParameters must show Name: Faial.
+   Refresh the nested URL, then use Back/Forward; the value must follow the path.

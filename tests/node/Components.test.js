@@ -18,17 +18,20 @@ test("DataTable filters rows and calculates stable page counts", () => {
     Data: [
       { Name: "Gateway", Status: "Ready" },
       { Name: "Archive", Status: "Warning" },
-      { Name: "Relay", Status: "Ready" }
+      { Name: "Relay", Status: "Ready" },
     ],
     PageSize: 2,
-    Columns: [{ Key: "Name" }, { Key: "Status" }]
+    Columns: [{ Key: "Name" }, { Key: "Status" }],
   });
 
   assert.equal(table.GetPageCount(table.GetFilteredRows()), 2);
 
   table.state.SearchTerm = "ready";
 
-  assert.deepEqual(table.GetFilteredRows().map((row) => row.Name), ["Gateway", "Relay"]);
+  assert.deepEqual(
+    table.GetFilteredRows().map((row) => row.Name),
+    ["Gateway", "Relay"],
+  );
   assert.equal(table.GetPageCount(table.GetFilteredRows()), 1);
 });
 
@@ -73,14 +76,15 @@ test("DataTable searches column values and explicit display labels, not hidden f
     Data: [{ Id: 0, Name: "Gateway", Secret: "hidden", Status: 1 }],
     Columns: [
       { Key: "Name", Value: (row) => `Service ${row.Name}` },
-      { Key: "Status", SearchText: (row, value) => value === 1 ? "Ready" : "Offline" },
-      { Key: "Secret", Searchable: false }
-    ]
+      { Key: "Status", SearchText: (_, value) => (value === 1 ? "Ready" : "Offline") },
+      { Key: "Secret", Searchable: false },
+    ],
   });
   for (const term of ["service", "ready", "GATEWAY"]) {
     table.state.SearchTerm = term;
     assert.equal(table.GetFilteredRows().length, 1);
   }
+
   for (const term of ["hidden", "0", "1"]) {
     table.state.SearchTerm = term;
     assert.equal(table.GetFilteredRows().length, 0);
@@ -99,6 +103,7 @@ test("DataTable requires stable unique row and column keys including numeric zer
     table.props = { Data: [{ Id: key }] };
     assert.throws(() => table.Render(), /RowKey/);
   }
+
   table.props = { Data: [{ Id: "A" }, { Id: "A" }] };
   assert.throws(() => table.Render(), /Duplicate: A/);
   table.props = { Data: [], Columns: [{ Key: "Name" }, { Key: "Name" }] };

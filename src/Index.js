@@ -48,7 +48,7 @@ export {
   GetFormValues,
   Guid,
   Required,
-  MaxLength
+  MaxLength,
 };
 
 export default CT;

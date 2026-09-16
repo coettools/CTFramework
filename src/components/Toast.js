@@ -7,6 +7,7 @@ const html = CT.Html;
 export class ToastComponent extends Component {
   constructor(props) {
     super(props);
+
     this.state = { IsVisible: true };
   }
 

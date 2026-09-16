@@ -72,7 +72,7 @@ class LiveStatus extends Component {
     this.Refresh();
   }
 
-  ComponentOnUpdate(previousProps, previousState) {
+  ComponentOnUpdate(_, previousState) {
     if (previousState.RefreshInterval !== this.state.RefreshInterval) {
       this.ConfigureRefresh();
     }
@@ -171,7 +171,7 @@ class App extends Component {
     this.MountPage();
   }
 
-  ComponentOnUpdate(prevProps, prevState) {
+  ComponentOnUpdate(_, prevState) {
     if (prevState.ActiveView !== this.state.ActiveView) {
       this.MountPage();
     }

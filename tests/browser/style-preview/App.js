@@ -19,7 +19,7 @@ export class App extends Component {
         <span class="lab-eyebrow">Design lab</span>
         <a href="../showcase/index.html" target="_blank" rel="noopener">Framework showcase</a>
       </div>`,
-      Content: html`<div id="palette-page"></div>`
+      Content: html`<div id="palette-page"></div>`,
     });
   }
 }
