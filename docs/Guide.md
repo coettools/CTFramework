@@ -30,3 +30,5 @@ import CT, {
   Required, Route, Router, SideNavigation, Store, Toast, Tooltip
 } from "@coettools/ctframework";
 ```
+
+Try the [online guide](https://framework.coettools.com/) for interactive examples, or run the showcase in `tests/browser/showcase/` from this repository. Examples remain separate from the production runtime.

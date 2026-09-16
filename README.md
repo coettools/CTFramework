@@ -65,7 +65,7 @@ Start with the [CTFramework Guide](docs/Guide.md). It is the wiki-style document
 
 `npm run check` also checks the documentation against the source exports: complete imports, the CT method index, component entries and usage examples, and styling references. These checks catch missing or stale entries; changes to behavior and options still need a documentation review alongside the tests and wiki updates.
 
-`npm run check` works in a standalone public checkout. `npm run check:workspace` also verifies wiki API coverage and requires the sibling wiki; `npm run test:wiki` runs that integration check on its own. Consumer synchronization checks wiki coverage when that project is present, then rebuilds and tests each consumer.
+The [online guide](https://framework.coettools.com/) includes interactive examples. The documentation and tests in this repository work without another project checkout.
 
 ## Browser Verification
 
@@ -201,3 +201,11 @@ and plain text. The wiki and showcase use it for their code examples. See the
 ## License
 
 CTFramework is licensed under the [MIT License](LICENSE).
+
+## Contributing
+
+Keep source, tests, and tooling readable: two-space indentation, double quotes, semicolons, focused methods, and blank lines between distinct steps. Use `_` for a required but unused callback argument. Preserve public signatures and side effects.
+
+Run `npm run check` and exercise the relevant browser tests before submitting changes. Update the API documentation and examples when behavior changes. Generate bundles with the build command rather than editing them by hand.
+
+Public documentation should explain installation, APIs, examples, styling, and contribution. Keep internal reviews, task notes, approval records, and local verification reports out of Git and package output. New public guides must be explicitly added to the documentation allowlist and reviewed for their intended audience.

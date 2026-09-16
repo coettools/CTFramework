@@ -24,7 +24,14 @@
   },
   "files": [
     "dist",
-    "docs",
+    "docs/Api.md",
+    "docs/Component-Guide.md",
+    "docs/Components.md",
+    "docs/Data-And-Services.md",
+    "docs/Getting-Started.md",
+    "docs/Guide.md",
+    "docs/Html-And-Dom.md",
+    "docs/Styling.md",
     "LICENSE",
     "README.md"
   ],
@@ -46,6 +53,7 @@
     "sync:projects": "node scripts/SyncProjects.js --committed",
     "sync:projects:preview": "node scripts/SyncProjects.js --working-tree",
     "projects:check": "npm run build && node scripts/SyncProjects.js --verify",
-    "prepare": "npm run build && npm run setup:git-hooks"
+    "prepare": "npm run build && npm run setup:git-hooks",
+    "prepack": "npm run check"
   }
 }
