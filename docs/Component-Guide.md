@@ -151,34 +151,41 @@ import { HomePage } from "./pages/HomePage.js";
 import { SettingsPage } from "./pages/SettingsPage.js";
 
 const html = CT.Html;
-const Pages = { home: HomePage, settings: SettingsPage };
 
 class App extends Component {
   constructor(props) {
     super(props);
-    this.state = { ActiveView: "home" };
-  }
 
-  Navigate(viewName) {
-    this.SetState({ ActiveView: viewName });
-  }
-
-  MountPage() {
-    CT.Mount(Pages[this.state.ActiveView], "#page");
+    this.state = { ActivePage: "home" };
+    this._pageHost = null;
   }
 
   ComponentOnMount() {
+    this._pageHost = this.vnode.dom.querySelector("#page");
+
     this.MountPage();
   }
 
-  ComponentOnUpdate(_, prevState) {
-    if (prevState.ActiveView !== this.state.ActiveView) {
-      this.MountPage();
-    }
+  ComponentOnUpdate(_, previousState) {
+    if (previousState.ActivePage === this.state.ActivePage) return;
+
+    this.MountPage();
   }
 
   ComponentOnUnmount() {
-    CT.Unmount("#page");
+    CT.Unmount(this._pageHost);
+    this._pageHost = null;
+  }
+
+  Navigate(pageName) {
+    this.SetState({ ActivePage: pageName });
+  }
+
+  MountPage() {
+    const pageClass = this.state.ActivePage === "settings" ? SettingsPage : HomePage;
+    this._page = new pageClass({});
+
+    CT.Mount(this._page, this._pageHost);
   }
 
   Render() {

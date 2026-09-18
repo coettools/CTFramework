@@ -371,6 +371,7 @@ module. Include the referenced image files in the project's deployment output.
 | `InitialIndex` | `0` | Zero-based starting position, clamped to the available images. Read only at construction. |
 | `Loop` | `true` | Wrap previous/next navigation. Set `false` to disable the respective button at each end. |
 | `Fit` | `"contain"` | Show the full image. `"cover"` fills the frame with cropping; other values use contain. |
+| `Labels` | `{}` | Optional translated strings: `Carousel`, `Slide`, `Viewer`, `Previous`, `Next`, `Choose`, `NoImages`, `UnavailableImage`, `ImageUnavailable`, `ZeroImages`, `EmptyGallery`; callbacks `Count(number, total)` and `ShowImage(number)`. Missing labels retain English defaults. |
 | `Indicators` | `true` | Show numbered image selectors. Set `false` for a large gallery to reduce tab stops. |
 | `OnChange` | None | Receives `(index, image)` after user navigation changes the selected position. |
 
@@ -433,6 +434,8 @@ ${Badge({ Text: "In review", Type: "warning" })}
 `Type` can be `default`, `info`, `success`, `warning`, or `danger`.
 
 ## Dialog
+
+Set `CloseLabel` (default `"Close"`) and `CloseAriaLabel` (default `"Close dialog"`) to translate the close button. Updating these options preserves modal state, keyboard behavior and focus.
 
 These components are controlled by parent state. The parent owns `Open` or `Visible`, so the UI remains easy to trace.
 

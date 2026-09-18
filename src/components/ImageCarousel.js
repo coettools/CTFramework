@@ -114,32 +114,34 @@ export class ImageCarouselComponent extends Component {
   }
 
   RenderImage(image) {
-    if (!image) return html`<p class="ct-image-carousel-empty">No images to display.</p>`;
+    const labels = this.props.Labels || {};
+    if (!image) return html`<p class="ct-image-carousel-empty">${labels.NoImages ?? "No images to display."}</p>`;
     if (this.state.FailedSource === image.Src) {
-      return html`<div class="ct-image-carousel-empty" role="img" ${CT.Attr("aria-label", image.Alt || "Unavailable image")}><p>Image unavailable.</p></div>`;
+      return html`<div class="ct-image-carousel-empty" role="img" ${CT.Attr("aria-label", image.Alt || labels.UnavailableImage || "Unavailable image")}><p>${labels.ImageUnavailable ?? "Image unavailable."}</p></div>`;
     }
 
     return html`<img class="ct-image-carousel-image" ${CT.Attr("src", image.Src)} ${CT.Attr("alt", image.Alt ?? "")} draggable="false" decoding="async" />`;
   }
 
   Render() {
-    const { Label = "Image gallery", Loop = true, Fit = "contain", Indicators = true } = this.props;
+    const { Label = "Image gallery", Loop = true, Fit = "contain", Indicators = true, Labels = {} } = this.props;
     const images = this.GetImages();
     const index = this.GetActiveIndex();
     const current = images[index];
     const hasMultiple = images.length > 1;
+    const countLabel = images.length ? (Labels.Count?.(index + 1, images.length) ?? `${index + 1} of ${images.length}`) : (Labels.ZeroImages ?? "0 images");
 
     return html`
-      <section class="ct-image-carousel" role="region" aria-roledescription="carousel" ${CT.Attr("aria-label", Label)}>
+      <section class="ct-image-carousel" role="region" ${CT.Attr("aria-roledescription", Labels.Carousel ?? "carousel")} ${CT.Attr("aria-label", Label)}>
         <header class="ct-image-carousel-header">
           <strong>${Label}</strong>
-          <span class="ct-image-carousel-count" role="status" aria-live="polite" aria-atomic="true">${images.length ? `${index + 1} of ${images.length}` : "0 images"}</span>
+          <span class="ct-image-carousel-count" role="status" aria-live="polite" aria-atomic="true">${countLabel}</span>
         </header>
-        <figure class="ct-image-carousel-slide" role="group" aria-roledescription="slide" ${CT.Attr("aria-label", images.length ? `${index + 1} of ${images.length}` : "Empty gallery")}>
+        <figure class="ct-image-carousel-slide" role="group" ${CT.Attr("aria-roledescription", Labels.Slide ?? "slide")} ${CT.Attr("aria-label", images.length ? countLabel : (Labels.EmptyGallery ?? "Empty gallery"))}>
           <div
             ${CT.Attr("className", `ct-image-carousel-viewport${Fit === "cover" ? " is-cover" : ""}`)}
             ${CT.Attr("tabIndex", hasMultiple ? 0 : -1)}
-            aria-label="Image viewer. Use left and right arrow keys to change images."
+            ${CT.Attr("aria-label", Labels.Viewer ?? "Image viewer. Use left and right arrow keys to change images.")}
             ${CT.On("keydown", (event) => this.HandleKeyDown(event))}
           >
             ${this.RenderImage(current)}
@@ -147,16 +149,22 @@ export class ImageCarouselComponent extends Component {
           <figcaption class="ct-image-carousel-caption" ${CT.Attr("hidden", !current?.Caption)}>${current?.Caption ?? ""}</figcaption>
         </figure>
         <div class="ct-image-carousel-controls" ${CT.Attr("hidden", !hasMultiple)}>
-          <button type="button" class="ct-button-secondary ct-image-carousel-previous" aria-label="Previous image" ${CT.Attr("disabled", !hasMultiple || (!Loop && index === 0))} ${CT.On("click", () => this.MoveImage(-1))}>
+          <button
+            type="button"
+            class="ct-button-secondary ct-image-carousel-previous"
+            ${CT.Attr("aria-label", Labels.Previous ?? "Previous image")}
+            ${CT.Attr("disabled", !hasMultiple || (!Loop && index === 0))}
+            ${CT.On("click", () => this.MoveImage(-1))}
+          >
             <span aria-hidden="true"></span>
           </button>
-          <div class="ct-image-carousel-indicators" role="group" aria-label="Choose an image" ${CT.Attr("hidden", !Indicators)}>
+          <div class="ct-image-carousel-indicators" role="group" ${CT.Attr("aria-label", Labels.Choose ?? "Choose an image")} ${CT.Attr("hidden", !Indicators)}>
             ${images.map(
               (_, position) =>
                 html`<button
                   type="button"
                   class="ct-image-carousel-indicator"
-                  ${CT.Attr("aria-label", `Show image ${position + 1}`)}
+                  ${CT.Attr("aria-label", Labels.ShowImage?.(position + 1) ?? `Show image ${position + 1}`)}
                   ${CT.Attr("aria-current", position === index ? "true" : null)}
                   ${CT.Attr("aria-disabled", String(position === index))}
                   ${CT.On("click", () => this.SelectImage(position))}
@@ -165,7 +173,13 @@ export class ImageCarouselComponent extends Component {
                 </button>`,
             )}
           </div>
-          <button type="button" class="ct-button-secondary ct-image-carousel-next" aria-label="Next image" ${CT.Attr("disabled", !hasMultiple || (!Loop && index === images.length - 1))} ${CT.On("click", () => this.MoveImage(1))}>
+          <button
+            type="button"
+            class="ct-button-secondary ct-image-carousel-next"
+            ${CT.Attr("aria-label", Labels.Next ?? "Next image")}
+            ${CT.Attr("disabled", !hasMultiple || (!Loop && index === images.length - 1))}
+            ${CT.On("click", () => this.MoveImage(1))}
+          >
             <span aria-hidden="true"></span>
           </button>
         </div>

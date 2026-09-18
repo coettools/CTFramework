@@ -32,6 +32,7 @@ test("publication rules distinguish public guidance from working notes", () => {
     assert.equal(internalPath.test(file), true, file);
     assert.equal(IsPublicDocument(file), false, file);
   }
+
   for (const file of ["docs/Api.md", "README.md", "tests/browser/components/README.md"]) assert.equal(IsPublicDocument(file), true, file);
   assert.equal(internalPath.test("tests/node/AuditRegression.test.js"), false);
   assert.equal(internalText.test("## Local Verification On 2000-01-01"), true);
@@ -41,6 +42,7 @@ test("publication rules distinguish public guidance from working notes", () => {
 test("tracked documentation excludes internal reports, workstation paths and workspace procedures", async (context) => {
   if (!existsSync(path.join(projectDirectory, ".git"))) {
     context.skip("Source archives have no Git index; the package allowlist is checked separately.");
+
     return;
   }
 

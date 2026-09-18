@@ -78,7 +78,7 @@ export class DialogComponent extends Component {
   }
 
   Render() {
-    const { Actions = [], Content = null, Open = false, Title = "Dialog" } = this.props;
+    const { Actions = [], Content = null, Open = false, Title = "Dialog", CloseLabel = "Close", CloseAriaLabel = "Close dialog" } = this.props;
 
     return html`
       <dialog
@@ -93,7 +93,7 @@ export class DialogComponent extends Component {
               <section class="ct-dialog">
                 <header class="ct-dialog-header">
                   <h2>${Title}</h2>
-                  <button type="button" class="ct-button-secondary" aria-label="Close dialog" ${CT.On("click", () => this.Close())}>Close</button>
+                  <button type="button" class="ct-button-secondary" ${CT.Attr("aria-label", CloseAriaLabel)} ${CT.On("click", () => this.Close())}>${CloseLabel}</button>
                 </header>
                 <div class="ct-dialog-content">${Content}</div>
                 ${Actions.length
