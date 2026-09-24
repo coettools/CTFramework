@@ -17,6 +17,36 @@ const ReadSection = (document, heading) => {
 
 const ReadDocument = async (file) => (await Read(`../../docs/${file}`)).replace(/\r\n/g, "\n");
 
+test("the child-component example runs with only its documented bundle and definitions", async (context) => {
+  const section = ReadSection(await ReadDocument("Component-Guide.md"), "Child Components");
+  const code = section.match(/```js\n([\s\S]*?)```/)?.[1];
+  assert.ok(code, "The child-component section needs a complete entry module");
+  assert.match(section, /<div id="app"><\/div>/);
+  assert.match(code, /import CT, \{ Component \} from "\.\.\/vendor\/ctframework\.bundle\.min\.js";/);
+
+  const { default: CT } = await import("../../dist/ctframework.bundle.min.js");
+  const startup = context.mock.method(CT, "Start", () => {});
+  const bundleUrl = new URL("../../dist/ctframework.bundle.min.js", import.meta.url).href;
+  const source = code.replace('"../vendor/ctframework.bundle.min.js"', JSON.stringify(bundleUrl));
+  await import(`data:text/javascript,${encodeURIComponent(source)}`);
+
+  assert.equal(startup.mock.calls.length, 1);
+  const options = startup.mock.calls[0].arguments[0];
+  assert.equal(options.Target, "#app");
+  const app = new options.App();
+  const childView = app.Render().props.values.find((value) => typeof value?.tag === "function");
+  assert.ok(childView, "The parent must include a child through CT.View");
+  assert.equal(childView.props.InitialCount, 5);
+  const child = new childView.tag(childView.props);
+  assert.equal(child.state.Count, 5);
+  const click = child.Render().props.values.find((value) => value?.eventType === "click");
+  assert.equal(typeof click?.handler, "function");
+  click.handler();
+  click.handler();
+  assert.equal(child.state.Count, 7);
+  assert.ok(child.Render().props.values.includes(7));
+});
+
 const ReadComponentExports = async () => {
   const source = await Read("../../src/Index.js");
   const names = [...source.matchAll(/import\s*\{([^}]+)\}\s*from\s*"\.\/components\/[^"]+"/g)].flatMap((match) => match[1].split(",").map((name) => name.trim())).filter((name) => name !== "Component" && publicExports.includes(name));

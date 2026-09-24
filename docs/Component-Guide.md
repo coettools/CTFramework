@@ -106,21 +106,59 @@ A nested component's render failure stays in that component's view. A later stat
 
 Use `CT.View` to include your own component in a template or a layout's `Content`. It returns a view description; CTFramework constructs and renders the child when its parent is mounted.
 
+This complete entry module defines a child counter and its parent. Load it with a module script from a page containing `<div id="app"></div>`. The bundle path assumes the module is in `src/` and the bundle is in `vendor/`; adjust it to match your files. `Counter` and `App` are example classes, not framework controls.
+
 ```js
-return ApplicationLayout({
-  Header: html`<h1>My website</h1>`,
-  Content: CT.View({
-    Component: MainContent,
-    Props: { UserName: this.state.UserName }
-  })
-});
+import CT, { Component } from "../vendor/ctframework.bundle.min.js";
+
+const html = CT.Html;
+
+class Counter extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = { Count: props.InitialCount ?? 0 };
+  }
+
+  Increase() {
+    this.SetState((state) => ({ Count: state.Count + 1 }));
+  }
+
+  Render() {
+    return html`<section>
+      <p role="status">Count: ${this.state.Count}</p>
+      <button type="button" ${CT.On("click", () => this.Increase())}>
+        Increment
+      </button>
+    </section>`;
+  }
+}
+
+class App extends Component {
+  Render() {
+    return html`<main>
+      <h1>Child component example</h1>
+      ${CT.View({
+        Component: Counter,
+        Props: { InitialCount: 5 },
+      })}
+    </main>`;
+  }
+}
+
+// Add <div id="app"></div> to your HTML.
+CT.Start({ App, Target: "#app" });
 ```
+
+The counter starts at 5. Clicking Increment changes its own state without remounting the parent. `Props.InitialCount` supplies the initial value; the child owns subsequent changes to `Count`.
 
 `Component` must be a class extending CTFramework's `Component`. `Props` defaults to an empty object. Read current parent values from `this.props` inside the child; copying props into state in the constructor captures only their initial values.
 
-Do not use `new MainContent(...).Render()`. Calling Render yourself extracts markup without mounting a managed child. A child included with `CT.View` retains its state while the same component type and identity remain in place, receives updated props, and runs its mount/update/unmount lifecycle. Removing it and adding it again starts a new instance. `SetState` updates that child's affected DOM without remounting the parent.
+CTFramework manages the child's instance, rendering, and mount/update/unmount lifecycle. The same component type and identity retain local state across parent updates while receiving current props. Removing the child and adding it again starts a new instance.
 
 For a changing list, supply a stable `Key` on the view options. Changing the key or component class deliberately creates a fresh child. Keep keys unique among siblings.
+
+In this fragment, `people` is your data array and `PersonCard` is a component you define to display `this.props.Person`.
 
 ```js
 return html`<section>

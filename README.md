@@ -67,6 +67,8 @@ Start with the [CTFramework Guide](docs/Guide.md). It is the wiki-style document
 
 The [online guide](https://framework.coettools.com/) includes interactive examples. The documentation and tests in this repository work without another project checkout.
 
+Documentation examples should be independent of any application's private setup. Include imports, component definitions and startup for standalone examples; name the required surrounding context for fragments. Explain framework behavior without prescribing a particular application structure or editor.
+
 ## Browser Verification
 
 The [component checks](http://127.0.0.1:4170/tests/browser/components/) cover table
