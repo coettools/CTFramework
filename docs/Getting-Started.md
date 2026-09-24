@@ -91,7 +91,7 @@ import { App } from "./App.js";
 CT.Start({ App, Target: "#app" });
 ```
 
-Open the project folder in VS Code and choose **Open with Live Server** on `index.html`, or use any HTTP static server. There is no need to write a custom server, install application packages, or run a build to test these files. Native module imports require HTTP rather than opening `index.html` through `file://`. Keep import path casing exact for case-sensitive servers. A plain browser cannot resolve `@coettools/ctframework` by itself; use the relative bundle import above unless your project has a package resolver or import map.
+Serve the project folder with an HTTP static server and open its URL in your browser. Any text editor can edit these files; CTFramework does not require an editor extension or a particular server. Once the bundle is present, the application needs no package installation or build step. This ES module example cannot run by opening `index.html` through `file://`. Keep import path casing exact for case-sensitive servers. A plain browser cannot resolve `@coettools/ctframework` by itself; use the relative bundle import above unless your project has a package resolver or import map.
 
 Package-managed projects may explicitly import `@coettools/ctframework/bundle` for the minified bundle or `@coettools/ctframework/bundle/debug` for the readable version. Use one variant consistently throughout the application.
 
