@@ -102,6 +102,38 @@ During `ShouldComponentUpdate`, `this.props` and `this.state` hold the previous 
 
 A nested component's render failure stays in that component's view. A later state or parent update can render it again; the fallback does not leave a detached component behind.
 
+## Child Components
+
+Use `CT.View` to include your own component in a template or a layout's `Content`. It returns a view description; CTFramework constructs and renders the child when its parent is mounted.
+
+```js
+return ApplicationLayout({
+  Header: html`<h1>My website</h1>`,
+  Content: CT.View({
+    Component: MainContent,
+    Props: { UserName: this.state.UserName }
+  })
+});
+```
+
+`Component` must be a class extending CTFramework's `Component`. `Props` defaults to an empty object. Read current parent values from `this.props` inside the child; copying props into state in the constructor captures only their initial values.
+
+Do not use `new MainContent(...).Render()`. Calling Render yourself extracts markup without mounting a managed child. A child included with `CT.View` retains its state while the same component type and identity remain in place, receives updated props, and runs its mount/update/unmount lifecycle. Removing it and adding it again starts a new instance. `SetState` updates that child's affected DOM without remounting the parent.
+
+For a changing list, supply a stable `Key` on the view options. Changing the key or component class deliberately creates a fresh child. Keep keys unique among siblings.
+
+```js
+return html`<section>
+  ${people.map((person) => CT.View({
+    Component: PersonCard,
+    Props: { Person: person },
+    Key: person.Id
+  }))}
+</section>`;
+```
+
+`CT.View` does not add a wrapper element or additional CSS. The child's markup and any controls it uses determine its appearance.
+
 ## Identity In Lists
 
 Stateful framework controls accept `Key` to identify an item within a dynamic list. Use a stable record identifier, not the current array position. Moving a keyed control keeps its instance and state; removing it runs cleanup. Keys must be unique within that list.

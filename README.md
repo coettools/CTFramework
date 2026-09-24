@@ -79,6 +79,9 @@ Run `npm run test:browser` and open [the showcase](http://127.0.0.1:4170/tests/b
 
 The [runtime regression page](http://127.0.0.1:4170/tests/browser/runtime/) checks keyed updates, lifecycle guards, fallback recovery, cleanup, events, forms, dropdowns, toast reuse, and modal behavior. Add `?source` to test source modules instead of the minified bundle. Also run the `rendering`, `code-block`, and `image-carousel` pages under `tests/browser/`. Exercise the controls with mouse, keyboard, and a narrow viewport; Node tests alone do not validate browser behavior.
 
+The [startup and child-view checks](tests/browser/startup/README.md) cover `CT.Start`,
+`CT.View`, parent updates, input focus, cleanup, and startup failures.
+
 - [Getting Started](docs/Getting-Started.md)
 - [HTML And DOM](docs/Html-And-Dom.md)
 - [Component Guide](docs/Component-Guide.md)
@@ -126,10 +129,10 @@ class App extends Component {
   }
 }
 
-CT(() => {
-  CT.Mount(App, "#app");
-});
+CT.Start({ App, Target: "#app" });
 ```
+
+Use `CT.Start({ App, Target: "#app" })` to start an application with readiness and startup error handling included. Use `CT.View({ Component: Child, Props: { Name: "Ada" } })` inside a template or layout to include a managed child component. Do not call a child's `Render()` yourself. See [startup](docs/Getting-Started.md#start-an-application) and [child views](docs/Component-Guide.md#child-components).
 
 ## DOM helpers
 

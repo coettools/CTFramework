@@ -40,6 +40,8 @@ import CT, {
 | `CT(callback)` | Runs `callback` once the document is ready. |
 | `CT(selector, scope?)` | Returns a chainable DOM selection. |
 | `CT.Ready(callback)` | Explicit form of `CT(callback)`. |
+| `CT.Start({ App, Target?, Props? })` | Waits for the document, mounts an application class, and handles startup failures. Returns a promise of the root/fallback DOM node, or null when no fallback can be displayed. Target defaults to #app. |
+| `CT.View({ Component, Props?, Key? })` | Describes a managed child component for a template or layout. Key identifies the child in a changing list. |
 | `CT.CreateSelection(target, scope?)` | Explicit selection helper; accepts a selector, DOM node, or iterable of nodes. |
 | `CT.Html` | Tagged template function for component markup. One root HTML element is required. |
 | `CT.On(eventType, handler)` | Adds an event marker inside an HTML start tag. |

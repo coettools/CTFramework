@@ -22,6 +22,7 @@ import CT, {
 } from "../../../src/Index.js";
 import { CSharpCode } from "../../fixtures/CSharpCode.js";
 import { CarouselImages } from "../../fixtures/CarouselImages.js";
+import { ChildCounter } from "./components/ChildCounter.js";
 
 const html = CT.Html;
 
@@ -274,6 +275,8 @@ export class App extends Component {
             body: "A small class component can own state updates without bringing in a large framework runtime.",
           })}
           <div class="stats-grid">${StatCard({ label: "Current count", value: this.state.count })} ${StatCard({ label: "Saved notes", value: this.state.notes.length })}</div>
+          ${CT.View({ Component: ChildCounter, Props: { ParentCount: this.state.count } })}
+          ${UsageExample({ Code: 'CT.Start({ App, Target: "#app" });\n\n// Inside Render, include a managed child:\nCT.View({\n  Component: ChildCounter,\n  Props: { ParentCount: this.state.count }\n});' })}
           <div class="button-row">
             <button type="button" ${CT.On("click", () => this.actions.incrementCount(1))}>Increment</button>
             <button type="button" class="ct-button-secondary" ${CT.On("click", () => this.actions.incrementCount(-1))}>Decrement</button>

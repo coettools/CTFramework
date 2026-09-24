@@ -6,7 +6,7 @@ accent edges belong to headers and selected navigation items.
 
 ## Load The Default
 
-`CT.Mount` adds the stylesheet once. Both standalone bundles embed it; no separate
+`CT.Start` and `CT.Mount` add the stylesheet once. Both standalone bundles embed it; no separate
 framework CSS download or import is needed. The module distribution includes its
 stylesheet in styles/Default.css.
 
@@ -22,7 +22,7 @@ class App extends Component {
   }
 }
 
-CT(() => CT.Mount(App, "#app"));
+CT.Start({ App, Target: "#app" });
 ```
 
 The stylesheet uses `@layer ctframework`. Normal, unlayered project CSS takes

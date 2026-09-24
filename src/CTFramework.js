@@ -1,4 +1,6 @@
 import { Component } from "./components/Component.js";
+import { View } from "./components/ComponentFactory.js";
+import { Start } from "./Startup.js";
 import { Guid } from "./utils/Guid.js";
 import { IsClassComponent, IsFunctionalComponent, IsTextNode, NormalizeNodes, NormalizeNode, CloneState } from "./html/RenderNodes.js";
 
@@ -1399,6 +1401,8 @@ export const CT = (target, scope) => {
 
 CT.CreateSelection = (target, scope) => new CTSelection(target, scope);
 CT.Html = CreateTemplate;
+CT.Start = (options) => Start(options);
+CT.View = (options) => View(options);
 CT.On = (eventType, handler) => ({ __ctTemplateMarker: "event", eventType, handler });
 CT.Attr = (name, value) => ({ __ctTemplateMarker: "attribute", name, value });
 CT.Ready = (callback) => CTFramework.Ready(callback);

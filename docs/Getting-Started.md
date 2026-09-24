@@ -50,21 +50,19 @@ Start it from `src/Main.js`:
 import CT from "@coettools/ctframework";
 import { App } from "./App.js";
 
-CT(() => {
-  CT.Mount(App, "#app");
-});
+CT.Start({ App, Target: "#app" });
 ```
 
 The document needs a mount target:
 
 ```html
 <body>
-  <div id="app"></div>
+  <div id="app">The application has not started. Check the browser console if this message remains.</div>
   <script type="module" src="./src/Main.js"></script>
 </body>
 ```
 
-`CT.Mount` adds CTFramework's default stylesheet once. Add ordinary project CSS after your module or stylesheet links to override its layered defaults. See [Styling](Styling.md).
+`CT.Start` mounts the application and adds CTFramework's default stylesheet once. Add ordinary project CSS to override its layered defaults. See [Styling](Styling.md).
 
 ## Use The Standalone Bundle
 
@@ -90,12 +88,30 @@ In `src/Main.js`, replace the CT import with the same bundle path. Keep the loca
 import CT from "../vendor/ctframework.bundle.min.js";
 import { App } from "./App.js";
 
-CT(() => CT.Mount(App, "#app"));
+CT.Start({ App, Target: "#app" });
 ```
 
-Serve the project over HTTP rather than opening `index.html` as a local file. Keep import path casing exact for case-sensitive servers. A plain browser cannot resolve `@coettools/ctframework` by itself; use the relative bundle import above unless your project has a package resolver or import map.
+Open the project folder in VS Code and choose **Open with Live Server** on `index.html`, or use any HTTP static server. There is no need to write a custom server, install application packages, or run a build to test these files. Native module imports require HTTP rather than opening `index.html` through `file://`. Keep import path casing exact for case-sensitive servers. A plain browser cannot resolve `@coettools/ctframework` by itself; use the relative bundle import above unless your project has a package resolver or import map.
 
 Package-managed projects may explicitly import `@coettools/ctframework/bundle` for the minified bundle or `@coettools/ctframework/bundle/debug` for the readable version. Use one variant consistently throughout the application.
+
+## Start An Application
+
+`CT.Start` is the application entry point. Pass your `Component` subclass as `App`, not an instance or a call to `Render`. `Target` accepts an element or selector and defaults to `"#app"`. Optional `Props` is an object passed to the constructor.
+
+```js
+CT.Start({
+  App,
+  Target: "#app",
+  Props: { UserName: "Ada" }
+});
+```
+
+The framework waits until the document is ready, resolves the target, mounts the component, and adds the default CSS once. Its promise resolves to the rendered root DOM node or the standard error fallback. Invalid options, constructor failures, and mounting errors are reported to the console. A missing or invalid target resolves to `null` without replacing other page content. If the fallback itself cannot be displayed, the result is also `null`.
+
+Keep a short message in the HTML mount element: if a script or static import cannot load, no JavaScript entry point can run to replace that message. `CT.Start` does not catch failures that prevent the framework or your entry module from loading. Applications needing custom import recovery can retain a small import-error boundary in their entry module.
+
+Use `CT.View` to include stateful children inside your application's returned content. See [Child Components](Component-Guide.md#child-components).
 
 ## Mount And Unmount
 

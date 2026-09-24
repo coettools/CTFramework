@@ -12,15 +12,11 @@ const appRouter = new Router([Route("/", "home"), Route("/notes", "notes"), Rout
 
 if (appRouter.currentPath === "/index.html") appRouter.Replace("/");
 
-CT(() => {
-  const appElement = CT("#app").Get();
-
-  if (!appElement) {
-    throw new Error("Showcase app element was not found.");
-  }
-
-  CT.Mount(App, appElement, {
+CT.Start({
+  App,
+  Target: "#app",
+  Props: {
     router: appRouter,
     store: appStore,
-  });
+  },
 });

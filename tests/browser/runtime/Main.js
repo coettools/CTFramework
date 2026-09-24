@@ -15,8 +15,7 @@ const Update = async (app, state) => {
   await Frame();
 };
 
-// Internal vnode construction is confined to runtime tests, not application examples.
-const Child = (type, props = {}) => ({ tag: type, props, key: props.Key ?? null, children: [], dom: null });
+const Child = (type, props = {}) => CT.View({ Component: type, Props: props, Key: props.Key ?? null });
 const Keyed = (key, vnode) => ({ ...vnode, key });
 const mount = document.querySelector("#app");
 let passed = 0;
