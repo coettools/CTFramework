@@ -43,7 +43,11 @@ Router.NormalizePath("settings/"); // "/settings"
 Router.NormalizePath("/settings?tab=profile#details"); // "/settings"
 ```
 
-BasePath defaults to `/`. GetCurrentPath returns the route without that prefix, or null outside its boundary. Resolve tries literal paths first, then named-parameter routes in registration order, then `*` or `/*`. It returns the original route record. Query strings and ordinary section fragments are preserved by navigation but ignored for matching. Read them using the browser's URL APIs. Pass application paths, not external URLs or fragment-only navigation. Use native anchors for ordinary section links.
+BasePath defaults to `/`. GetCurrentPath returns the route without that prefix, or null outside its boundary. Resolve tries literal paths first, then named-parameter routes in registration order, then the `*` fallback. It returns the original route record, or null if nothing matches and no fallback is registered.
+
+Use exactly `*` for the fallback route path, without a leading slash, whitespace, query string, or fragment. Other spellings of this root fallback throw TypeError when routes are resolved.
+
+Query strings and ordinary section fragments are preserved by navigation but ignored for matching. Read them using the browser's URL APIs. Pass application paths, not external URLs or fragment-only navigation. Use native anchors for ordinary section links.
 
 ### Named Parameters
 

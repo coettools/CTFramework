@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Route, Router } from "../../src/Index.js";
+import * as ReadableFramework from "../../dist/ctframework.bundle.js";
+import * as MinifiedFramework from "../../dist/ctframework.bundle.min.js";
 
 const CreateWindowMock = (context, pathname = "/") => {
   const originalWindow = globalThis.window;
@@ -165,3 +167,68 @@ test("Router parameter names are unique identifiers and cannot mutate object pro
 
   router.Destroy();
 });
+
+for (const [name, framework] of [
+  ["source", { Route, Router }],
+  ["readable bundle", ReadableFramework],
+  ["minified bundle", MinifiedFramework],
+]) {
+  test(`${name}: Router rejects alternate root fallback definitions after normalization`, (context) => {
+    CreateWindowMock(context);
+    const fallback = framework.Route("*", "missing");
+    const router = new framework.Router([fallback]);
+
+    for (const path of ["/*", " /* ", " * ", "/*/", "*?q=1", "/*?q=1#section", "/*#section", "/one/../*", "/one/%2e%2e/*"]) {
+      for (const record of [framework.Route(path, "invalid"), { path, component: "invalid" }]) {
+        router.routes = [fallback, framework.Route("/known", "known"), record];
+        assert.throws(() => router.Resolve("/known"), { name: "TypeError", message: 'Use "*" as the fallback route path.' });
+        assert.throws(() => router.Resolve(null), /fallback route path/);
+        assert.throws(() => router.GetParameters("/missing"), /fallback route path/);
+      }
+    }
+
+    router.routes = [fallback];
+    fallback.path = "/*";
+    assert.throws(() => router.Resolve("/missing"), /fallback route path/);
+    router.Destroy();
+  });
+
+  test(`${name}: Router keeps exact fallback precedence, identity and path behavior`, (context) => {
+    const browser = CreateWindowMock(context, "/guide/business/initial");
+    const fallback = framework.Route("*", "missing");
+    const secondFallback = framework.Route("*", "second");
+    const parameter = framework.Route("/business/:Id", "business");
+    const literal = framework.Route("/business/new", "new");
+    const router = new framework.Router([fallback, parameter, literal, secondFallback], { BasePath: "/guide" });
+
+    assert.equal(router.Resolve(), parameter);
+    assert.deepEqual(router.GetParameters(), { Id: "initial" });
+    assert.equal(router.Resolve("/business/new/?tab=details#heading"), literal);
+    assert.deepEqual(router.GetParameters("/business/new"), {});
+    assert.equal(router.Resolve("/missing"), fallback);
+    assert.deepEqual(router.GetParameters("/missing"), {});
+    assert.equal(router.Resolve("/*"), fallback);
+    assert.equal(framework.Router.NormalizePath("*"), "/*");
+
+    router.Navigate("/business/*?tab=details#heading");
+    assert.equal(browser.location.pathname, "/guide/business/*");
+    assert.deepEqual(router.GetParameters(), { Id: "*" });
+    assert.deepEqual(router.GetParameters("/business/%2A"), { Id: "*" });
+    browser.history.pushState({}, "", "/guide-other/business/initial");
+    router.HandlePopState();
+    assert.equal(router.currentPath, null);
+    assert.equal(router.Resolve(), fallback);
+    assert.deepEqual(router.GetParameters(), {});
+
+    const literalStar = framework.Route("/docs/*", "literal-star");
+    const encodedStar = framework.Route("/%2A", "encoded-star");
+    router.routes = [parameter, literalStar, encodedStar];
+    assert.equal(router.Resolve("/docs/*"), literalStar);
+    assert.equal(router.Resolve("/%2A"), encodedStar);
+    assert.equal(router.Resolve("/docs/other"), null);
+    assert.equal(router.Resolve("/missing"), null);
+    assert.equal(router.Resolve(null), null);
+    assert.deepEqual(router.GetParameters("/missing"), {});
+    router.Destroy();
+  });
+}

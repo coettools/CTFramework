@@ -76,19 +76,26 @@ export class Router {
 
   Resolve(path = this.currentPath) {
     const currentPath = path === null ? null : Router.NormalizePath(path);
-    const candidates = this.routes.filter((route) => !["*", "/*"].includes(route.path)).map((route) => ({ route, pattern: Router.NormalizePath(route.path) }));
+    const candidates = this.routes
+      .filter((route) => route.path !== "*")
+      .map((route) => {
+        const pattern = Router.NormalizePath(route.path);
+        if (pattern === "/*") throw new TypeError('Use "*" as the fallback route path.');
+
+        return { route, pattern };
+      });
 
     return (
       candidates.find(({ pattern }) => !/(^|\/):/.test(pattern) && pattern === currentPath)?.route ||
       candidates.find(({ pattern }) => /(^|\/):/.test(pattern) && MatchParameters(pattern, currentPath) !== null)?.route ||
-      this.routes.find((route) => route.path === "*" || route.path === "/*") ||
+      this.routes.find((route) => route.path === "*") ||
       null
     );
   }
 
   GetParameters(path = this.currentPath) {
     const route = this.Resolve(path);
-    if (!route || ["*", "/*"].includes(route.path)) return {};
+    if (!route || route.path === "*") return {};
 
     return MatchParameters(Router.NormalizePath(route.path), path === null ? null : Router.NormalizePath(path)) || {};
   }
