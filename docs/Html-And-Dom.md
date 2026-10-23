@@ -29,13 +29,30 @@ Template handlers receive a delegated event view: `target` is the original click
 html`<button type="button" ${CT.On("click", (event) => console.log(event.currentTarget))}>Save</button>`;
 ```
 
-Template events support `click`, `dblclick`, `input`, `change`, `submit`, `keydown`, `keyup`, `keypress`, `mousedown`, `mouseup`, `pointerdown`, `pointerup`, `focusin`, `focusout`, and `contextmenu`. Use `focusin` and `focusout` for delegated focus behavior.
+Template events support `click`, `dblclick`, `input`, `change`, `submit`, `keydown`, `keyup`, `keypress`, `mousedown`, `mouseup`, `pointerdown`, `pointerup`, `focusin`, `focusout`, and `contextmenu`. `focus` and `blur` also work; CTFramework normalizes them to delegated `focusin` and `focusout`. Unsupported event names are rejected. An event marker in template content is invalid; keep it in an opening tag.
 
 ## Dynamic Attributes: CT.Attr
 
-Use `CT.Attr(name, value)` for values that change during rendering. `true` creates a boolean attribute; `false`, `null`, and `undefined` remove it.
+Use `CT.Attr(name, value)` for values that change during rendering. For HTML boolean attributes, `true` sets the attribute and `false`, `null`, or `undefined` removes it. Property-only booleans such as a checkbox's `indeterminate` set or reset the DOM property instead.
 
 Use strings for ARIA states: `CT.Attr("aria-expanded", String(isOpen))`. Use `null` to omit an ARIA attribute, for example on an inactive carousel selector. A changed attribute name removes the previous binding. Object style bindings remove properties no longer present.
+
+`value`, `checked`, and `indeterminate` are special DOM-property bindings. Other boolean values use HTML content attributes, including `selected`, so native `defaultSelected` and form-reset behavior remain intact. Other non-boolean bindings may use writable DOM properties where available. Getter-only relationships such as `form` and `list` use HTML attributes: pass the target form or datalist's ID, not the element itself. Changing the ID updates the association; removing `form` restores the nearest ancestor form, or leaves the control unowned when it has no ancestor form. Invalid values rejected by a writable property still reach the component's error handling.
+
+Use a complete marker in the start tag, such as `${CT.Attr("title", title)}`. Do not place the marker inside a quoted attribute value. Static `class="panel"` uses HTML spelling; dynamic `CT.Attr("class", value)` and `CT.Attr("className", value)` both write that same `class` attribute.
+
+On an unrelated update, an unchanged `value` or `checked` binding leaves a user's current DOM edit alone. When the bound value changes, CTFramework applies it. If the edit should persist as application state, update state in an `input` or `change` handler:
+
+```js
+return html`<label>Name
+  <input
+    ${CT.Attr("value", this.state.Name)}
+    ${CT.On("input", (event) => this.SetState({ Name: event.currentTarget.value }))}
+  >
+</label>`;
+```
+
+Changing a numeric binding such as `CT.Attr("size", 20)` to `CT.Attr("size", null)` removes the reflected HTML attribute without assigning an invalid empty value to its numeric property. `CT.Attr("indeterminate", true)` sets a checkbox's indeterminate property; `false` or removal clears it.
 
 ```js
 html`
@@ -44,6 +61,29 @@ html`
     ${CT.Attr("disabled", this.state.IsSaving)}
     ${CT.Attr("className", this.state.HasError ? "has-error" : "")}
   >
+`;
+```
+
+For example, this input uses native form and datalist associations. This is a `Render` fragment; `this.state.FormId` is `"profile-form"` and `this.state.ListId` is `"name-suggestions"` initially.
+
+```js
+return html`
+  <section>
+    <form id="profile-form">
+      <button type="submit">Save</button>
+    </form>
+    <label for="profile-name">Name</label>
+    <input
+      id="profile-name"
+      name="Name"
+      ${CT.Attr("form", this.state.FormId)}
+      ${CT.Attr("list", this.state.ListId)}
+    >
+    <datalist id="name-suggestions">
+      <option value="Ada"></option>
+      <option value="Grace"></option>
+    </datalist>
+  </section>
 `;
 ```
 

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { Accordion, Alert, ApplicationLayout, DataTable, Dropdown, Tooltip } from "../../src/Index.js";
+import { Accordion, Alert, ApplicationLayout, DataTable, Dropdown, FallbackView, Tooltip } from "../../src/Index.js";
 import { AccordionComponent } from "../../src/components/Accordion.js";
 import { DataTableComponent } from "../../src/components/DataTable.js";
 import { DropdownComponent } from "../../src/components/Dropdown.js";
@@ -11,6 +11,13 @@ test("component factories return a renderable component node", () => {
   assert.equal(Accordion({ Items: [] }).tag, AccordionComponent);
   assert.equal(DataTable({ Data: [] }).tag, DataTableComponent);
   assert.equal(Dropdown({ Options: [] }).tag, DropdownComponent);
+});
+
+test("FallbackView binds its dynamic type class with an attribute marker", () => {
+  const view = FallbackView({ Type: "missing" });
+  const attribute = view.props.values.find((value) => value?.__ctTemplateMarker === "attribute");
+  assert.equal(attribute.name, "className");
+  assert.equal(attribute.value, "ct-fallback ct-fallback-missing");
 });
 
 test("DataTable filters rows and calculates stable page counts", () => {

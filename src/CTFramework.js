@@ -125,6 +125,9 @@ export class CTFramework {
   static eventHandlers = {};
   static pendingUpdates = [];
   static queuedComponentUpdates = new Map();
+  static componentUpdateCounts = null;
+  static maximumComponentUpdates = 100;
+  static propertyBindings = new WeakMap();
   static supportedEvents = ["click", "dblclick", "input", "change", "submit", "keydown", "keyup", "keypress", "mousedown", "mouseup", "pointerdown", "pointerup", "focusin", "focusout", "contextmenu"];
   static isEventDelegationReady = false;
 
@@ -185,7 +188,7 @@ export class CTFramework {
   static ScheduleUpdate(updateFunction) {
     CTFramework.pendingUpdates.push(updateFunction);
 
-    if (CTFramework.pendingUpdates.length === 1) {
+    if (CTFramework.pendingUpdates.length === 1 && !CTFramework.componentUpdateCounts) {
       requestAnimationFrame(() => {
         CTFramework.ProcessUpdates();
       });
@@ -226,9 +229,15 @@ export class CTFramework {
   }
 
   static ProcessUpdates() {
-    while (CTFramework.pendingUpdates.length) {
-      const updateFunction = CTFramework.pendingUpdates.shift();
-      updateFunction && updateFunction();
+    CTFramework.componentUpdateCounts = new Map();
+
+    try {
+      while (CTFramework.pendingUpdates.length) {
+        const updateFunction = CTFramework.pendingUpdates.shift();
+        updateFunction && updateFunction();
+      }
+    } finally {
+      CTFramework.componentUpdateCounts = null;
     }
   }
 
@@ -250,6 +259,19 @@ export class CTFramework {
     if (!component.vnode || component.__disposed) {
       return;
     }
+
+    const counts = CTFramework.componentUpdateCounts;
+    const count = counts?.get(component) ?? 0;
+    if (counts && count >= CTFramework.maximumComponentUpdates) {
+      if (count === CTFramework.maximumComponentUpdates) {
+        counts.set(component, count + 1);
+        CTFramework.RenderErrorFallback(component, new Error(`Maximum update limit exceeded in ${component.constructor.name}. Check SetState calls in ComponentOnUpdate.`));
+      }
+
+      return;
+    }
+
+    counts?.set(component, count + 1);
 
     try {
       const oldVNode = component.vnode;
@@ -290,7 +312,7 @@ export class CTFramework {
       // The framework fallback still renders if an application's error hook fails.
     }
 
-    const fallback = CTFramework.CreateErrorFallbackDom(error);
+    const fallback = CTFramework.CreateErrorFallbackDom();
     const oldDom = component.vnode?.dom;
 
     const canReplaceOldDom = oldDom?.parentNode && (!component.__container || oldDom.parentNode === component.__container);
@@ -321,7 +343,7 @@ export class CTFramework {
     return fallback;
   }
 
-  static CreateErrorFallbackDom(error) {
+  static CreateErrorFallbackDom() {
     const section = document.createElement("section");
     section.className = "ct-fallback ct-fallback-error";
     section.setAttribute("role", "alert");
@@ -337,16 +359,12 @@ export class CTFramework {
     message.className = "ct-muted";
     message.textContent = "The current view could not be rendered. You can reload the page and continue working.";
 
-    const detail = document.createElement("pre");
-    detail.className = "ct-code-snippet";
-    detail.textContent = error instanceof Error ? error.message : String(error);
-
     const reload = document.createElement("button");
     reload.type = "button";
     reload.textContent = "Reload page";
     reload.addEventListener("click", () => window.location.reload());
 
-    section.append(eyebrow, title, message, detail, reload);
+    section.append(eyebrow, title, message, reload);
 
     return section;
   }
@@ -615,11 +633,7 @@ export class CTFramework {
   }
 
   static UpdateEventHandler(dom, name, value) {
-    const eventType = CTFramework.NormalizeEventType(name.toLowerCase().substring(2));
-
-    if (!CTFramework.supportedEvents.includes(eventType)) {
-      return;
-    }
+    const eventType = CTFramework.ValidateEventType(name.substring(2));
 
     const eventId = CTFramework.EnsureEventId(dom);
     CTFramework.eventHandlers[eventId] ||= {};
@@ -659,6 +673,33 @@ export class CTFramework {
     return eventType;
   }
 
+  static ValidateEventType(eventType) {
+    const normalized = typeof eventType === "string" ? CTFramework.NormalizeEventType(eventType.toLowerCase()) : "";
+    if (!CTFramework.supportedEvents.includes(normalized)) {
+      throw new TypeError(`Unsupported CT.On event ${JSON.stringify(eventType)}. Use one of: ${CTFramework.supportedEvents.join(", ")}. focus and blur are also accepted.`);
+    }
+
+    return normalized;
+  }
+
+  static CanSetDomProperty(dom, name) {
+    if (!(name in dom)) {
+      return false;
+    }
+
+    let owner = dom;
+    while (owner) {
+      const descriptor = Object.getOwnPropertyDescriptor(owner, name);
+      if (descriptor) {
+        return descriptor.writable === true || typeof descriptor.set === "function";
+      }
+
+      owner = Object.getPrototypeOf(owner);
+    }
+
+    return false;
+  }
+
   static SetDomProperty(dom, name, value) {
     if (name === "className") {
       dom.setAttribute("class", value);
@@ -673,13 +714,14 @@ export class CTFramework {
     }
 
     if (name === "value") {
-      dom.value = value ?? "";
+      const nextValue = value === null || value === undefined ? "" : String(value);
+      if (dom.value !== nextValue) dom.value = nextValue;
 
       return;
     }
 
-    if (name === "checked") {
-      dom.checked = Boolean(value);
+    if (name === "checked" || name === "indeterminate") {
+      dom[name] = Boolean(value);
 
       return;
     }
@@ -694,8 +736,19 @@ export class CTFramework {
       return;
     }
 
-    if (name in dom && name !== "list") {
+    if (CTFramework.CanSetDomProperty(dom, name)) {
       dom[name] = value;
+      if (dom.hasAttribute(name)) {
+        CTFramework.propertyBindings.get(dom)?.delete(name);
+      } else {
+        let bindings = CTFramework.propertyBindings.get(dom);
+        if (!bindings) {
+          bindings = new Set();
+          CTFramework.propertyBindings.set(dom, bindings);
+        }
+
+        bindings.add(name);
+      }
 
       return;
     }
@@ -722,19 +775,18 @@ export class CTFramework {
       return;
     }
 
-    if (name === "checked") {
-      dom.checked = false;
+    if (name === "checked" || name === "indeterminate") {
+      dom[name] = false;
 
       return;
     }
 
-    if (name in dom && typeof oldValue !== "string" && typeof oldValue !== "object") {
-      try {
-        dom[name] = "";
-      } catch {
-        // Some native properties are read-only; their attribute can still be removed.
-      }
+    const bindings = CTFramework.propertyBindings.get(dom);
+    if (bindings?.has(name) && oldValue !== undefined && oldValue !== false && typeof oldValue !== "string" && typeof oldValue !== "object" && CTFramework.CanSetDomProperty(dom, name)) {
+      dom[name] = typeof oldValue === "boolean" ? false : "";
     }
+
+    bindings?.delete(name);
 
     // Reflected property setters may recreate an empty attribute.
     dom.removeAttribute(name);
@@ -819,6 +871,19 @@ export class CTFramework {
       slot = slotWalker.nextNode();
     }
 
+    values.forEach((value, index) => {
+      const marker = IsTemplateMarker(value, "event") ? "event" : IsTemplateMarker(value, "attribute") ? "attribute" : null;
+      if (marker) {
+        const name = `data-ct-template-${marker}-${index}`;
+        const matches = vnode.templateBindingElements.filter((element) => element.hasAttribute(name));
+        if (matches.length !== 1 || matches[0].getAttribute(name) !== "") {
+          throw new TypeError(`Put CT.${marker === "event" ? "On" : "Attr"} inside the element's start tag, outside attribute quotes.`);
+        }
+      } else if (slots.filter((entry) => entry.index === index).length !== 1) {
+        throw new TypeError("Put dynamic text in element content. Use CT.Attr(name, value) for dynamic attributes, outside attribute quotes.");
+      }
+    });
+
     slots.forEach(({ index, node }) => {
       const value = values[index];
       const children = NormalizeNodes([value]);
@@ -899,9 +964,11 @@ export class CTFramework {
           }
           if (!attributeValue) return;
           const { name, value } = attributeValue;
-          if (name === "style") CTFramework.UpdateStyle(element, oldAttribute?.value, value);
+          const previousValue = oldAttribute?.name === name ? oldAttribute.value : undefined;
+          if ((name === "value" || name === "checked") && oldAttribute?.name === name && Object.is(oldAttribute.value, value)) return;
+          if (name === "style") CTFramework.UpdateStyle(element, previousValue, value);
           else if (value === undefined || value === null || value === false) {
-            CTFramework.RemoveDomProperty(element, name, oldAttribute?.value);
+            CTFramework.RemoveDomProperty(element, name, previousValue);
           } else CTFramework.SetDomProperty(element, name, value);
         }
       });
@@ -1403,7 +1470,7 @@ CT.CreateSelection = (target, scope) => new CTSelection(target, scope);
 CT.Html = CreateTemplate;
 CT.Start = (options) => Start(options);
 CT.View = (options) => View(options);
-CT.On = (eventType, handler) => ({ __ctTemplateMarker: "event", eventType, handler });
+CT.On = (eventType, handler) => ({ __ctTemplateMarker: "event", eventType: CTFramework.ValidateEventType(eventType), handler });
 CT.Attr = (name, value) => ({ __ctTemplateMarker: "attribute", name, value });
 CT.Ready = (callback) => CTFramework.Ready(callback);
 CT.Mount = (component, container, props = {}) => {

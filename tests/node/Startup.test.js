@@ -73,7 +73,8 @@ test("Start displays the framework fallback for constructor failure and releases
   assert.deepEqual(CT.Unmount.mock.calls[0].arguments, [host]);
   assert.deepEqual(host.replaceChildren.mock.calls[0].arguments, [fallback]);
   assert.equal(CTFramework.EnsureDefaultStyles.mock.calls.length, 1);
-  assert.match(CTFramework.CreateErrorFallbackDom.mock.calls[0].arguments[0].message, /Constructor failed/);
+  assert.equal(CTFramework.CreateErrorFallbackDom.mock.calls[0].arguments.length, 0);
+  assert.match(console.error.mock.calls[0].arguments[1].message, /Constructor failed/);
 });
 
 test("Start reports missing or invalid targets without overwriting another part of the page", async (context) => {

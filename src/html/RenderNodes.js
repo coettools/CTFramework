@@ -21,7 +21,7 @@ export const NormalizeNodes = (children, results = []) => {
       continue;
     }
 
-    results.push(typeof child === "string" || typeof child === "number" ? CreateTextNode(child) : child);
+    results.push(NormalizeNode(child));
   }
 
   return results;
@@ -32,7 +32,15 @@ export const NormalizeNode = (node) => {
     return CreateTextNode("");
   }
 
-  return typeof node === "string" || typeof node === "number" ? CreateTextNode(node) : node;
+  if (typeof node === "string" || typeof node === "number") return CreateTextNode(node);
+  if (node instanceof Component) {
+    throw new TypeError("Use CT.View({ Component: Child, Props }) for a managed child, not a Component instance or a manual Render() call.");
+  }
+  if (typeof node !== "object" || (typeof node.tag !== "string" && typeof node.tag !== "function")) {
+    throw new TypeError("Render and template children must be text or CTFramework views. Use CT.View for a child Component.");
+  }
+
+  return node;
 };
 
 export const IsTextNode = (node) => node?.tag === "text";

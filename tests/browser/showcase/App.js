@@ -190,7 +190,7 @@ export class App extends Component {
         Title: "CodeBlock",
         Content: html`<section>
           ${CodeBlock({ Title: "Usage", Code: 'CodeBlock({\n  Title: "Greeting.cs",\n  Language: "csharp",\n  Code: source,\n  LineNumbers: true,\n  Wrap: false,\n  Copy: true\n});' })}
-          ${CodeBlock({ Title: "Greeting.cs", Language: "csharp", Code: CSharpCode })}
+          <div class="showcase-csharp">${CodeBlock({ Title: "Greeting.cs", Language: "csharp", Code: CSharpCode })}</div>
         </section>`,
       },
       {

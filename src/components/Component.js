@@ -46,5 +46,7 @@ export class Component {
   ComponentOnMount() {}
   ComponentOnUpdate(_, _2) {}
   ComponentOnUnmount() {}
-  ComponentOnCatch(_, _2) {}
+  ComponentOnCatch(error, info) {
+    console.error(`CTFramework could not render ${info.component}.`, error);
+  }
 }

@@ -136,6 +136,7 @@ ${Dropdown({
   Label: "Environment",
   Required: true,
   Disabled: false,
+  Placeholder: "Select an option",
   Value: selectedEnvironment,
   Options: [
     { Value: "development", Label: "Development" },
@@ -146,6 +147,8 @@ ${Dropdown({
 ```
 
 Options can be strings or `{ Value, Label }` objects. `OnChange(value, option)` receives the selected value and source option.
+
+`Placeholder` defaults to `"Select an option"` and labels the empty-string option. Set it to a different string to change that prompt.
 
 Selecting the placeholder calls `OnChange("", null)`. Handle that empty selection explicitly when the value is required; it does not throw or remount the select.
 
@@ -312,11 +315,18 @@ CodeBlock({
   Title: "Greeting.cs",
   Language: "csharp",
   Code: [
-    "public static string Create(string name)",
+    "namespace coettools.Examples",
     "{",
-    '    return $"Hello, {name}!";',
-    "}"
-  ].join("\n")
+    "\tpublic static class Greeting",
+    "\t{",
+    "\t\tpublic static string Create(string name)",
+    "\t\t{",
+    '\t\t\treturn $"Hello, {name}!";',
+    "\t\t}",
+    "\t}",
+    "}",
+    ""
+  ].join("\r\n")
 });
 ```
 
@@ -325,6 +335,7 @@ directives, method calls, and character, regular, verbatim, interpolated, and ra
 strings. These [C# string forms](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/strings/)
 remain source text; CTFramework does not compile or run them. Use `String.raw` when
 writing a JavaScript template string that contains C# backslash escapes.
+The display normalizes CRLF to LF; Copy preserves the source's line endings and tabs.
 
 Highlighting is lexical, not semantic: contextual keywords are coloured wherever
 they occur, and custom types are not inferred. Interpolated string contents use one

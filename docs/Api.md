@@ -2,6 +2,8 @@
 
 This is the compact public API index. For copy-ready individual examples, use the [CTFramework Guide](Guide.md). Component-specific options are in [Components.md](Components.md), and default CSS and overrides are in [Styling.md](Styling.md).
 
+The package-name import below needs module tooling that resolves `@coettools/ctframework`. In a plain browser module, import the built standalone bundle by a relative path instead; see [Getting Started](Getting-Started.md#use-the-standalone-bundle).
+
 ```js
 import CT, {
   Accordion,
@@ -41,11 +43,11 @@ import CT, {
 | `CT(selector, scope?)` | Returns a chainable DOM selection. |
 | `CT.Ready(callback)` | Explicit form of `CT(callback)`. |
 | `CT.Start({ App, Target?, Props? })` | Waits for the document, mounts an application class, and handles startup failures. Returns a promise of the root/fallback DOM node, or null when no fallback can be displayed. Target defaults to #app. |
-| `CT.View({ Component, Props?, Key? })` | Describes a managed child component for a template or layout. Key identifies the child in a changing list. |
+| `CT.View({ Component, Props?, Key? })` | Describes a managed child component for a template or layout. Pass the component class, not an instance. Key identifies the child in a changing list. |
 | `CT.CreateSelection(target, scope?)` | Explicit selection helper; accepts a selector, DOM node, or iterable of nodes. |
 | `CT.Html` | Tagged template function for component markup. One root HTML element is required. |
-| `CT.On(eventType, handler)` | Adds an event marker inside an HTML start tag. |
-| `CT.Attr(name, value)` | Adds a dynamic attribute marker inside an HTML start tag. |
+| `CT.On(eventType, handler)` | Adds a supported event marker inside an HTML start tag. Unsupported events are rejected; `focus` and `blur` use delegated `focusin` and `focusout`. |
+| `CT.Attr(name, value)` | Adds a dynamic attribute or property marker inside an HTML start tag. Do not quote a marker inside an attribute value. |
 | `CT.Mount(component, target, props?)` | Renders a `Component` subclass or instance into an element or selector. Return CT views from the component's `Render` method. |
 | `CT.Unmount(target)` | Removes a mounted component and runs its unmount lifecycle. |
 
@@ -64,20 +66,22 @@ Selections provide `Get`, `Each`, `Find`, `On`, `Attr`, `Data`, `Css`, `Html`, `
 
 ## Component
 
-Extend `Component` for stateful UI. `constructor` and `Render` are the normal places for component setup and markup. `SetState` merges an object into the current state and updates only the component’s affected dynamic template slots.
+Extend `Component` for stateful UI. `constructor` and `Render` are the normal places for component setup and markup. `SetState` changes state immediately and schedules affected DOM updates for an animation frame. Object updates merge at the top level; a callback receives a shallow copy of current state as its first argument and current props as its second. A callback returning `null` or `undefined` cancels that update.
 
 | Method | Purpose |
 | --- | --- |
-| `SetState(newState)` | Merges an object or applies a state callback. |
+| `SetState(newState)` | Merges an object or applies a state callback; returns `undefined`. |
 | `ForceUpdate()` | Schedules a component render without changing state. |
 | `ShouldComponentUpdate(nextProps, nextState)` | Return `false` to skip an update. |
 | `Render()` | Required. Returns CT markup. |
 | `ComponentOnMount()` | Runs after the component enters the DOM. |
 | `ComponentOnUpdate(previousProps, previousState)` | Runs after an update. |
 | `ComponentOnUnmount()` | Runs before removal. |
-| `ComponentOnCatch(error, info)` | Runs when rendering fails before CTFramework shows its fallback error view. |
+| `ComponentOnCatch(error, info)` | Receives the full failure before CTFramework shows a generic fallback without the raw error message. |
 
-Use one root element in every `CT.Html` template. Dynamic content may be nested anywhere inside that root, including table cells. CTFramework updates dynamic slots in place, preserving active inputs and unaffected DOM.
+Use one root element in every `CT.Html` template. Dynamic content may be nested anywhere inside that root, including table cells. Use `CT.On` and `CT.Attr` only in start tags; an event marker in content is invalid. A bare `class` attribute uses native HTML spelling, while `CT.Attr("className", value)` maps to that same attribute.
+
+CTFramework updates dynamic slots in place. An unchanged `value` or `checked` binding does not overwrite an edit on an unrelated update; a changed bound value is applied. Record edits in state through `input` or `change` handlers when state should remain the source of truth. See [HTML And DOM](Html-And-Dom.md#dynamic-attributes-ctattr).
 
 ## Router And Route
 

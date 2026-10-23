@@ -1,6 +1,6 @@
 # CTFramework Guide
 
-This is the practical entry point for CTFramework. Each page uses the public package API and can be copied into a normal raw JavaScript application.
+This is the practical entry point for CTFramework. The guides show the public API with both package imports and relative standalone-bundle imports. Package-name imports need module tooling; a plain browser module uses the relative bundle path described in [Getting Started](Getting-Started.md#use-the-standalone-bundle).
 
 ## Start Here
 
@@ -17,6 +17,7 @@ This is the practical entry point for CTFramework. Each page uses the public pac
 - Use `const html = CT.Html;` once per module, then use `html\`...\`` for views.
 - A template must have one root HTML element.
 - Put `CT.On(...)` and `CT.Attr(...)` inside an element's start tag.
+- Use native `class` in static HTML. For a dynamic class, `CT.Attr("className", value)` maps to the HTML `class` attribute.
 - Use `SetState` for component state; do not manually redraw a mounted component.
 - Import the built package through your module tooling, or the standalone bundle in a plain browser. Application code should not import internal framework `src` files. See [Getting Started](Getting-Started.md).
 - Use PascalCase for classes, public methods, and named helpers. Keep option names as documented: component options use PascalCase, while `HttpClient` accepts `baseUrl` and `headers`. Browser-native properties retain their native form, such as `className`.

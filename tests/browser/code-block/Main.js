@@ -27,14 +27,14 @@ class CodeBlockChecks extends Component {
         <button type="button" ${CT.On("click", () => this.SetState({ Code: CSharpCode, Language: "csharp" }))}>Load C# example</button>
         <button type="button" ${CT.On("click", () => this.SetState({ IsDialogOpen: true }))}>Open code dialog</button>
         <p><button type="button" ${CT.On("click", () => this.SetState((state) => ({ Count: state.Count + 1 })))}>Update parent</button> Count: ${this.state.Count}</p>
-        <div id="primary">${CodeBlock({ Title: "Example", Code: this.state.Code, Language: this.state.Language })}</div>
+        <div id="primary" ${CT.Attr("className", this.state.Language === "csharp" ? "code-example-csharp" : null)}>${CodeBlock({ Title: "Example", Code: this.state.Code, Language: this.state.Language })}</div>
         <h2>Independent plain text</h2>
         <div id="secondary">${CodeBlock({ Title: "Output.txt", Code: "Build complete.\nNo errors.", Language: "text", Copy: false, LineNumbers: false, Wrap: true })}</div>
         <label>Paste copied source<textarea id="paste" rows="4"></textarea></label>
         ${Dialog({
           Open: this.state.IsDialogOpen,
           Title: "C# in a dialog",
-          Content: CodeBlock({ Title: "Greeting.cs", Code: CSharpCode, Language: "csharp" }),
+          Content: html`<div class="code-example-csharp">${CodeBlock({ Title: "Greeting.cs", Code: CSharpCode, Language: "csharp" })}</div>`,
           OnClose: () => this.SetState({ IsDialogOpen: false }),
         })}
       </section>
@@ -66,7 +66,7 @@ CT(async () => {
     Assert(!viewport.querySelector("script, img, strong"), "HTML examples must never become executable DOM.");
     app.SetState({ Code: CSharpCode, Language: "csharp" });
     await Settle();
-    Assert(viewport.textContent === CSharpCode && document.querySelector("#primary .ct-code-language").textContent === "C#", "C# source and caption must render from the production bundle.");
+    Assert(viewport.textContent === CSharpCode.replaceAll("\r\n", "\n") && document.querySelector("#primary .ct-code-language").textContent === "C#", "C# source and caption must render from the production bundle.");
     Assert(
       [...viewport.querySelectorAll(".ct-code-token-keyword")].some((token) => token.textContent === "public"),
       "C# keywords must use the default syntax colours.",

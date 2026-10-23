@@ -99,7 +99,10 @@ try {
     }
   }
   const fallback = await CT.Start({ App: Broken, Target: "#failure" });
-  Check(fallback?.getAttribute("role") === "alert" && fallback.textContent.includes("Expected startup test failure"), "Constructor failures display a useful fallback");
+  Check(
+    fallback?.getAttribute("role") === "alert" && fallback.textContent.includes("Something unexpected happened") && !fallback.textContent.includes("Expected startup test failure"),
+    "Constructor failures display a generic fallback without private details",
+  );
   Check((await CT.Start({ App, Target: "#missing" })) === null, "A missing target does not overwrite the page");
   Check(document.querySelectorAll("#ctframework-default-styles").length === 1, "Default CSS is added once");
   document.querySelector("#failure").replaceChildren();

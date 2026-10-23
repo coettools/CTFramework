@@ -34,7 +34,7 @@ export const Start = async (options = {}) => {
 
     try {
       CTFramework.EnsureDefaultStyles();
-      const fallback = CTFramework.CreateErrorFallbackDom(error);
+      const fallback = CTFramework.CreateErrorFallbackDom();
       target.replaceChildren(fallback);
 
       return fallback;

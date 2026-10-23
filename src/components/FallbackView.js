@@ -4,7 +4,7 @@ const html = CT.Html;
 
 export const FallbackView = ({ ActionLabel = "Return", Message = "The requested view is not available.", OnAction = null, Title = "Page not found", Type = "not-found" } = {}) => {
   return html`
-    <section class="ct-fallback ct-fallback-${Type}" role="alert">
+    <section ${CT.Attr("className", `ct-fallback ct-fallback-${Type}`)} role="alert">
       <p class="ct-eyebrow">CTFramework</p>
       <h1>${Title}</h1>
       <p class="ct-muted">${Message}</p>

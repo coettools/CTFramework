@@ -35,6 +35,7 @@ test("code highlighting preserves every character in all supported languages", (
 });
 
 test("C# keywords, identifiers, directives, comments, and numbers use existing syntax colours", () => {
+  // Lexer coverage includes syntax outside authoring conventions and incomplete source.
   const samples = {
     keyword: ["using", "namespace", "public", "record", "string", "int", "async", "await", "init", "required", "#nullable", "  #region"],
     number: ["true", "false", "null", "42", "1_000", "0xFFul", "0b_1010", "12.5m", "1.25e-3D", ".5f"],
@@ -129,7 +130,7 @@ test("CodeBlock is public and recomputes tokens only when code or language chang
 });
 
 test("Copy writes the original source, handles denial, and ignores completion after unmount", async (context) => {
-  const code = CSharpCode.replaceAll("\n", "\r\n") + '\r\n\tvar path = @"C:\\tools\\new";\r\n\r\n';
+  const code = CSharpCode + '\r\n\tvar path = @"C:\\tools\\new";\r\n\r\n';
   let copied = null;
   let write = async (value) => {
     copied = value;

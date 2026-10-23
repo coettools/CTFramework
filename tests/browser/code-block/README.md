@@ -5,7 +5,7 @@ http://127.0.0.1:4170/tests/browser/code-block/index.html.
 This fixture uses the production minified bundle. Expect 14 automatic checks.
 
 1. Type multiple characters in Source. Focus and the text selection must stay in the field.
-2. Switch Language between JavaScript, C# (`csharp`), HTML, CSS, JSON, and text. Load the C# example and check its caption, keywords, comments, and interpolated string. Switching to text removes colours; switching back restores them without changing the source.
+2. Switch Language between JavaScript, C# (`csharp`), HTML, CSS, JSON, and text. Load the C# example and check its caption, namespace, tab indentation, keywords, and interpolated string. Switching to text removes colours; switching back restores them without changing the source.
 3. Toggle Wrap repeatedly, update the parent, and keep typing. Only the intended code changes; the independent block keeps its settings.
 4. Click Copy, then paste into the empty Paste copied source field. It must match Source, without line numbers. Feedback appears only after success. Unit tests cover denied/unavailable clipboard and unmount during copying.
 5. Test long lines at desktop and 390px mobile widths. The page must not overflow; code scrolls locally or wraps. Tab to the code region and scroll with the keyboard.
@@ -14,5 +14,10 @@ This fixture uses the production minified bundle. Expect 14 automatic checks.
 
 Repeat Copy, Wrap, typing, and parent updates with the C# example. Include a verbatim
 path, a raw multiline string, tabs, and blank lines; copying must preserve them.
+The C# sample uses CRLF and a final newline. The display normalizes line endings
+to LF; Copy preserves the original CRLF text. Pasting into a browser textarea may
+normalize line endings, so use the clipboard/unit check for exact source bytes.
+The fixture and showcase scope four-column tabs to their C# examples. Check that
+switching to JavaScript restores its existing two-column tab display.
 
 No code entered in this fixture is executed. HTML/script-shaped source is tested as literal text.

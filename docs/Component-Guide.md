@@ -4,6 +4,8 @@
 
 Extend `Component` when a view owns state or behavior. Keep custom helpers as instance methods so each component's work remains contained.
 
+The package-name imports in this guide need module tooling. For plain browser modules, use a relative import of the built bundle as shown in [Getting Started](Getting-Started.md#use-the-standalone-bundle).
+
 ```js
 import CT, { Component } from "@coettools/ctframework";
 
@@ -46,7 +48,7 @@ CT.Mount(Counter, "#counter", { InitialCount: 10 });
 
 ## SetState And ForceUpdate
 
-`SetState` accepts an object or a function. Object state merges into the existing state. CTFramework schedules one affected component update and preserves active input DOM.
+`SetState` accepts an object or a function. Object updates merge at the top level, so replace nested objects deliberately. State changes immediately; CTFramework schedules the affected DOM update for an animation frame.
 
 ```js
 this.SetState({ IsSaving: true });
@@ -55,12 +57,15 @@ this.SetState((state, props) => ({
   Count: state.Count + props.Step
 }));
 
+// Return null or undefined to leave state unchanged.
+this.SetState((state) => state.Count >= 10 ? null : { Count: 10 });
+
 this.ForceUpdate();
 ```
 
 Use `ForceUpdate` only when data outside `state` or `props` changed. Prefer `SetState` for normal UI changes.
 
-State changes immediately; DOM updates are batched into an animation frame. Callback updates receive the latest state, including earlier updates from the same event. `ForceUpdate` bypasses `ShouldComponentUpdate`. Calls to either method after unmount are ignored; still release timers, subscriptions, and requests in your cleanup hook.
+Callback updates receive a shallow copy of the latest state and current props, including earlier updates from the same event. Nested objects remain shared, so do not mutate them in the callback. `ForceUpdate` bypasses `ShouldComponentUpdate`. Calls to either method after unmount are ignored; still release timers, subscriptions, and requests in your cleanup hook.
 
 ## Lifecycle Methods
 
@@ -96,15 +101,19 @@ class LiveStatus extends Component {
 }
 ```
 
-`Render()` is required. If it throws, CTFramework calls `ComponentOnCatch(error, info)` and replaces the view with its safe error fallback.
+`Render()` is required. If rendering or an update fails, CTFramework calls `ComponentOnCatch(error, info)` with the full error and replaces the affected view with a generic fallback. The default hook logs the error and component to the developer console; a custom hook handles its own reporting. The fallback does not show the raw exception message.
 
 During `ShouldComponentUpdate`, `this.props` and `this.state` hold the previous values; the arguments contain the proposed values. Returning `false` skips rendering, not the state/prop assignment. Keep this method free of side effects. `ComponentOnUpdate` receives the previous values after an update is accepted.
 
 A nested component's render failure stays in that component's view. A later state or parent update can render it again; the fallback does not leave a detached component behind.
 
+Guard `ComponentOnUpdate` calls to `SetState` with a meaningful state comparison. CTFramework stops an update chain after 100 updates for one component in a flush, reports that failure through `ComponentOnCatch`, and continues updates for unrelated roots. A later update can recover the affected view.
+
 ## Child Components
 
 Use `CT.View` to include your own component in a template or a layout's `Content`. It returns a view description; CTFramework constructs and renders the child when its parent is mounted.
+
+Pass a `Component` subclass to `CT.View`, not a constructed instance. Interpolating an instance directly into a template is invalid; wrap the class and props with `CT.View`.
 
 This complete entry module defines a child counter and its parent. Load it with a module script from a page containing `<div id="app"></div>`. The bundle path assumes the module is in `src/` and the bundle is in `vendor/`; adjust it to match your files. `Counter` and `App` are example classes, not framework controls.
 

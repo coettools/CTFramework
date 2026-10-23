@@ -2,6 +2,10 @@
   width: 100%;
 }
 
+.showcase-csharp .ct-code-viewport {
+  tab-size: 4;
+}
+
 .hero {
   border-top: 3px solid var(--ct-color-accent);
 }

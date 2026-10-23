@@ -84,6 +84,15 @@ The [runtime regression page](http://127.0.0.1:4170/tests/browser/runtime/) chec
 The [startup and child-view checks](tests/browser/startup/README.md) cover `CT.Start`,
 `CT.View`, parent updates, input focus, cleanup, and startup failures.
 
+The [DOM property checks](tests/browser/dom-properties/README.md) cover native form
+and datalist associations, retained input focus, writable properties, and setter
+failures. Run source, readable, and minified variants before changing DOM bindings.
+
+The [runtime safety checks](tests/browser/runtime-safety/README.md) cover numeric
+attribute removal, draft preservation, checkbox properties, template diagnostics,
+private error details, bounded update loops and recovery. Exercise the supplied
+keyboard and pointer controls at desktop and narrow widths as well.
+
 - [Getting Started](docs/Getting-Started.md)
 - [HTML And DOM](docs/Html-And-Dom.md)
 - [Component Guide](docs/Component-Guide.md)
@@ -210,6 +219,11 @@ CTFramework is licensed under the [MIT License](LICENSE).
 ## Contributing
 
 Keep source, tests, and tooling readable: two-space indentation, double quotes, semicolons, focused methods, and blank lines between distinct steps. Use `_` for a required but unused callback argument. Preserve public signatures and side effects.
+
+The coettools C# master standard, `CSHARP_CODE_CONVENTIONS.md`, governs the C# examples.
+Keep their tabs, block-scoped namespaces, explicit visibility and method bodies;
+JavaScript containers keep the formatting above. Lexer and clipboard tests also
+include deliberately incomplete or nonconforming source to verify text preservation.
 
 Run `npm run check` and exercise the relevant browser tests before submitting changes. Update the API documentation and examples when behavior changes. Generate bundles with the build command rather than editing them by hand.
 

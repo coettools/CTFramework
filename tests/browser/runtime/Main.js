@@ -209,6 +209,7 @@ try {
       ComponentOnUnmount() {
         unmounts++;
       }
+      ComponentOnCatch() {}
     }
     const app = new Broken();
     CT.Mount(app, mount);

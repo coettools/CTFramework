@@ -107,7 +107,7 @@ CT.Start({
 });
 ```
 
-The framework waits until the document is ready, resolves the target, mounts the component, and adds the default CSS once. Its promise resolves to the rendered root DOM node or the standard error fallback. Invalid options, constructor failures, and mounting errors are reported to the console. A missing or invalid target resolves to `null` without replacing other page content. If the fallback itself cannot be displayed, the result is also `null`.
+The framework waits until the document is ready, resolves the target, mounts the component, and adds the default CSS once. Its promise resolves to the rendered root DOM node or a generic error fallback. The fallback does not display the raw exception text. Invalid options, constructor failures, and mounting errors are reported to the console. A missing or invalid target resolves to `null` without replacing other page content. If the fallback itself cannot be displayed, the result is also `null`.
 
 Keep a short message in the HTML mount element: if a script or static import cannot load, no JavaScript entry point can run to replace that message. `CT.Start` does not catch failures that prevent the framework or your entry module from loading. Applications needing custom import recovery can retain a small import-error boundary in their entry module.
 
