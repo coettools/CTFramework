@@ -14,6 +14,9 @@ import { FallbackView } from "./components/FallbackView.js";
 import { ImageCarousel } from "./components/ImageCarousel.js";
 import { PopupWindow } from "./components/PopupWindow.js";
 import { PanZoomView } from "./components/PanZoomView.js";
+import { Popover } from "./components/Popover.js";
+import { SplitLayout } from "./components/SplitLayout.js";
+import { Tabs } from "./components/Tabs.js";
 import { SideNavigation } from "./components/SideNavigation.js";
 import { Toast } from "./components/Toast.js";
 import { Tooltip } from "./components/Tooltip.js";
@@ -43,6 +46,9 @@ export {
   ImageCarousel,
   PopupWindow,
   PanZoomView,
+  Popover,
+  SplitLayout,
+  Tabs,
   SideNavigation,
   Toast,
   Tooltip,

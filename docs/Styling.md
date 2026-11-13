@@ -121,6 +121,10 @@ properties; no compatibility aliases are provided.
 | `--ct-chart-6` | light-dark(#a8273a, #f3a2aa) | Sixth chart series. |
 | `--ct-chart-7` | light-dark(#67551d, #e4d29c) | Seventh chart series. |
 | `--ct-chart-8` | light-dark(#14616a, #70cbd2) | Eighth chart series. |
+| `--ct-layout-gap` | 1rem | Default gap in SplitLayout. |
+| `--ct-split-layout-sticky-top` | 0px | Offset for a sticky SplitLayout side column. |
+| `--ct-tabs-gap` | 1rem | Gap between Tabs panels in columns mode. |
+| `--ct-tabs-padding` | 0.5rem 0.9rem | Padding inside tab buttons. |
 
 ## Change An Accent
 
@@ -317,6 +321,10 @@ along with its light surface/text tokens; chart colors then use their light valu
 The supplied pairs exceed 3:1 against Split's dark surface and the guide's example
 light surface. Recheck contrast against any custom background. Labels, dash
 patterns, keyboard values, and the full data table remain necessary non-color cues.
+`Series[].Color` sets a series color; bar-only `Series[].Colors` can set a color
+for each category. A `null` entry uses the series color. The selected bar color
+also appears in its tooltip swatch. The right axis uses the same theme tokens as
+the left axis, while `Y2.Format` controls its displayed values.
 
 ```css
 .project-report {
@@ -329,8 +337,28 @@ patterns, keyboard values, and the full data table remain necessary non-color cu
 ```
 
 Keep `.ct-chart-plot` focusable, its focus outline visible, and touch page scrolling
-available. Grid, axis and tooltip classes use existing border, muted, raised-surface
+available. Grid, both axes and the structured tooltip use existing border, muted, raised-surface
 and text tokens. No fixed font family is added.
+
+## Style Tabs, SplitLayout, And Popover
+
+Tabs use `--ct-tabs-gap` between columns and `--ct-tabs-padding` within tab
+buttons. SplitLayout uses `--ct-layout-gap` between columns and
+`--ct-split-layout-sticky-top` to offset a sticky side. Set these on a wrapper
+when one workspace needs different spacing:
+
+```css
+.project-workspace {
+  --ct-tabs-gap: 1.25rem;
+  --ct-layout-gap: 1.25rem;
+}
+```
+
+Keep the tab list horizontally scrollable, selected and keyboard focus states
+visible, and the sticky side independently scrollable when it overflows.
+Popover uses the existing surface, border, text, and focus colors; set its
+maximum width through the `Width` option. Its panel opens in the top layer so
+scrolling cards do not clip it.
 
 ## Component Reference
 
@@ -340,7 +368,10 @@ Components add their own classes. Use these only when you need a focused overrid
 | --- | --- | --- |
 | `ApplicationLayout` | `ct-application-layout` | Graphite shell, navy header with accent edge; independent content scrolling on desktop. |
 | `SideNavigation` | `ct-side-navigation` | Graphite rail; green-tinted selection with a left edge. |
-| `Card` | `ct-card` | Navy panel, raised header and selective accent edge. |
+| `Tabs` | `ct-tabs` | Horizontal tab list when panels do not fit; heading-labelled columns otherwise. Preserve tab focus and horizontal scrolling. |
+| `SplitLayout` | `ct-split-layout` | Two columns with an optional sticky, independently scrolling side; stacks at its own width threshold. |
+| `Popover` | `ct-popover` | Anchored top-layer card with focus and pointer access. Preserve its focus outline, card scrolling, and viewport fit. |
+| `Card` | `ct-card` | Navy panel, raised header and selective accent edge. Header actions sit beside the title and wrap on narrow cards; heading level does not change styling. |
 | `Chart` | `ct-chart` | Responsive SVG plot, token colors, labelled legend, keyboard tooltip, and full table. |
 | `CodeBlock` | `ct-code-block` | Graphite source, navy toolbar, syntax colours, optional gutter, Copy and Wrap. |
 | `ImageCarousel` | `ct-image-carousel` | Navy frame, uncropped 16:9 image viewer, caption, and green selected image button. |

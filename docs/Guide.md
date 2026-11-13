@@ -27,8 +27,8 @@ This is the practical entry point for CTFramework. The guides show the public AP
 ```js
 import CT, {
   Accordion, Alert, ApplicationLayout, Badge, Card, Chart, CodeBlock, Combobox, Component, DataTable, Dialog, Dropdown,
-  FallbackView, GetFormValues, Guid, HttpClient, ImageCarousel, MaxLength, PanZoomView, PopupWindow,
-  Required, Route, Router, SideNavigation, Store, Toast, Tooltip
+  FallbackView, GetFormValues, Guid, HttpClient, ImageCarousel, MaxLength, PanZoomView, Popover, PopupWindow,
+  Required, Route, Router, SideNavigation, SplitLayout, Store, Tabs, Toast, Tooltip
 } from "@coettools/ctframework";
 ```
 
@@ -36,5 +36,12 @@ Try the [online guide](https://framework.coettools.com/) for interactive example
 
 For searchable single selection, see [Combobox](Components.md#combobox). For a bounded SVG or canvas viewport, see [PanZoomView](Components.md#panzoomview). Their CSS hooks are in the [component reference](Styling.md#component-reference).
 
-Use [Chart](Components.md#chart) for line, area and grouped or stacked bar data,
-with keyboard inspection and a full formatted data table.
+Use [Chart](Components.md#chart) for line, area, scatter, and grouped or stacked
+bar data, with keyboard inspection and a full formatted data table.
+
+Use [Tabs](Components.md#tabs) to switch between panels when they cannot fit
+side by side. Use [SplitLayout](Components.md#splitlayout) for a side column
+that can stay visible while the main content scrolls.
+
+Use [Popover](Components.md#popover) for structured details that open from a
+focusable trigger on hover, focus, touch, or click.

@@ -1,5 +1,5 @@
 const variant = new URLSearchParams(location.search);
-const { default: CT, Component, Alert, FallbackView } = await import(variant.has("source") ? "../../../src/Index.js" : variant.has("debug") ? "../../../dist/ctframework.bundle.js" : "../../../dist/ctframework.bundle.min.js");
+const { default: CT, Component, Alert, Card, FallbackView } = await import(variant.has("source") ? "../../../src/Index.js" : variant.has("debug") ? "../../../dist/ctframework.bundle.js" : "../../../dist/ctframework.bundle.min.js");
 const html = CT.Html;
 const mount = document.querySelector("#app");
 let passed = 0;
@@ -257,7 +257,7 @@ try {
       [() => html`<input id="${"profile"}" />`, /CT.Attr/],
       [() => html`<button>${CT.On("click", () => {})}Save</button>`, /CT.On.*start tag/],
       [() => html`<p>${CT.Attr("title", "Note")}</p>`, /CT.Attr.*start tag/],
-      [() => html`<button ${CT.On("mouseenter", () => {})}>Hover</button>`, /Unsupported CT.On event.*mouseenter/],
+      [() => html`<button ${CT.On("scroll", () => {})}>Scroll</button>`, /Unsupported CT.On event.*scroll/],
       [
         () => {
           throw new Error("PRIVATE_DETAIL_SENTINEL");
@@ -319,6 +319,69 @@ try {
     await Frame();
     Assert(mount.textContent === "Count: 3" && !mount.querySelector(".ct-fallback"), "Recovery failed");
     CT.Unmount("#other");
+  });
+
+  await Check("Hover events follow native target and bubbling semantics", async () => {
+    const calls = [];
+    const Record = (event) => calls.push([event.type, event.currentTarget.id]);
+    class HoverChecks extends Component {
+      Render() {
+        return html`<div id="hover-parent" ${CT.On("pointerenter", Record)} ${CT.On("pointerover", Record)} ${CT.On("mouseenter", Record)}>
+          <button id="hover-child" ${CT.On("pointerenter", Record)} ${CT.On("pointerleave", Record)} ${CT.On("pointerover", Record)} ${CT.On("pointerout", Record)} ${CT.On("mouseenter", Record)} ${CT.On("mouseleave", Record)}>
+            Hover target
+          </button>
+        </div>`;
+      }
+    }
+    CT.Mount(HoverChecks, mount);
+    const child = mount.querySelector("button");
+    child.dispatchEvent(new PointerEvent("pointerenter"));
+    Assert(JSON.stringify(calls) === JSON.stringify([["pointerenter", "hover-child"]]), "Non-bubbling pointerenter fired on an ancestor");
+    child.dispatchEvent(new PointerEvent("pointerover", { bubbles: true }));
+    Assert(
+      JSON.stringify(calls.slice(-2)) ===
+        JSON.stringify([
+          ["pointerover", "hover-child"],
+          ["pointerover", "hover-parent"],
+        ]),
+      "Pointerover must bubble with the correct currentTarget",
+    );
+    child.dispatchEvent(new MouseEvent("mouseenter"));
+    child.dispatchEvent(new MouseEvent("mouseleave"));
+    child.dispatchEvent(new PointerEvent("pointerleave"));
+    child.dispatchEvent(new PointerEvent("pointerout", { bubbles: true }));
+    Assert(calls.filter(([name]) => name === "mouseenter").length === 1 && calls.at(-1)[0] === "pointerout", "Hover event coverage failed");
+    CT.Unmount(mount);
+    child.dispatchEvent(new PointerEvent("pointerenter"));
+    Assert(calls.at(-1)[0] === "pointerout", "Removed hover handler remained active");
+  });
+
+  await Check("Nested Card headings keep action controls and visual hierarchy", async () => {
+    class CardChecks extends Component {
+      constructor() {
+        super();
+        this.state = { Level: 3, Count: 0 };
+      }
+      Render() {
+        return Card({
+          Title: "Nested section",
+          HeadingLevel: this.state.Level,
+          Actions: html`<button type="button" ${CT.On("click", () => this.SetState({ Count: this.state.Count + 1 }))}>Edit ${this.state.Count}</button>`,
+          Content: "Body",
+        });
+      }
+    }
+    const card = new CardChecks();
+    CT.Mount(card, mount);
+    Assert(mount.querySelector("h3")?.textContent === "Nested section", "Card used the wrong heading level");
+    const action = mount.querySelector("button");
+    action.focus();
+    action.click();
+    await Frame();
+    Assert(action === mount.querySelector("button") && document.activeElement === action && action.textContent === "Edit 1", "Card header action lost focus or state");
+    card.SetState({ Level: 4 });
+    await Frame();
+    Assert(mount.querySelector("h4") && mount.querySelector("button") === action, "Changing heading level replaced its action");
   });
 
   CT.Unmount(mount);

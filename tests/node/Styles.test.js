@@ -49,6 +49,9 @@ test("every visual component has default styling and an override reference", asy
     "code-block",
     "combobox",
     "pan-zoom-view",
+    "split-layout",
+    "tabs",
+    "popover",
     "image-carousel",
     "accordion",
     "data-table",
@@ -61,7 +64,7 @@ test("every visual component has default styling and an override reference", asy
     "tooltip",
     "fallback",
   ]) {
-    assert.ok(css.includes(`.ct-${name} {`), `${name} needs default CSS`);
+    assert.match(css, new RegExp(`\\.ct-${name}\\s*[,\\{]`), `${name} needs default CSS`);
     assert.ok(guide.includes(`\`ct-${name}\``), `${name} needs styling documentation`);
   }
 

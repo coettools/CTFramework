@@ -207,11 +207,21 @@ Read [Styling.md](docs/Styling.md) for the supplied classes, every theme token, 
 
 ## Components
 
-`Chart` draws SVG line/area and grouped or stacked bar charts, with token-based
-colors, keyboard inspection and a full formatted data table. See
+`Chart` draws SVG line, area, scatter, and grouped or stacked bar charts. It
+supports mixed continuous series, optional right-axis values, per-category bar
+colors, keyboard inspection, and a full formatted data table. See
 [Chart usage](docs/Components.md#chart) and [chart styling](docs/Styling.md#style-charts).
 
 Read [Components.md](docs/Components.md) for `ApplicationLayout`, `Accordion`, `DataTable`, `Dropdown`, `Combobox`, `PanZoomView`, `SideNavigation`, `Tooltip`, `Badge`, `Card`, `CodeBlock`, `ImageCarousel`, `Alert`, `Dialog`, `PopupWindow`, `Toast`, and `FallbackView` usage.
+
+`Tabs` switches from side-by-side panels to a tab list as its container narrows;
+`SplitLayout` pairs a bounded side column with flexible main content. See
+[Tabs](docs/Components.md#tabs) and [SplitLayout](docs/Components.md#splitlayout).
+`Popover` shows structured details from a focusable trigger. See
+[Popover usage](docs/Components.md#popover).
+
+`Card` can place actions beside its title and set the title's heading level to
+fit the page outline. See [Card usage](docs/Components.md#card).
 
 `Combobox` provides searchable, controlled single selection for long option lists, including grouped and disabled options. `PanZoomView` provides a bounded pan and zoom viewport for SVG content or a canvas draw callback. See their [usage](docs/Components.md#combobox), [viewport examples](docs/Components.md#panzoomview), and [style overrides](docs/Styling.md#style-comboboxes-and-pan-zoom-views).
 

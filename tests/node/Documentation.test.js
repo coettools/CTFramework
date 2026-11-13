@@ -104,7 +104,7 @@ test("every UI component has a documented default CSS selector", async () => {
 
   const css = await Read("../../src/styles/Default.css");
   for (const [, name, className] of rows) {
-    assert.ok(css.includes(`.${className} {`), `${name} needs default CSS for its documented selector`);
+    assert.match(css, new RegExp(`\\.${className}\\s*[,\\{]`), `${name} needs default CSS for its documented selector`);
   }
 });
 

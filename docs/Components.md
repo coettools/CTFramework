@@ -17,8 +17,9 @@ return html`
 
 ## Chart
 
-`Chart` draws numeric or time-based line/area series and category-based bars in
-SVG, without another runtime library. The plot follows its container's width.
+`Chart` draws numeric or time-based line, area, and scatter series, and
+category-based bars in SVG, without another runtime library. The plot follows
+its container's width.
 The full data table remains available even when drawing is thinned for width.
 The following complete module needs `<div id="app"></div>` in the page.
 For a plain browser import, replace the package path with your built vendor URL.
@@ -77,28 +78,85 @@ return Chart({
 });
 ```
 
-For `Type: "area"`, use the line-series `Points` shape. Stacked areas require
-aligned x coordinates across all their series. This avoids implying values
+For `Type: "area"` or `Type: "scatter"`, use the line-series `Points` shape.
+On a continuous chart, `Series[].Type` can mix `"line"`, `"area"`, and
+`"scatter"` series. Set `PointRadius` to size scatter points and dots at
+isolated line or area values. Stacked continuous charts require every series to
+be an area with aligned x coordinates. This avoids implying values
 where a series supplied no measurement. `Y: null` marks missing data; gaps are
 not interpolated or silently treated as zero. Formatters receive numeric values
 for continuous axes and category labels for bar X values;
 use numeric timestamps or `Date` values for time coordinates and an appropriate
 `X.Format`. No date-string parsing or time-zone assumption is added.
 
+Assign `Axis: "right"` to a series when it uses a different unit, and supply
+`Y2` for that axis. `Y` and `Y2` have independent domains, tick values, labels,
+and formatters. Each axis formatter also applies to its series in the tooltip,
+table, and summary. Area stacks accumulate separately on each axis. Bars using
+both axes must be grouped; a stacked bar chart cannot mix axes. For bars,
+`Series[].Colors` assigns colors in category order; use `null` to keep the
+series color for a category. The tooltip swatch uses the selected bar color.
+Its heading identifies the selected x value or category, with a labelled value
+row for each visible series. Keyboard inspection retains polite text announcements.
+The table identifies right-axis series with `Y2.Label`, or with "right axis"
+when that label is absent.
+
+This fragment belongs inside a component's `Render` method and mixes three
+continuous drawing styles with values on both axes:
+
+```js
+return Chart({
+  Title: "Jobs and completion rate",
+  Type: "line",
+  X: { Label: "Hour" },
+  Y: { Label: "Jobs", Min: 0, Format: (value) => `${value} jobs` },
+  Y2: { Label: "Completion", Min: 0, Max: 100, Format: (value) => `${value}%` },
+  Series: [
+    { Id: "planned", Label: "Planned", Type: "area", Points: [{ X: 0, Y: 4 }, { X: 1, Y: 6 }] },
+    { Id: "done", Label: "Done", Type: "line", Points: [{ X: 0, Y: 3 }, { X: 1, Y: null }], PointRadius: 4 },
+    { Id: "rate", Label: "Completion rate", Type: "scatter", Axis: "right", Points: [{ X: 0, Y: 75 }, { X: 1, Y: 83 }], PointRadius: 5 }
+  ]
+});
+```
+
+For a single-series bar chart with category colors, pass one color or `null`
+per category:
+
+```js
+return Chart({
+  Title: "Jobs by shift",
+  Type: "bar",
+  Categories: ["Morning", "Afternoon", "Evening"],
+  Series: [{
+    Id: "jobs",
+    Label: "Completed jobs",
+    Values: [12, 17, 9],
+    Colors: ["var(--ct-chart-1)", null, "var(--ct-chart-3)"]
+  }]
+});
+```
+
 | Option | Default | Purpose |
 | --- | --- | --- |
 | `Title` | Required | Accessible name and visible heading. |
 | `ShowTitle` | `true` | Hide only the visible heading; retain the accessible name. |
-| `Type` | `"line"` | `"line"`, `"area"`, or `"bar"`. |
+| `Type` | `"line"` | `"line"`, `"area"`, `"bar"`, or `"scatter"`. |
 | `Height` | `240` | Plot height in CSS pixels. Width follows its container. |
 | `X`, `Y` | Auto | Axis object with `Label`, `Min`, `Max`, `Format`, and `Ticks`. Explicit `Min: 0` is honored. |
-| `X.Format`, `Y.Format` | Numeric/category text; ISO for Date X | `(value) => text`, used by ticks, tooltip, and table. Date coordinates normalize to numeric timestamps before custom formatting. |
-| `X.Ticks`, `Y.Ticks` | About 5 | Optional explicit tick-value arrays; narrow widths reduce label density. |
+| `Y2` | None | Optional right axis with `Label`, `Min`, `Max`, `Format`, and `Ticks`; required by a right-axis series. |
+| `Y2.Label` | `""` | Right-axis label; also identifies right-axis series in the table. |
+| `Y2.Min`, `Y2.Max` | Auto | Optional numeric bounds for the right axis; `Min: 0` is honored. |
+| `X.Format`, `Y.Format`, `Y2.Format` | Numeric/category text; ISO for Date X | `(value) => text`, used by ticks, tooltip, table, and summary where applicable. Date coordinates normalize to numeric timestamps before custom formatting. |
+| `X.Ticks`, `Y.Ticks`, `Y2.Ticks` | About 5 | Optional explicit tick-value arrays; narrow widths reduce label density. |
 | `Series` | `[]` | Unique `Id`, `Label`, optional `Color`, and either `Points` or `Values`. |
-| `Series[].Points` | Required for line/area | `{ X, Y }` coordinates. X is finite numeric/Date; Y finite numeric or null. |
+| `Series[].Type` | Chart `Type` | `"line"`, `"area"`, or `"scatter"` on continuous charts; bar charts remain bar-only. |
+| `Series[].Axis` | `"left"` | `"left"` or `"right"`; right requires `Y2`. |
+| `Series[].PointRadius` | `2.5` | Positive finite SVG circle radius in CSS pixels for scatter and isolated line/area dots. |
+| `Series[].Points` | Required for line/area/scatter | `{ X, Y }` coordinates. X is finite numeric/Date; Y finite numeric or null. |
 | `Series[].Values` | Required for bars | Values aligned to Categories, including null for missing values. |
 | `Series[].Dashed` | `false` | Additional line-style cue; series also have labelled legend entries. |
 | `Series[].Color` | Chart token | Optional project CSS color. Verify contrast after overriding it. |
+| `Series[].Colors` | Series color | Optional bar-only array with exactly one CSS color string or `null` per category. `null` uses the series color. |
 | `Categories` | `[]` | Ordered category labels for bars. |
 | `Stacked` | `false` | Stack bars/areas instead of independent areas or grouped bars. |
 | `Markers` | `[]` | Line/area `{ X, Label }` vertical reference lines with text labels. |
@@ -116,6 +174,74 @@ Hidden series can be restored through their legend buttons. There is no entry
 animation, data streaming, logarithmic scale, pan, or zoom API in this control.
 
 Use the [chart tokens and styling](Styling.md#style-charts) for project overrides.
+
+## Tabs
+
+Use `Tabs` to show all panels side by side when they fit and one selected panel
+when they do not. `Layout: "auto"` measures the control's own width. The
+following fragment belongs inside a component's `Render` method with
+`const html = CT.Html` and `Tabs` imported from the package:
+
+```js
+return Tabs({
+  Label: "Workspace sections",
+  Layout: "auto",
+  MinPanelWidth: "22rem",
+  HeadingLevel: 3,
+  Items: [
+    { Id: "overview", Title: "Overview", Content: html`<p>Current work.</p>` },
+    { Id: "activity", Title: "Activity", Badge: 3, Content: html`<p>Recent updates.</p>` },
+    { Id: "notes", Title: "Notes", Content: html`<p>Project notes.</p>` }
+  ]
+});
+```
+
+`Items` need unique string or finite-number `Id` values, nonempty `Title`
+values, and content. `Badge` adds a short count or label. `Disabled` prevents
+tab selection. `Span` is a positive integer for the panel's width in columns
+mode. `Layout` can be `"auto"` (default), `"tabs"`, or `"columns"`.
+`MinPanelWidth` defaults to `"22rem"`; `HeadingLevel` defaults to `2` and
+accepts integers `1`–`6` for headings in columns mode.
+
+Selection is internal when `Value` is omitted. To control it, pass `Value`
+and update parent state in `OnChange(id)`. `OnChange` runs on user selection;
+`OnLayoutChange(mode)` reports an automatic switch between `"tabs"` and
+`"columns"`. Panels stay mounted while hidden and across layout switches, so
+stateful `CT.View` children keep their state. The control keeps selection across
+parent renders when its `Key` is stable. In tabs mode, Left/Right and Home/End
+select enabled tabs; Tab moves into the panel. In columns mode, every panel is
+visible under its own heading in reading order.
+
+## SplitLayout
+
+`SplitLayout` gives a page a bounded side column and a flexible main column.
+Its own width determines when the columns stack. This fragment belongs inside
+the `Content` of `ApplicationLayout` or another scrolling container, with
+`SplitLayout` imported and `const html = CT.Html` in scope:
+
+```js
+${SplitLayout({
+  Side: html`<section><h2>Summary</h2><p>Current totals</p></section>`,
+  Main: html`<section><h2>Details</h2><p>Work through the records.</p></section>`,
+  Label: { Side: "Summary", Main: "Details" },
+  SidePosition: "start",
+  SideWidth: { Min: "18rem", Max: "24rem" },
+  Sticky: true,
+  StackBelow: "64rem",
+  StackOrder: "side-first"
+})}
+```
+
+`Side` and `Main` accept HTML or `CT.View` children. `SidePosition` defaults
+to `"start"`; `StackOrder` defaults to `"side-first"`. `SideWidth` defaults
+to `18rem` minimum and `24rem` maximum. `StackBelow` defaults to `"64rem"`.
+`Gap` accepts a nonnegative literal CSS length such as `1rem` or `0`;
+`var()` and `calc()` are not accepted as options. When omitted, the framework
+layout gap token applies. `Sticky` defaults to `false`; set it to `true` to keep the
+side column in view within the nearest scrolling container. A tall sticky side
+column scrolls independently and becomes keyboard focusable when it overflows.
+Stacking turns sticky behavior off. `Label.Side` names the side region and
+`Label.Main` names the main region. The main column can host container queries.
 
 ## ApplicationLayout
 
@@ -508,6 +634,46 @@ ${SideNavigation({
 })}
 ```
 
+## Popover
+
+Use `Popover` for structured details beside a focusable trigger. Unlike a
+short `Tooltip` hint, its content can contain multiple lines and controls.
+This fragment belongs inside a component's `Render` method with `Popover`
+imported and `const html = CT.Html` in scope:
+
+```js
+return html`<section>
+  ${Popover({
+    Label: "Record details",
+    Trigger: html`<button type="button">Inspect record</button>`,
+    Content: html`<div><h3>Record details</h3><p>Three updates are ready.</p></div>`,
+    Open: "hover",
+    Placement: "right",
+    Width: "22rem"
+  })}
+  <p>The record summary remains available on this page.</p>
+</section>`;
+```
+
+`Label` defaults to `"Details"` and supplies its name and short hover description.
+Use a specific label when several popovers appear together. `Trigger` must render one focusable control as its
+root. `Content` accepts HTML or a `CT.View` child and mounts only while open.
+`Open` defaults to `"hover"`: pointer hover opens after a short delay, focus
+opens it for keyboard users, and touch activation opens it. Moving the pointer
+into the card keeps it open. `"click"` opens on activation and moves focus
+into a nonmodal dialog. Escape and outside interaction close either mode;
+click mode also closes on a second activation. `Placement` defaults to
+`"top"` and can be `"right"`, `"bottom"`, or `"left"`; the card flips or
+shifts to stay in view. `Width` sets a maximum width; the default is `22rem`.
+`OnOpenChange(open)`
+reports visibility changes. `Key` provides stable identity in a changing list.
+Keep a separate path to any information needed without hover.
+Popover uses the browser's native Popover API. On touch, a link trigger previews
+its card on the first tap and follows the link on the next tap.
+
+`CT.On` also accepts `pointerenter`, `pointerleave`, `pointerover`,
+`pointerout`, `mouseenter`, and `mouseleave` for app-owned pointer behavior.
+
 ## Tooltip
 
 `Tooltip` adds a short hint on hover or keyboard focus. `Content` should contain one
@@ -544,12 +710,19 @@ Tooltip({
 ```js
 ${Card({
   Title: "System health",
-  Content: html`<p>All services are available.</p>`,
-  Footer: html`<button type="button">Open details</button>`
+  HeadingLevel: 3,
+  Actions: html`<a href="#system-health-details">Details</a>`,
+  Content: html`<p id="system-health-details">All services are available.</p>`,
+  Footer: html`<small>Current status</small>`
 })}
 ```
 
-`Card` accepts `Title`, `Content`, and optional `Footer`.
+`Card` accepts `Title`, `Content`, and optional `Footer`. `Title` is an `h2`
+by default. Set `HeadingLevel` to an integer from `1` through `6` to place the
+title at the right level in your page's heading order. `Actions` places content
+at the end of the header beside the title, wrapping below it when space is
+limited. The heading keeps the same visual style at every level. Give action
+buttons their own event handlers; `Card` does not perform their actions.
 
 ## CodeBlock
 

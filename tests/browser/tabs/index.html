@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabs interaction checks</title>
+    <style>
+      main {
+        max-width: 62rem;
+        margin: auto;
+        padding: 0.75rem;
+      }
+      #fixture {
+        width: min(34rem, 100%);
+      }
+      #fixture .ct-pan-zoom-view {
+        height: 9rem;
+        min-height: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Tabs interaction checks</h1>
+      <p id="result" role="status" data-status="running">Running checks…</p>
+      <div id="app"></div>
+    </main>
+    <script type="module" src="./Main.js"></script>
+  </body>
+</html>

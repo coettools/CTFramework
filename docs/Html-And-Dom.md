@@ -34,7 +34,7 @@ Template handlers receive a delegated event view: `target` is the original click
 html`<button type="button" ${CT.On("click", (event) => console.log(event.currentTarget))}>Save</button>`;
 ```
 
-Template events support `click`, `dblclick`, `input`, `change`, `submit`, `keydown`, `keyup`, `keypress`, `mousedown`, `mouseup`, `pointerdown`, `pointerup`, `focusin`, `focusout`, and `contextmenu`. `focus` and `blur` also work; CTFramework normalizes them to delegated `focusin` and `focusout`. Unsupported event names are rejected. An event marker in template content is invalid; keep it in an opening tag.
+Template events support `click`, `dblclick`, `input`, `change`, `submit`, `keydown`, `keyup`, `keypress`, `mousedown`, `mouseup`, `pointerdown`, `pointerup`, `pointerenter`, `pointerleave`, `pointerover`, `pointerout`, `mouseenter`, `mouseleave`, `focusin`, `focusout`, and `contextmenu`. Enter/leave events run on their native target without bubbling; over/out events bubble. `focus` and `blur` also work; CTFramework normalizes them to delegated `focusin` and `focusout`. Unsupported event names are rejected. An event marker in template content is invalid; keep it in an opening tag.
 
 ## Dynamic Attributes: CT.Attr
 

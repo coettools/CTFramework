@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CTFramework Popover checks</title>
+    <link rel="icon" href="data:," />
+    <script type="module" src="./Main.js"></script>
+    <style>
+      #app {
+        margin: 1rem;
+      }
+      .scroll-card {
+        height: 4rem;
+        overflow: auto;
+        text-align: right;
+      }
+      .scroll-card::after {
+        display: block;
+        height: 5rem;
+        content: "";
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Popover checks</h1>
+      <p id="result" role="status">Running checks…</p>
+      <ol id="checks"></ol>
+      <div id="app"></div>
+    </main>
+  </body>
+</html>

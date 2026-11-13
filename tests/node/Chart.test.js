@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { Chart } from "../../src/components/Chart.js";
 import { CreateChartData } from "../../src/utils/ChartData.js";
-import { ChartAxis, ChartBars, ChartLayers, ChartLayout, ChartPaths, NearestChartIndex } from "../../src/utils/ChartGeometry.js";
+import { ChartAxis, ChartBars, ChartDots, ChartLayers, ChartLayout, ChartPaths, NearestChartIndex } from "../../src/utils/ChartGeometry.js";
 
 const Series = (id, values, xs = values.map((_, index) => index)) => ({ Id: id, Label: id.toUpperCase(), Points: Array.from(values, (y, index) => ({ X: xs[index], Y: y })) });
 const Data = (options = {}) => CreateChartData({ Title: "Readings", ...options });
@@ -189,7 +189,13 @@ test("keyboard inspection uses raw rows for both announcements and crosshair, in
   const chart = Control({ Series: [Series("a", [1, null, 3]), Series("b", [9], [1])], X: { Format: (value) => `t${value}` }, Y: { Format: (value) => `${value} m` } });
   chart.Render();
   const attributes = new Map();
-  const tooltip = {};
+  const heading = {};
+  const values = [{}, {}];
+  const swatches = [{ style: {} }, { style: {} }];
+  const tooltip = {
+    querySelector: () => heading,
+    querySelectorAll: () => values.map((value, index) => ({ querySelector: (selector) => (selector === ".ct-chart-tooltip-value" ? value : swatches[index]) })),
+  };
   const live = {};
   chart._plot = { querySelector: () => ({ setAttribute: (key, value) => attributes.set(key, value) }) };
   chart.vnode = { dom: { querySelector: (name) => (name === ".ct-chart-tooltip" ? tooltip : live) } };
@@ -197,7 +203,11 @@ test("keyboard inspection uses raw rows for both announcements and crosshair, in
   chart.Select(0, true);
   press("ArrowRight");
   assert.equal(live.textContent, "t1 · A: — · B: 9 m");
-  assert.equal(tooltip.textContent, live.textContent);
+  assert.equal(heading.textContent, "t1");
+  assert.deepEqual(
+    values.map((value) => value.textContent),
+    ["—", "9 m"],
+  );
   assert.equal(attributes.get("x1"), chart._layout.ScaleX(1));
   press("ArrowRight");
   press("ArrowRight");
@@ -206,4 +216,91 @@ test("keyboard inspection uses raw rows for both announcements and crosshair, in
   press("Escape");
   assert.equal(tooltip.hidden, true);
   assert.equal(live.textContent, "");
+});
+
+test("scatter and mixed series retain only supplied X values with independently sized dots", () => {
+  const data = Data({
+    Type: "scatter",
+    Series: [
+      { ...Series("a", [4, 8], [1, 3]), PointRadius: 4.5 },
+      { ...Series("b", [9, 7], [1, 3]), Type: "line" },
+    ],
+  });
+  const layout = ChartLayout(data, 600);
+  assert.deepEqual(data.Positions, [1, 3]);
+  assert.equal(data.Series[0].Type, "scatter");
+  assert.equal(data.Series[1].Type, "line");
+  assert.equal(data.Series[0].PointRadius, 4.5);
+  assert.equal(data.Series[1].PointRadius, 2.5);
+  assert.equal(ChartDots(layout.Layers[0], layout).length, 2);
+  assert.ok(ChartDots(layout.Layers[0], layout).every((dot) => Number.isFinite(dot.Top)));
+  const crowded = Data({ Type: "scatter", Series: [Series("a", Array(600).fill(5))] });
+  const narrow = ChartLayout(crowded, 220);
+  assert.ok(ChartDots(narrow.Layers[0], narrow).length < 220);
+  assert.equal(crowded.Positions.length, 600);
+  for (const props of [
+    { Series: [{ ...Series("a", [1]), Type: "dots" }] },
+    { Series: [{ ...Series("a", [1]), Type: "bar" }] },
+    { Series: [{ ...Series("a", [1]), PointRadius: -1 }] },
+    { Series: [{ ...Series("a", [1]), PointRadius: 0 }] },
+    { Series: [{ ...Series("a", [1]), PointRadius: Infinity }] },
+    { Type: "area", Stacked: true, Series: [{ ...Series("a", [1]), Type: "scatter" }] },
+  ])
+    assert.throws(() => Data(props), /Chart|Stacked/);
+});
+
+test("category colors preserve numeric bar data and remain aligned after gaps and clipping", () => {
+  const data = Data({ Type: "bar", Categories: ["A", "B", "C"], X: { Min: 1 }, Series: [{ Id: "a", Label: "A", Values: [2, null, 5], Colors: ["red", null, "blue"] }] });
+  const layout = ChartLayout(data, 600);
+  const bars = ChartBars(layout.Layers[0], layout, 0, 1, false);
+  assert.equal(bars.length, 1);
+  assert.equal(bars[0].Position, 2);
+  assert.equal(data.Series[0].Colors[bars[0].Position], "blue");
+  assert.deepEqual([...data.Series[0].Values.values()], [2, null, 5]);
+  assert.throws(() => Data({ Series: [{ ...Series("a", [2]), Colors: ["red"] }] }), /Colors/);
+  assert.throws(() => Data({ Type: "bar", Categories: ["A"], Series: [{ Id: "a", Label: "A", Values: [2], Colors: [] }] }), /Colors/);
+});
+
+test("right-axis series have independent zero bounds, domains, geometry and formatting", () => {
+  const data = Data({ Y: { Min: 0, Format: (value) => `${value} jobs` }, Y2: { Min: 0, Max: 100, Format: (value) => `${value}%` }, Series: [Series("a", [2, 4]), { ...Series("b", [50, 100]), Axis: "right", Type: "scatter" }] });
+  const layout = ChartLayout(data, 600);
+  assert.equal(layout.Y.Min, 0);
+  assert.ok(layout.Y.Max < 100);
+  assert.equal(layout.Y2.Max, 100);
+  assert.equal(layout.ScaleY2(100), layout.Top);
+  assert.equal(layout.ScaleY2(50), (layout.Top + layout.Bottom) / 2);
+  assert.equal(data.FormatY(50, "right"), "50%");
+  assert.equal(data.FormatY(2), "2 jobs");
+  assert.equal(data.FormatY(null, "right"), "—");
+  assert.ok(layout.Right < ChartLayout(Data({ Series: [Series("a", [2, 4])] }), 600).Right);
+  assert.throws(() => Data({ Series: [{ ...Series("a", [1]), Axis: "right" }] }), /Y2/);
+  assert.throws(() => Data({ Y2: { Min: 2, Max: 1 } }), /Y2/);
+  assert.throws(() => Data({ Series: [{ ...Series("a", [1]), Axis: "other" }] }), /Axis/);
+  const hidden = ChartLayout(Data({ ...data, Series: [Series("a", [2, 4]), { ...Series("b", [50, 100]), Axis: "right" }], Hidden: ["b"] }), 600);
+  assert.equal(hidden.Y2.Min, 0);
+  assert.equal(hidden.Y2.Max, 100);
+});
+
+test("stacked areas keep unknown baselines and totals within their own axis", () => {
+  const data = Data({ Type: "area", Stacked: true, Y2: {}, Series: [Series("a", [null, 2]), { ...Series("b", [50, 70]), Axis: "right" }, Series("c", [3, 4]), { ...Series("d", [10, 20]), Axis: "right" }] });
+  const layers = ChartLayers(data);
+  assert.equal(layers[2][0], null);
+  assert.equal(layers[1][0].Top, 50);
+  assert.equal(layers[3][0].Base, 50);
+  assert.equal(layers[3][1].Top, 90);
+  assert.equal(layers[2][1].Top, 6);
+  assert.throws(
+    () =>
+      Data({
+        Type: "bar",
+        Stacked: true,
+        Y2: {},
+        Categories: ["A"],
+        Series: [
+          { Id: "a", Label: "A", Values: [2] },
+          { Id: "b", Label: "B", Values: [80], Axis: "right" },
+        ],
+      }),
+    /one Y axis/,
+  );
 });

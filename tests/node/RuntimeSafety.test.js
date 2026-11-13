@@ -19,13 +19,14 @@ test("invalid component children point to managed views instead of undefined tag
 });
 
 test("template events validate unsupported names and retain focus aliases", () => {
-  for (const name of ["mouseenter", "mouseleave", "scroll", "", null, 7]) {
+  for (const name of ["scroll", "", null, 7]) {
     assert.throws(() => CT.On(name, () => {}), /Unsupported CT.On event.*Use one of/);
   }
 
   assert.equal(CT.On("focus", () => {}).eventType, "focusin");
   assert.equal(CT.On("blur", () => {}).eventType, "focusout");
   assert.equal(CT.On("CLICK", () => {}).eventType, "click");
+  for (const name of ["pointerenter", "pointerleave", "pointerover", "pointerout", "mouseenter", "mouseleave"]) assert.equal(CT.On(name, () => {}).eventType, name);
 });
 
 test("unchanged value and checked slots are not reapplied; changed bindings still are", (context) => {

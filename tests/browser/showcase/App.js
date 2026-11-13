@@ -1,6 +1,7 @@
 import CT, {
   Accordion,
   Alert,
+  ApplicationLayout,
   Badge,
   Card,
   Chart,
@@ -18,8 +19,11 @@ import CT, {
   MaxLength,
   PopupWindow,
   PanZoomView,
+  Popover,
   Required,
   SideNavigation,
+  SplitLayout,
+  Tabs,
   Toast,
   Tooltip,
 } from "../../../src/Index.js";
@@ -67,6 +71,8 @@ export class App extends Component {
       diagramCamera: null,
       diagramItem: "none",
       hiddenChartSeries: [],
+      selectedTab: "overview",
+      narrowTabs: false,
       activeSystemArea: "runtime",
       isDialogOpen: false,
       isPopupOpen: false,
@@ -171,7 +177,43 @@ export class App extends Component {
       {
         Id: "chart",
         Title: "Chart",
-        Content: CodeBlock({ Title: "Usage", Code: 'Chart({\n  Title: "Completed jobs",\n  Series: [{\n    Id: "queue", Label: "Queue A",\n    Points: [{ X: 0, Y: 2 }, { X: 1, Y: 5 }]\n  }]\n});' }),
+        Content: CodeBlock({
+          Title: "Usage",
+          Code: ["Chart({", '  Title: "Completed jobs",', '  Type: "scatter",', "  Series: [{", '    Id: "queue", Label: "Queue A",', "    PointRadius: 5,", "    Points: [{ X: 0, Y: 2 }, { X: 1, Y: 5 }]", "  }]", "});"].join("\n"),
+        }),
+      },
+      {
+        Id: "tabs",
+        Title: "Tabs",
+        Content: CodeBlock({
+          Title: "Usage",
+          Code: [
+            "Tabs({",
+            '  Label: "Workspace sections",',
+            '  Layout: "auto",',
+            "  Items: [",
+            '    { Id: "overview", Title: "Overview", Content: html`<p>Work</p>` },',
+            '    { Id: "notes", Title: "Notes", Content: html`<p>Notes</p>` }',
+            "  ]",
+            "});",
+          ].join("\n"),
+        }),
+      },
+      {
+        Id: "split-layout",
+        Title: "SplitLayout",
+        Content: CodeBlock({
+          Title: "Usage",
+          Code: ["SplitLayout({", "  Side: html`<p>Summary</p>`,", "  Main: html`<p>Details</p>`,", '  Label: { Side: "Summary", Main: "Details" },', "  Sticky: true", "});"].join("\n"),
+        }),
+      },
+      {
+        Id: "popover",
+        Title: "Popover",
+        Content: CodeBlock({
+          Title: "Usage",
+          Code: ["Popover({", '  Label: "Record details",', '  Trigger: html`<button type="button">Inspect</button>`,', "  Content: html`<div><h3>Record</h3><p>Ready to review.</p></div>`,", '  Open: "hover"', "});"].join("\n"),
+        }),
       },
       {
         Id: "combobox",
@@ -209,7 +251,14 @@ export class App extends Component {
       },
       { Id: "alert", Title: "Alert", Content: CodeBlock({ Title: "Alert", Code: 'Alert({\n  Title: "Saved",\n  Message: "Changes are available.",\n  Type: "success",\n  Live: "polite"\n});' }) },
       { Id: "badge", Title: "Badge", Content: CodeBlock({ Title: "Badge", Code: 'Badge({\n  Text: "Ready",\n  Type: "success"\n});' }) },
-      { Id: "card", Title: "Card", Content: CodeBlock({ Title: "Card", Code: 'Card({\n  Title: "Deployment",\n  Content: html`<p>Ready</p>`,\n  Footer: html`<button type="button">Open</button>`\n});' }) },
+      {
+        Id: "card",
+        Title: "Card",
+        Content: CodeBlock({
+          Title: "Card",
+          Code: ["Card({", '  Title: "Deployment",', "  HeadingLevel: 3,", '  Actions: html`<a href="#deployment-details">Details</a>`,', '  Content: html`<p id="deployment-details">Ready</p>`', "});"].join("\n"),
+        }),
+      },
       {
         Id: "code-block",
         Title: "CodeBlock",
@@ -391,6 +440,8 @@ export class App extends Component {
             <div class="component-main">
               ${Card({
                 Title: "Deployment controls",
+                HeadingLevel: 3,
+                Actions: html` <button type="button" class="ct-button-secondary" ${CT.On("click", this.actions.openDialog)}>Review deployment</button> `,
                 Content: html`
                   <div class="component-card-content">
                     ${Alert({ Title: "Default styles active", Message: "This screen uses CTFramework CSS without its own component theme.", Type: "success" })}
@@ -440,15 +491,91 @@ export class App extends Component {
             </div>
           </div>
           <section class="component-examples">
-            <h3>Inspect chart values</h3>
+            <h3>Switch between panels as space changes</h3>
+            <button type="button" ${CT.On("click", () => this.SetState({ narrowTabs: !this.state.narrowTabs }))}>${this.state.narrowTabs ? "Use full width" : "Use narrow width"}</button>
+            <div
+              ${CT.Attr("style", {
+                width: this.state.narrowTabs ? "20rem" : "100%",
+                maxWidth: "100%",
+              })}
+            >
+              ${Tabs({
+                Key: "showcase-tabs",
+                Label: "Workspace sections",
+                Layout: "auto",
+                MinPanelWidth: "16rem",
+                HeadingLevel: 4,
+                Value: this.state.selectedTab,
+                OnChange: (id) => this.SetState({ selectedTab: id }),
+                Items: [
+                  {
+                    Id: "overview",
+                    Title: "Overview",
+                    Content: CT.View({
+                      Component: ChildCounter,
+                      Props: { ParentCount: this.state.count },
+                      Key: "tabs-counter",
+                    }),
+                  },
+                  {
+                    Id: "notes",
+                    Title: "Notes",
+                    Badge: this.state.notes.length,
+                    Content: html`<p>There are ${this.state.notes.length} saved notes.</p>`,
+                  },
+                ],
+              })}
+            </div>
+            <p role="status">Selected panel: ${this.state.selectedTab}</p>
+            <h3>Keep an outline beside details</h3>
+            ${ApplicationLayout({
+              Header: html`<strong>Review workspace</strong>`,
+              SideNavigation: SideNavigation({
+                Title: "System areas",
+                ActiveId: this.state.activeSystemArea,
+                Items: [
+                  { Id: "runtime", Label: "Runtime" },
+                  { Id: "services", Label: "Services" },
+                  { Id: "operations", Label: "Operations" },
+                ],
+                OnNavigate: this.actions.selectSystemArea,
+              }),
+              Content: html`<section>
+                ${SplitLayout({
+                  Label: { Side: "Outline", Main: "Review details" },
+                  SideWidth: { Min: "12rem", Max: "18rem" },
+                  StackBelow: "48rem",
+                  Sticky: true,
+                  Side: html`<section>
+                    <h4>Outline</h4>
+                    <ol>
+                      ${Array.from({ length: 48 }, (_, index) => html`<li>Section ${index + 1}</li>`)}
+                    </ol>
+                  </section>`,
+                  Main: html`<section>
+                    <h4>Review details</h4>
+                    ${Array.from({ length: 24 }, (_, index) => html`<p>Record ${index + 1}: review the current details.</p>`)}
+                  </section>`,
+                })}
+              </section>`,
+            })}
+            <h3>Inspect chart values on two axes</h3>
             ${Chart({
               Title: "Completed jobs",
+              Type: "line",
               X: { Label: "Time", Format: (value) => `${value}s` },
-              Y: { Label: "Jobs", Min: 0 },
+              Y: { Label: "Jobs", Min: 0, Format: (value) => `${value} jobs` },
+              Y2: {
+                Label: "Completion rate",
+                Min: 0,
+                Max: 100,
+                Format: (value) => `${value}%`,
+              },
               Series: [
                 {
                   Id: "a",
                   Label: "Queue A",
+                  Type: "area",
                   Points: [
                     { X: 0, Y: 2 },
                     { X: 1, Y: 5 },
@@ -457,18 +584,80 @@ export class App extends Component {
                 },
                 {
                   Id: "b",
-                  Label: "Queue B",
+                  Label: "Completion rate",
+                  Type: "scatter",
+                  Axis: "right",
+                  PointRadius: 5,
+                  Points: [
+                    { X: 0, Y: 25 },
+                    { X: 1, Y: 50 },
+                    { X: 2, Y: 75 },
+                  ],
+                },
+                {
+                  Id: "c",
+                  Label: "Queue C",
+                  Type: "line",
+                  PointRadius: 4,
                   Points: [
                     { X: 0, Y: 1 },
-                    { X: 1, Y: 3 },
-                    { X: 2, Y: 6 },
+                    { X: 1, Y: null },
+                    { X: 2, Y: 4 },
                   ],
-                  Dashed: true,
                 },
               ],
               Markers: [{ X: 1, Label: "Added worker" }],
               Hidden: this.state.hiddenChartSeries,
               OnToggleSeries: (id, visible) => this.SetState((state) => ({ hiddenChartSeries: visible ? state.hiddenChartSeries.filter((value) => value !== id) : [...state.hiddenChartSeries, id] })),
+            })}
+            <h3>Jobs by shift</h3>
+            ${Chart({
+              Title: "Jobs by shift",
+              Type: "bar",
+              Categories: ["Morning", "Afternoon", "Evening"],
+              Y: { Label: "Jobs", Min: 0 },
+              Series: [
+                {
+                  Id: "shifts",
+                  Label: "Completed jobs",
+                  Values: [12, 17, 9],
+                  Colors: ["var(--ct-chart-1)", null, "var(--ct-chart-3)"],
+                },
+              ],
+            })}
+            <h3>Inspect details by hover, focus, or click</h3>
+            ${Card({
+              Title: "Records",
+              HeadingLevel: 4,
+              Content: html`<div style="max-height: 12rem; overflow: auto">
+                <p>Scroll this card while the detail view is open.</p>
+                ${Popover({
+                  Label: "Record A details",
+                  Trigger: html`<button type="button">Hover or focus on Record A</button>`,
+                  Content: html`<div>
+                    <h4>Record A</h4>
+                    <p>Three updates are ready.</p>
+                    <ul>
+                      <li>Owner assigned</li>
+                      <li>Review requested</li>
+                    </ul>
+                  </div>`,
+                  Open: "hover",
+                  Placement: "right",
+                  Width: "20rem",
+                })}
+                ${Popover({
+                  Label: "Record B details",
+                  Trigger: html`<button type="button">Click for Record B</button>`,
+                  Content: html`<div>
+                    <h4>Record B</h4>
+                    <p>Two notes are ready to read.</p>
+                  </div>`,
+                  Open: "click",
+                  Placement: "bottom",
+                })}
+                ${Array.from({ length: 12 }, (_, index) => html`<p>Record note ${index + 1}</p>`)}
+              </div>`,
             })}
             <h3>Search a long list</h3>
             ${Combobox({
@@ -497,6 +686,29 @@ export class App extends Component {
               OnItemActivate: (id) => this.SetState({ diagramItem: id }),
             })}
             <p>Activated node: ${this.state.diagramItem}</p>
+            <h3>Inspect a diagram node</h3>
+            <div style="height: 20rem">
+              ${PanZoomView({
+                Label: "Popover diagram",
+                Bounds: { MinX: -120, MinY: -80, MaxX: 120, MaxY: 80 },
+                Content: html`<g>
+                  <foreignObject x="-80" y="-30" width="160" height="60">
+                    <div xmlns="http://www.w3.org/1999/xhtml">
+                      ${Popover({
+                        Label: "Diagram node details",
+                        Trigger: html`<button type="button">Inspect node</button>`,
+                        Content: html`<div>
+                          <h4>Diagram node</h4>
+                          <p>This node is part of the example diagram.</p>
+                        </div>`,
+                        Open: "hover",
+                        Placement: "top",
+                      })}
+                    </div>
+                  </foreignObject>
+                </g>`,
+              })}
+            </div>
             <h3>Image gallery</h3>
             ${ImageCarousel({ Label: "Landscape gallery", Images: CarouselImages })}
             <h3>Usage snippets</h3>

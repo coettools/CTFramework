@@ -50,22 +50,21 @@ export const ChartAxis = (axis, dataMin, dataMax, count = 5) => {
 const LayerValues = (data, rows) => {
   // A missing lower layer has an unknown contribution. Leave its dependants open.
   return rows.map((row) => {
-    let positive = 0;
-    let negative = 0;
-    let complete = true;
-    const layers = row.Values.map((value) => {
-      if (value === null || (!complete && data.Stacked && data.Type === "area")) {
-        complete = false;
+    const axes = { left: { Positive: 0, Negative: 0, Complete: true }, right: { Positive: 0, Negative: 0, Complete: true } };
+    const layers = row.Values.map((value, index) => {
+      const axis = axes[data.Visible[index].Axis];
+      if (value === null || (!axis.Complete && data.Stacked && data.Type === "area")) {
+        axis.Complete = false;
 
         return null;
       }
 
-      const base = data.Stacked ? (value < 0 ? negative : positive) : 0;
+      const base = data.Stacked ? (value < 0 ? axis.Negative : axis.Positive) : 0;
       const top = base + value;
       if (!Number.isFinite(top)) throw new RangeError("Chart stacked total must be finite.");
-      const layer = { X: row.X, Value: value, Base: base, Top: top, Positive: positive, Negative: negative };
-      if (data.Stacked && value < 0) negative = top;
-      else if (data.Stacked) positive = top;
+      const layer = { X: row.X, Value: value, Base: base, Top: top, Positive: axis.Positive, Negative: axis.Negative };
+      if (data.Stacked && value < 0) axis.Negative = top;
+      else if (data.Stacked) axis.Positive = top;
 
       return layer;
     });
@@ -76,15 +75,18 @@ const LayerValues = (data, rows) => {
 
 // Insert geometric vertices where a known segment changes sign. All layers use
 // the same crossings, so both sides of a stack share their exact boundary.
-const StackCrossings = (rows) => {
+const StackCrossings = (rows, series) => {
   const result = [];
   for (const [index, row] of rows.entries()) {
     const previous = rows[index - 1];
     if (previous) {
       const crossings = new Map();
+      const incomplete = new Set();
       for (const [layer, value] of row.Values.entries()) {
         const prior = previous.Values[layer];
-        if (prior === null || value === null) break;
+        const axis = series[layer].Axis;
+        if (prior === null || value === null) incomplete.add(axis);
+        if (incomplete.has(axis)) continue;
         if (!((prior < 0 && value > 0) || (prior > 0 && value < 0))) continue;
         const fraction = 1 / (1 + Math.abs(value / prior));
         if (!crossings.has(fraction)) crossings.set(fraction, new Set());
@@ -121,29 +123,34 @@ export const ChartLayers = (data) => {
   }
 
   const rows = data.Positions.map((x) => ({ X: x, Values: data.Visible.map((series) => series.Values.get(x)) }));
-  const layers = LayerValues(data, data.Type === "area" ? StackCrossings(rows) : rows);
+  const layers = LayerValues(data, data.Type === "area" ? StackCrossings(rows, data.Visible) : rows);
 
   return data.Visible.map((_, index) => layers.map((row) => row[index]));
 };
 
 export const ChartLayout = (data, width, measure = (value) => String(value).length * 7) => {
   const layers = ChartLayers(data);
-  let min = data.Type === "line" ? Infinity : 0;
-  let max = data.Type === "line" ? -Infinity : 0;
-  for (const layer of layers) {
+  const ranges = { left: { Min: Infinity, Max: -Infinity }, right: { Min: Infinity, Max: -Infinity } };
+  for (const [index, layer] of layers.entries()) {
+    const series = data.Visible[index];
+    const range = ranges[series.Axis];
     for (const point of layer) {
       if (!point) continue;
-      min = Math.min(min, point.Top);
-      max = Math.max(max, point.Top);
+      range.Min = Math.min(range.Min, point.Top, ["area", "bar"].includes(series.Type) ? point.Base : Infinity);
+      range.Max = Math.max(range.Max, point.Top, ["area", "bar"].includes(series.Type) ? point.Base : -Infinity);
     }
   }
 
   const bottom = Math.max(2, data.Height - (data.X.Label ? 42 : 24));
   const top = Math.min(bottom - 1, data.Markers.length ? 24 : 10);
-  const y = ChartAxis(data.Y, min, max, Math.min(6, Math.max(2, Math.floor((bottom - top) / 42) + 1)));
+  const tickCount = Math.min(6, Math.max(2, Math.floor((bottom - top) / 42) + 1));
+  const y = ChartAxis(data.Y, ranges.left.Min, ranges.left.Max, tickCount);
+  const y2 = data.Y2 ? ChartAxis(data.Y2, ranges.right.Min, ranges.right.Max, tickCount) : null;
   const labelWidth = y.Ticks.reduce((size, tick) => Math.max(size, measure(data.FormatY(tick))), 0);
-  const left = Math.min(width * 0.45, Math.ceil(labelWidth) + (data.Y.Label ? 26 : 8));
-  const right = Math.max(left + 1, width - 8);
+  const rightLabelWidth = y2 ? y2.Ticks.reduce((size, tick) => Math.max(size, measure(data.FormatY(tick, "right"))), 0) : 0;
+  const marginCap = width * (y2 ? 0.33 : 0.45);
+  const left = Math.min(marginCap, Math.ceil(labelWidth) + (data.Y.Label ? 26 : 8));
+  const right = Math.max(left + 1, width - (y2 ? Math.min(marginCap, Math.ceil(rightLabelWidth) + (data.Y2.Label ? 26 : 8)) : 8));
   const plotWidth = right - left;
   const count = Math.max(2, Math.min(6, Math.floor(plotWidth / 75) + 1));
   const positions = data.Positions;
@@ -159,6 +166,7 @@ export const ChartLayout = (data, width, measure = (value) => String(value).leng
   const band = bars ? plotWidth / Math.max(1, x.Max - x.Min + 1) : 0;
   const scaleX = (value) => (bars ? left + (value - x.Min + 0.5) * band : left + fraction(value, x.Min, x.Max) * plotWidth);
   const scaleY = (value) => bottom - fraction(value, y.Min, y.Max) * (bottom - top);
+  const scaleY2 = y2 ? (value) => bottom - fraction(value, y2.Min, y2.Max) * (bottom - top) : null;
   const selectable = positions.filter((position) => position >= x.Min && position <= x.Max);
 
   let end = -Infinity;
@@ -183,7 +191,34 @@ export const ChartLayout = (data, width, measure = (value) => String(value).leng
     previousY = pixel;
   }
 
-  return { Width: width, Left: left, Right: right, Top: top, Bottom: bottom, X: x, Y: y, ScaleX: scaleX, ScaleY: scaleY, Band: band, Layers: layers, Selectable: selectable, Labels: labels, YLabels: yLabels };
+  const y2Labels = [];
+  previousY = Infinity;
+  for (const tick of y2?.Ticks ?? []) {
+    const pixel = scaleY2(tick);
+    if (previousY - pixel < 16) continue;
+    y2Labels.push(tick);
+    previousY = pixel;
+  }
+
+  return {
+    Width: width,
+    Left: left,
+    Right: right,
+    Top: top,
+    Bottom: bottom,
+    X: x,
+    Y: y,
+    Y2: y2,
+    ScaleX: scaleX,
+    ScaleY: scaleY,
+    ScaleY2: scaleY2,
+    Band: band,
+    Layers: layers,
+    Selectable: selectable,
+    Labels: labels,
+    YLabels: yLabels,
+    Y2Labels: y2Labels,
+  };
 };
 
 export const NearestChartIndex = (values, target, project) => {
@@ -209,8 +244,19 @@ export const ChartBars = (points, layout, index, count, stacked) => {
       const base = layout.ScaleY(point.Base);
       const top = layout.ScaleY(point.Top);
 
-      return { X: layout.ScaleX(point.X) - group / 2 + (stacked ? 0 : index * width), Y: Math.min(base, top), Width: width, Height: Math.abs(base - top) };
+      return { Position: point.X, X: layout.ScaleX(point.X) - group / 2 + (stacked ? 0 : index * width), Y: Math.min(base, top), Width: width, Height: Math.abs(base - top) };
     });
+};
+
+export const ChartDots = (points, layout) => {
+  const buckets = new Map();
+  for (const point of points) {
+    if (!point || point.X < layout.X.Min || point.X > layout.X.Max) continue;
+    const x = layout.ScaleX(point.X);
+    buckets.set(Math.floor(x), { X: x, Top: layout.ScaleY(point.Top) });
+  }
+
+  return [...buckets.values()];
 };
 
 // Keep the endpoints of each continuous run and one representative per pixel

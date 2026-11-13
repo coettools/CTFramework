@@ -152,7 +152,29 @@ export class CTFramework {
   static componentUpdateCounts = null;
   static maximumComponentUpdates = 100;
   static propertyBindings = new WeakMap();
-  static supportedEvents = ["click", "dblclick", "input", "change", "submit", "keydown", "keyup", "keypress", "mousedown", "mouseup", "pointerdown", "pointerup", "focusin", "focusout", "contextmenu"];
+  static supportedEvents = [
+    "click",
+    "dblclick",
+    "input",
+    "change",
+    "submit",
+    "keydown",
+    "keyup",
+    "keypress",
+    "mousedown",
+    "mouseup",
+    "pointerdown",
+    "pointerup",
+    "pointerenter",
+    "pointerleave",
+    "pointerover",
+    "pointerout",
+    "mouseenter",
+    "mouseleave",
+    "focusin",
+    "focusout",
+    "contextmenu",
+  ];
   static isEventDelegationReady = false;
 
   static Render(component, container) {
@@ -1142,24 +1164,29 @@ export class CTFramework {
     }
 
     CTFramework.supportedEvents.forEach((eventType) => {
-      document.addEventListener(eventType, (event) => {
-        let target = event.target instanceof Element ? event.target : event.target?.parentElement;
+      document.addEventListener(
+        eventType,
+        (event) => {
+          let target = event.target instanceof Element ? event.target : event.target?.parentElement;
 
-        while (target instanceof Element) {
-          const eventId = target.getAttribute("data-ct-id");
-          const handler = eventId ? CTFramework.eventHandlers[eventId]?.[event.type] : null;
+          while (target instanceof Element) {
+            const eventId = target.getAttribute("data-ct-id");
+            const handler = eventId ? CTFramework.eventHandlers[eventId]?.[event.type] : null;
 
-          if (handler) {
-            handler(CTFramework.CreateDelegatedEvent(event, target));
+            if (handler) {
+              handler(CTFramework.CreateDelegatedEvent(event, target));
 
-            if (event.cancelBubble) {
-              return;
+              if (event.cancelBubble) {
+                return;
+              }
             }
-          }
 
-          target = target.parentElement;
-        }
-      });
+            if (["pointerenter", "pointerleave", "mouseenter", "mouseleave"].includes(event.type)) return;
+            target = target.parentElement;
+          }
+        },
+        ["pointerenter", "pointerleave", "mouseenter", "mouseleave"].includes(eventType),
+      );
     });
 
     CTFramework.isEventDelegationReady = true;

@@ -47,13 +47,14 @@ const DashPatterns = ["none", "8 4", "2 3", "9 3 2 3", "12 4", "4 3", "8 3 2 3 2
 export const CreateChartData = (props) => {
   const { Title, Type = "line", Height = 240, Stacked = false, Series = [], Categories = [], Hidden = [], Markers = [] } = props;
   ReadLabel(Title, "Title");
-  if (!["line", "area", "bar"].includes(Type)) throw new TypeError("Chart Type must be line, area or bar.");
+  if (!["line", "area", "bar", "scatter"].includes(Type)) throw new TypeError("Chart Type must be line, area, bar or scatter.");
   if (!Number.isFinite(Height) || Height <= 0) throw new RangeError("Chart Height must be positive and finite.");
-  if (typeof Stacked !== "boolean" || (Stacked && Type === "line")) throw new TypeError("Chart Stacked applies to area and bar charts.");
+  if (typeof Stacked !== "boolean" || (Stacked && !["area", "bar"].includes(Type))) throw new TypeError("Chart Stacked applies to area and bar charts.");
   if (props.OnToggleSeries !== undefined && typeof props.OnToggleSeries !== "function") throw new TypeError("Chart OnToggleSeries must be a function.");
 
   const x = ReadAxis(props.X === undefined ? {} : props.X, "X", Type === "bar" ? ReadY : ReadChartX);
   const y = ReadAxis(props.Y === undefined ? {} : props.Y, "Y", ReadY);
+  const y2 = props.Y2 === undefined ? undefined : ReadAxis(props.Y2, "Y2", ReadY);
   const categories = Array.from(ReadArray(Categories, "Categories"), (label) => ReadLabel(label, "category"));
   const hidden = new Set(ReadArray(Hidden, "Hidden"));
   const ids = new Set();
@@ -65,6 +66,19 @@ export const CreateChartData = (props) => {
     ids.add(id);
 
     const label = ReadLabel(entry.Label, "Series.Label");
+    const type = entry.Type ?? Type;
+    if (Type === "bar" ? type !== "bar" : !["line", "area", "scatter"].includes(type)) throw new TypeError("Chart Series.Type must match the chart's category or continuous X axis.");
+    if (Stacked && Type === "area" && type !== "area") throw new TypeError("Stacked area charts need area series.");
+    const axis = entry.Axis ?? "left";
+    if (!["left", "right"].includes(axis) || (axis === "right" && !y2)) throw new TypeError("Chart Series.Axis must be left, or right with a Y2 axis.");
+    const pointRadius = entry.PointRadius ?? 2.5;
+    if (!Number.isFinite(pointRadius) || pointRadius <= 0) throw new RangeError("Chart Series.PointRadius must be positive and finite.");
+    let colors;
+    if (entry.Colors !== undefined) {
+      colors = ReadArray(entry.Colors, "Series.Colors").map((color) => (color === null ? null : ReadLabel(color, "Series.Colors color")));
+      if (type !== "bar" || colors.length !== categories.length) throw new RangeError("Chart Series.Colors needs one color or null per bar category.");
+    }
+
     const values = new Map();
     if (Type === "bar") {
       const raw = ReadArray(entry.Values, "Series.Values");
@@ -86,6 +100,10 @@ export const CreateChartData = (props) => {
     return {
       Id: id,
       Label: label,
+      Type: type,
+      Axis: axis,
+      PointRadius: pointRadius,
+      Colors: colors,
       Values: values,
       Positions: positions,
       Min: finite.reduce((min, value) => Math.min(min, value), Infinity),
@@ -103,6 +121,10 @@ export const CreateChartData = (props) => {
         throw new RangeError("Stacked areas need aligned X positions in every series. Supply null Y at a gap.");
       }
     }
+  }
+
+  if (Type === "bar" && Stacked && new Set(series.map((item) => item.Axis)).size > 1) {
+    throw new TypeError("Stacked bars need one Y axis. Use grouped bars to compare different axes.");
   }
 
   const markers = Array.from(ReadArray(Markers, "Markers"), (marker) => ({ X: ReadChartX(marker?.X), Label: ReadLabel(marker.Label, "marker Label") }));
@@ -124,7 +146,11 @@ export const CreateChartData = (props) => {
     return String(value);
   };
 
-  const formatY = (value) => (value == null ? "—" : String(y.Format ? y.Format(value) : value));
+  const formatY = (value, axis = "left") => {
+    const formatter = (axis === "right" ? y2 : y).Format;
 
-  return { Title, Type, Height, Stacked, X: x, Y: y, Series: series, Visible: visible, Positions: positions, Markers: markers, FormatX: formatX, FormatY: formatY, HasData: visible.some((item) => item.Min <= item.Max) };
+    return value == null ? "—" : String(formatter ? formatter(value) : value);
+  };
+
+  return { Title, Type, Height, Stacked, X: x, Y: y, Y2: y2, Series: series, Visible: visible, Positions: positions, Markers: markers, FormatX: formatX, FormatY: formatY, HasData: visible.some((item) => item.Min <= item.Max) };
 };

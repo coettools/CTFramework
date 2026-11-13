@@ -3,11 +3,20 @@ import { Component } from "./Component.js";
 import { CreateComponent } from "./ComponentFactory.js";
 import { Guid } from "../utils/Guid.js";
 import { CreateChartData } from "../utils/ChartData.js";
-import { ChartBars, ChartLayout, ChartPaths, NearestChartIndex } from "../utils/ChartGeometry.js";
+import { ChartBars, ChartDots, ChartLayout, ChartPaths, NearestChartIndex } from "../utils/ChartGeometry.js";
 
 const html = CT.Html;
 const attr = CT.Attr;
 const Identity = (value) => value;
+const SeriesColor = (series, position) => series.Colors?.[position] ?? series.Color;
+const SeriesSwatch = (series) =>
+  html`<svg class="ct-chart-swatch" width="32" height="12" aria-hidden="true" ${attr("style", { color: series.Color })}>
+    ${series.Type === "scatter"
+      ? html`<circle cx="16" cy="6" ${attr("r", Math.min(5, series.PointRadius))} fill="currentColor"></circle>`
+      : series.Type === "bar"
+        ? html`<rect x="4" y="2" width="24" height="8" fill="currentColor"></rect>`
+        : html`<line x1="1" x2="31" y1="6" y2="6" stroke="currentColor" stroke-width="3" ${attr("stroke-dasharray", series.Dash)}></line>`}
+  </svg>`;
 
 class ChartComponent extends Component {
   constructor(props) {
@@ -108,13 +117,18 @@ class ChartComponent extends Component {
       const x = this._layout.ScaleX(position);
       line.setAttribute("x1", x);
       line.setAttribute("x2", x);
-      const values = data.Visible.map((series) => `${series.Label}: ${data.FormatY(series.Values.get(position))}`);
+      const values = data.Visible.map((series) => `${series.Label}: ${data.FormatY(series.Values.get(position), series.Axis)}`);
       text = [data.FormatX(position), ...values].join(" · ");
+      tooltip.querySelector(".ct-chart-tooltip-x").textContent = data.FormatX(position);
+      const rows = tooltip.querySelectorAll(".ct-chart-tooltip-row");
+      data.Visible.forEach((series, index) => {
+        rows[index].querySelector(".ct-chart-tooltip-value").textContent = data.FormatY(series.Values.get(position), series.Axis);
+        rows[index].querySelector(".ct-chart-swatch").style.color = SeriesColor(series, position);
+      });
     }
 
     line?.setAttribute("visibility", active ? "visible" : "hidden");
     tooltip.hidden = !active;
-    if (tooltip.textContent !== text) tooltip.textContent = text;
     const announcement = announce ? text : "";
     if (status.textContent !== announcement) status.textContent = announcement;
   }
@@ -124,9 +138,7 @@ class ChartComponent extends Component {
 
     return html`<div class="ct-chart-legend" role="group" aria-label="Series">
       ${data.Series.map((series) => {
-        const swatch = html`<svg width="32" height="12" aria-hidden="true" ${attr("style", { color: series.Color })}>
-          <line x1="1" x2="31" y1="6" y2="6" stroke="currentColor" stroke-width="3" ${attr("stroke-dasharray", series.Dash)}></line>
-        </svg>`;
+        const swatch = SeriesSwatch(series);
         const entry = this.props.OnToggleSeries
           ? html`<button type="button" class="ct-button-secondary" ${attr("aria-pressed", String(series.Visible))} ${CT.On("click", () => this.props.OnToggleSeries(series.Id, !series.Visible))}>${swatch}${series.Label}</button>`
           : html`<span>${swatch}${series.Label}${series.Visible ? "" : " (hidden)"}</span>`;
@@ -144,7 +156,7 @@ class ChartComponent extends Component {
       <thead>
         <tr>
           <th scope="col">${data.X.Label || (data.Type === "bar" ? "Category" : "X")}</th>
-          ${data.Visible.map((item) => html`<th scope="col">${item.Label}</th>`)}
+          ${data.Visible.map((item) => html`<th scope="col">${item.Label}${item.Axis === "right" ? ` (${data.Y2.Label || "right axis"})` : data.Y.Label ? ` (${data.Y.Label})` : ""}</th>`)}
         </tr>
       </thead>
       <tbody>
@@ -152,7 +164,7 @@ class ChartComponent extends Component {
           (position) =>
             html`<tr>
               <th scope="row">${data.FormatX(position)}</th>
-              ${data.Visible.map((item) => html`<td>${data.FormatY(item.Values.get(position))}</td>`)}
+              ${data.Visible.map((item) => html`<td>${data.FormatY(item.Values.get(position), item.Axis)}</td>`)}
             </tr>`,
         )}
       </tbody>
@@ -160,17 +172,18 @@ class ChartComponent extends Component {
   }
 
   RenderSeries(series, index, data, layout) {
+    if (series.Axis === "right") layout = { ...layout, ScaleY: layout.ScaleY2 };
     const points = layout.Layers[index];
     let shapes;
     if (data.Type === "bar") {
       const bars = ChartBars(points, layout, index, data.Visible.length, data.Stacked);
-      shapes = bars.map((bar) => html`<rect fill="currentColor" stroke="var(--ct-color-surface)" ${attr("x", bar.X)} ${attr("y", bar.Y)} ${attr("width", bar.Width)} ${attr("height", bar.Height)}></rect>`);
+      shapes = bars.map((bar) => html`<rect ${attr("fill", SeriesColor(series, bar.Position))} stroke="var(--ct-color-surface)" ${attr("x", bar.X)} ${attr("y", bar.Y)} ${attr("width", bar.Width)} ${attr("height", bar.Height)}></rect>`);
     } else {
-      const paths = ChartPaths(points, layout, data.Type === "area", data.Stacked);
+      const paths = series.Type === "scatter" ? { Dots: ChartDots(points, layout) } : ChartPaths(points, layout, series.Type === "area", data.Stacked);
       shapes = [
         paths.Area ? html`<path fill="currentColor" fill-opacity="0.27" ${attr("d", paths.Area)}></path>` : null,
         paths.Line ? html`<path fill="none" stroke="currentColor" ${attr("d", paths.Line)}></path>` : null,
-        paths.Dots.map((dot) => html`<circle r="2.5" fill="currentColor" ${attr("cx", dot.X)} ${attr("cy", dot.Top)}></circle>`),
+        paths.Dots.map((dot) => html`<circle ${attr("r", series.PointRadius)} fill="currentColor" ${attr("cx", dot.X)} ${attr("cy", dot.Top)}></circle>`),
       ];
     }
 
@@ -183,7 +196,9 @@ class ChartComponent extends Component {
   RenderSvg(data, layout) {
     const { Left, Right, Top, Bottom, Width, ScaleX, ScaleY } = layout;
     const clip = `${this._id}-clip`;
-    const summary = data.Visible.map((series) => (series.Min <= series.Max ? `${series.Label}, ${data.FormatY(series.Min)} to ${data.FormatY(series.Max)}` : `${series.Label}, no values`));
+    const summary = data.Visible.map((series) =>
+      series.Min <= series.Max ? `${series.Label}, ${data.FormatY(series.Min, series.Axis)} to ${data.FormatY(series.Max, series.Axis)}${series.Axis === "right" ? `, ${data.Y2.Label || "right axis"}` : ""}` : `${series.Label}, no values`,
+    );
     const markers = data.Markers.filter((marker) => marker.X >= layout.X.Min && marker.X <= layout.X.Max);
 
     return html`<svg
@@ -203,6 +218,8 @@ class ChartComponent extends Component {
         ${layout.YLabels.map((tick) => html`<text text-anchor="end" dominant-baseline="middle" ${attr("x", Left - 5)} ${attr("y", ScaleY(tick))}>${data.FormatY(tick)}</text>`)}
         ${layout.Labels.map((tick) => html`<text ${attr("text-anchor", tick.Anchor)} ${attr("x", tick.X)} ${attr("y", Bottom + 15)}>${tick.Label}</text>`)}
         ${data.Y.Label ? html`<text text-anchor="middle" ${attr("transform", `translate(12 ${(Top + Bottom) / 2}) rotate(-90)`)}>${data.Y.Label}</text>` : null}
+        ${layout.Y2Labels.map((tick) => html`<text class="ct-chart-axis-right" text-anchor="start" dominant-baseline="middle" ${attr("x", Right + 5)} ${attr("y", layout.ScaleY2(tick))}>${data.FormatY(tick, "right")}</text>`)}
+        ${data.Y2?.Label ? html`<text class="ct-chart-axis-right" text-anchor="middle" ${attr("transform", `translate(${Width - 12} ${(Top + Bottom) / 2}) rotate(90)`)}>${data.Y2.Label}</text>` : null}
         ${data.X.Label ? html`<text text-anchor="middle" ${attr("x", (Left + Right) / 2)} ${attr("y", data.Height - 4)}>${data.X.Label}</text>` : null}
         ${markers.map(
           (marker) =>
@@ -232,7 +249,13 @@ class ChartComponent extends Component {
       <div class="ct-chart-plot" role="group" ${attr("aria-label", data.Title)} ${attr("aria-describedby", data.HasData ? helpId : null)} ${attr("tabindex", data.HasData ? "0" : null)}>
         ${data.HasData ? this.RenderSvg(data, layout) : html`<p>${empty}</p>`}
       </div>
-      <div class="ct-chart-tooltip" hidden></div>
+      <div class="ct-chart-tooltip" hidden>
+        <strong class="ct-chart-tooltip-x"></strong>
+        ${data.Visible.map((series) => ({
+          ...html`<div class="ct-chart-tooltip-row">${SeriesSwatch(series)}<span>${series.Label}:</span><span class="ct-chart-tooltip-value"></span></div>`,
+          key: series.Id,
+        }))}
+      </div>
       <div class="ct-chart-status" role="status" aria-live="polite" aria-atomic="true"></div>
       ${hasRows
         ? html`<button type="button" class="ct-button-secondary" ${attr("aria-controls", tableId)} ${attr("aria-expanded", String(this.state.TableOpen))} ${CT.On("click", () => this.SetState({ TableOpen: !this.state.TableOpen }))}>

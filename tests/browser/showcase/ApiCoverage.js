@@ -2,6 +2,7 @@ export const ShowcaseApiCoverage = [
   "Chart",
   "Combobox",
   "PanZoomView",
+  "Popover",
   "Accordion",
   "ApplicationLayout",
   "Alert",
@@ -25,6 +26,8 @@ export const ShowcaseApiCoverage = [
   "Required",
   "MaxLength",
   "SideNavigation",
+  "SplitLayout",
+  "Tabs",
   "Toast",
   "Tooltip",
 ];

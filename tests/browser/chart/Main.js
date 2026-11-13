@@ -60,6 +60,45 @@ class ChartChecks extends Component {
       ${Chart({ ...bars, Title: "Grouped readings" })} ${Chart({ ...bars, Title: "Stacked readings", Stacked: true })}
       ${Chart({ Title: "Stacked areas", Type: "area", Stacked: true, Series: [first, { ...second, Points: Points(600, -4) }] })}
       <div id="four-series">${Chart({ Title: "Four channels", Series: [first, second, { Id: "c", Label: "Channel C", Points: Points(600, 4) }, { Id: "d", Label: "Channel D", Points: Points(600, 6) }] })}</div>
+      <div id="mixed-chart">
+        ${Chart({
+          Title: "Mixed observations",
+          Legend: true,
+          Y: { Label: "Count", Min: 0, Max: 1000, Format: (value) => `${value} jobs` },
+          Y2: { Label: "Completion", Min: 0, Max: 100, Format: (value) => `${value}%` },
+          Series: [
+            {
+              Id: "trend",
+              Label: "Trend",
+              Points: [
+                { X: 0, Y: 1000 },
+                { X: 1, Y: 500 },
+                { X: 2, Y: 0 },
+              ],
+            },
+            { Id: "hits", Label: "Observation", Type: "scatter", PointRadius: 3, Points: [{ X: 1, Y: 500 }] },
+            { Id: "crits", Label: "Notable observation", Type: "scatter", PointRadius: 5, Points: [{ X: 2, Y: 0 }] },
+            {
+              Id: "completion",
+              Label: "Complete",
+              Axis: "right",
+              Points: [
+                { X: 0, Y: 80 },
+                { X: 1, Y: 40 },
+                { X: 2, Y: 10 },
+              ],
+            },
+          ],
+        })}
+      </div>
+      <div id="colored-bars">
+        ${Chart({
+          Title: "Category colors",
+          Type: "bar",
+          Categories: ["First", "Second", "Third"],
+          Series: [{ Id: "counts", Label: "Count", Values: [2, 4, 6], Colors: ["var(--ct-chart-1)", "var(--ct-chart-2)", "var(--ct-chart-3)"] }],
+        })}
+      </div>
       ${Chart({ Title: "Empty readings", EmptyText: "No readings yet", ShowTitle: false })}
       <button id="open-dialog" type="button" ${CT.On("click", () => document.querySelector("#chart-dialog").showModal())}>Open chart dialog</button>
       <dialog id="chart-dialog" aria-label="Chart dialog">
@@ -101,7 +140,8 @@ CT(async () => {
     plot.focus();
     plot.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "ArrowRight" }));
     Assert(status.textContent === "t1 · Channel A: -1 units · Channel B: —", "Right arrow announces exact values and gaps");
-    Assert(tooltip.textContent === status.textContent && !tooltip.hidden, "Focused tooltip matches the live region");
+    Assert(tooltip.querySelector(".ct-chart-tooltip-x").textContent === "t1" && !tooltip.hidden, "Focused tooltip uses the selected X value");
+    Assert(tooltip.querySelectorAll(".ct-chart-tooltip-row").length === 2 && tooltip.querySelector(".ct-chart-tooltip-value").textContent === "-1 units", "Tooltip has one formatted row and swatch per visible series");
     plot.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "ArrowLeft" }));
     Assert(status.textContent.startsWith("t0 ·"), "Left arrow returns to first sample");
 
@@ -155,13 +195,35 @@ CT(async () => {
     await Settle();
     const rect = liveSvg.getBoundingClientRect();
     liveSvg.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerType: "touch", clientX: rect.right - 2 }));
-    Assert(tooltip.textContent.startsWith("t599 ·") && liveSvg.querySelector(".ct-chart-crosshair").getAttribute("visibility") === "visible", "Touch inspects the nearest full-resolution sample");
+    Assert(tooltip.querySelector(".ct-chart-tooltip-x").textContent === "t599" && liveSvg.querySelector(".ct-chart-crosshair").getAttribute("visibility") === "visible", "Touch inspects the nearest full-resolution sample");
 
     const grouped = document.querySelector('.ct-chart[aria-label="Grouped readings"]');
     const stacked = document.querySelector('.ct-chart[aria-label="Stacked readings"]');
     const barX = (chart) => Array.from(chart.querySelectorAll(".ct-chart-series"), (series) => series.querySelector("rect").getAttribute("x"));
     Assert(new Set(barX(grouped)).size === 2 && new Set(barX(stacked)).size === 1, "Grouped bars use adjacent slots and stacked bars share a slot");
     Assert(grouped.querySelector(".ct-chart-axis").textContent.includes("Shift Morning"), "Categorical axis calls X.Format with the label");
+
+    const mixed = document.querySelector("#mixed-chart");
+    Assert(!mixed.querySelector('[data-series="hits"] path') && mixed.querySelector('[data-series="hits"] circle').getAttribute("r") === "3", "Scatter draws explicit SVG dots without a connecting path");
+    Assert(mixed.querySelector('[data-series="crits"] circle').getAttribute("r") === "5", "Each scatter series has its own SVG radius");
+    Assert(mixed.querySelector(".ct-chart-axis-right").textContent.includes("%"), "Right axis has its own formatted ticks");
+    const mixedPlot = mixed.querySelector(".ct-chart-plot");
+    mixedPlot.focus();
+    mixedPlot.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "ArrowRight" }));
+    Assert(mixed.querySelector("[aria-live]").textContent === "1 · Trend: 500 jobs · Observation: 500 jobs · Notable observation: — · Complete: 40%", "Mixed-series announcement formats each axis independently");
+    mixed.querySelector("[aria-controls]").click();
+    await Settle();
+    Assert(mixed.querySelectorAll("tbody tr").length === 3, "Scatter does not insert halfway table rows");
+    Assert(mixed.querySelector("tbody tr").cells[4].textContent === "80%", "Right-axis formatter reaches the table");
+    mixed.querySelector("[aria-controls]").click();
+    await Settle();
+    const colored = document.querySelector("#colored-bars");
+    const fills = Array.from(colored.querySelectorAll(".ct-chart-series rect"), (bar) => getComputedStyle(bar).fill);
+    Assert(new Set(fills).size === 3, "A single bar series supports category colors");
+    const coloredPlot = colored.querySelector(".ct-chart-plot");
+    coloredPlot.focus();
+    coloredPlot.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "ArrowRight" }));
+    Assert(getComputedStyle(colored.querySelector(".ct-chart-tooltip-row .ct-chart-swatch")).color === fills[1], "Tooltip swatch matches the inspected category's bar color");
 
     const dialog = document.querySelector("#chart-dialog");
     for (let attempt = 0; attempt < 2; attempt++) {
