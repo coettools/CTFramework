@@ -3,7 +3,9 @@ import CT, {
   Alert,
   Badge,
   Card,
+  Chart,
   CodeBlock,
+  Combobox,
   Component,
   DataTable,
   Dialog,
@@ -15,6 +17,7 @@ import CT, {
   ImageCarousel,
   MaxLength,
   PopupWindow,
+  PanZoomView,
   Required,
   SideNavigation,
   Toast,
@@ -60,6 +63,10 @@ export class App extends Component {
       selectedEnvironment: "",
       environmentDisabled: false,
       environmentResult: "Submit an environment to inspect the form values.",
+      selectedResource: "",
+      diagramCamera: null,
+      diagramItem: "none",
+      hiddenChartSeries: [],
       activeSystemArea: "runtime",
       isDialogOpen: false,
       isPopupOpen: false,
@@ -161,6 +168,24 @@ export class App extends Component {
     ];
 
     this.componentExamples = [
+      {
+        Id: "chart",
+        Title: "Chart",
+        Content: CodeBlock({ Title: "Usage", Code: 'Chart({\n  Title: "Completed jobs",\n  Series: [{\n    Id: "queue", Label: "Queue A",\n    Points: [{ X: 0, Y: 2 }, { X: 1, Y: 5 }]\n  }]\n});' }),
+      },
+      {
+        Id: "combobox",
+        Title: "Combobox",
+        Content: CodeBlock({ Title: "Usage", Code: 'Combobox({\n  Label: "Resource",\n  Value: this.state.Resource,\n  Options: ["Copper", "Iron", "Silver"],\n  OnChange: (value) => this.SetState({ Resource: value })\n});' }),
+      },
+      {
+        Id: "pan-zoom-view",
+        Title: "PanZoomView",
+        Content: CodeBlock({
+          Title: "Usage",
+          Code: 'PanZoomView({\n  Label: "Diagram",\n  Bounds: { MinX: -200, MinY: -100, MaxX: 200, MaxY: 100 },\n  Camera: this.state.Camera,\n  Content: html`<g><circle cx="0" cy="0" r="20" /></g>`,\n  OnCameraChange: (camera) => this.SetState({ Camera: camera })\n});',
+        }),
+      },
       {
         Id: "image-carousel",
         Title: "ImageCarousel",
@@ -415,6 +440,63 @@ export class App extends Component {
             </div>
           </div>
           <section class="component-examples">
+            <h3>Inspect chart values</h3>
+            ${Chart({
+              Title: "Completed jobs",
+              X: { Label: "Time", Format: (value) => `${value}s` },
+              Y: { Label: "Jobs", Min: 0 },
+              Series: [
+                {
+                  Id: "a",
+                  Label: "Queue A",
+                  Points: [
+                    { X: 0, Y: 2 },
+                    { X: 1, Y: 5 },
+                    { X: 2, Y: 3 },
+                  ],
+                },
+                {
+                  Id: "b",
+                  Label: "Queue B",
+                  Points: [
+                    { X: 0, Y: 1 },
+                    { X: 1, Y: 3 },
+                    { X: 2, Y: 6 },
+                  ],
+                  Dashed: true,
+                },
+              ],
+              Markers: [{ X: 1, Label: "Added worker" }],
+              Hidden: this.state.hiddenChartSeries,
+              OnToggleSeries: (id, visible) => this.SetState((state) => ({ hiddenChartSeries: visible ? state.hiddenChartSeries.filter((value) => value !== id) : [...state.hiddenChartSeries, id] })),
+            })}
+            <h3>Search a long list</h3>
+            ${Combobox({
+              Id: "resource-search",
+              Name: "Resource",
+              Label: "Resource",
+              Value: this.state.selectedResource,
+              Options: [
+                { Value: "iron", Label: "Iron ore", Group: "Metals", Keywords: ["mining"], Description: "Smelted into iron." },
+                { Value: "copper", Label: "Copper ore", Group: "Metals", Keywords: ["mining"] },
+                { Value: "oak", Label: "Oak timber", Group: "Wood", Disabled: true },
+              ],
+              OnChange: (value) => this.SetState({ selectedResource: value }),
+            })}
+            <p>Selected resource: ${this.state.selectedResource || "none"}</p>
+            <h3>Pan and zoom a diagram</h3>
+            ${PanZoomView({
+              Label: "Resource diagram",
+              Bounds: { MinX: -200, MinY: -100, MaxX: 200, MaxY: 100 },
+              Camera: this.state.diagramCamera,
+              Content: html`<g
+                ><line x1="-100" y1="0" x2="100" y2="0" stroke="currentColor"></line>
+                ${[-100, 0, 100].map((x) => html`<circle ${CT.Attr("cx", x)} cy="0" r="20" fill="var(--ct-color-accent)" role="button" tabindex="0" ${CT.Attr("aria-label", `Node ${x}`)} ${CT.Attr("data-ct-item", String(x))}></circle>`)}
+              </g>`,
+              OnCameraChange: (camera) => this.SetState({ diagramCamera: camera }),
+              OnItemActivate: (id) => this.SetState({ diagramItem: id }),
+            })}
+            <p>Activated node: ${this.state.diagramItem}</p>
             <h3>Image gallery</h3>
             ${ImageCarousel({ Label: "Landscape gallery", Images: CarouselImages })}
             <h3>Usage snippets</h3>

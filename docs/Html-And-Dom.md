@@ -4,6 +4,11 @@
 
 ## CT.Html
 
+SVG child templates such as ``html`<g>...</g>` `` and
+``html`<circle cx="0" cy="0" r="10"></circle>` `` keep their SVG namespace,
+including when interpolated into another SVG view. Use `CT.Attr` for dynamic SVG
+attributes just as for HTML. See the [PanZoomView example](Components.md#panzoomview).
+
 Create a module-level alias and return one root element from `Render` or a component function:
 
 ```js

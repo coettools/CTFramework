@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chart checks</title>
+    <style>
+      :root[data-theme="light"] {
+        --ct-color-background: #f3f5f6;
+        --ct-color-surface: #ffffff;
+        --ct-color-surface-raised: #eef1f3;
+        --ct-color-text: #19252c;
+        --ct-color-muted: #445560;
+        --ct-color-border: #b6c2c8;
+      }
+      main {
+        max-width: 65rem;
+        margin: auto;
+        padding: 0.75rem;
+      }
+      main section > .ct-chart {
+        margin-block: 1rem;
+      }
+      dialog {
+        width: min(80vw, 40rem);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Chart checks</h1>
+      <p id="result" role="status">Running…</p>
+      <div id="app"></div>
+    </main>
+    <script type="module" src="./Main.js"></script>
+  </body>
+</html>

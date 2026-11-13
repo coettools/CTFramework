@@ -113,6 +113,14 @@ properties; no compatibility aliases are provided.
 | `--ct-font-family` | Bahnschrift, "Arial Narrow", sans-serif | Interface text; no remote font dependency. |
 | `--ct-font-mono` | Consolas, "Courier New", monospace | Code and technical text. |
 | `--ct-focus-ring` | none | Optional focus shadow; the accent outline stays visible. |
+| `--ct-chart-1` | light-dark(#126a70, #46c8cc) | First chart series: light/dark scheme. |
+| `--ct-chart-2` | light-dark(#245993, #8ebfff) | Second chart series. |
+| `--ct-chart-3` | light-dark(#795410, #ebbc74) | Third chart series. |
+| `--ct-chart-4` | light-dark(#734187, #c8a4fa) | Fourth chart series. |
+| `--ct-chart-5` | light-dark(#3b641d, #b5d986) | Fifth chart series. |
+| `--ct-chart-6` | light-dark(#a8273a, #f3a2aa) | Sixth chart series. |
+| `--ct-chart-7` | light-dark(#67551d, #e4d29c) | Seventh chart series. |
+| `--ct-chart-8` | light-dark(#14616a, #70cbd2) | Eighth chart series. |
 
 ## Change An Accent
 
@@ -277,6 +285,53 @@ and `ct-image-carousel-indicator`. The selected button has `aria-current="true"`
 Keep the visible focus ring and `touch-action: pan-y pinch-zoom` on the viewer so
 keyboard navigation, vertical scrolling, and zoom continue to work.
 
+## Style Comboboxes And Pan Zoom Views
+
+`Combobox` uses `.ct-combobox` for layout, `.ct-combobox-popup` for the bounded result list, and `.ct-combobox-option.is-active` for the selected navigation color roles. The popup stays inside its control, including when the control is in a dialog. Keep its overflow, stacking, and active-state contrast when overriding it.
+
+`PanZoomView` uses `.ct-pan-zoom-view` as the full-size viewport and `.ct-pan-zoom-controls` for the visible Zoom in, Zoom out, and Fit buttons. Give its parent a height. Keep the viewport's `touch-action: none` so pointer pan and pinch work, and preserve its `:focus-visible` outline for keyboard users. Canvas drawing colors are supplied by the caller.
+
+```css
+.project-filter .ct-combobox-popup {
+  max-height: 16rem;
+  background: var(--ct-color-surface-raised);
+}
+
+.project-map {
+  height: 22rem;
+}
+
+.project-map .ct-pan-zoom-view {
+  border-color: var(--ct-color-border);
+  background: var(--ct-color-surface);
+}
+```
+
+Wrap each control in `.project-filter` or `.project-map` to scope the override. These selectors change appearance and dimensions without changing focus or gesture behavior. See [Combobox](Components.md#combobox) and [PanZoomView](Components.md#panzoomview) for setup.
+
+## Style Charts
+
+The eight chart colors use CSS `light-dark()` and the inherited `color-scheme`.
+Split remains dark by default. A project light palette sets `color-scheme: light`
+along with its light surface/text tokens; chart colors then use their light values.
+The supplied pairs exceed 3:1 against Split's dark surface and the guide's example
+light surface. Recheck contrast against any custom background. Labels, dash
+patterns, keyboard values, and the full data table remain necessary non-color cues.
+
+```css
+.project-report {
+  --ct-chart-1: light-dark(#126a70, #46c8cc);
+}
+
+.project-report .ct-chart-table {
+  max-height: 22rem;
+}
+```
+
+Keep `.ct-chart-plot` focusable, its focus outline visible, and touch page scrolling
+available. Grid, axis and tooltip classes use existing border, muted, raised-surface
+and text tokens. No fixed font family is added.
+
 ## Component Reference
 
 Components add their own classes. Use these only when you need a focused override.
@@ -286,11 +341,14 @@ Components add their own classes. Use these only when you need a focused overrid
 | `ApplicationLayout` | `ct-application-layout` | Graphite shell, navy header with accent edge; independent content scrolling on desktop. |
 | `SideNavigation` | `ct-side-navigation` | Graphite rail; green-tinted selection with a left edge. |
 | `Card` | `ct-card` | Navy panel, raised header and selective accent edge. |
+| `Chart` | `ct-chart` | Responsive SVG plot, token colors, labelled legend, keyboard tooltip, and full table. |
 | `CodeBlock` | `ct-code-block` | Graphite source, navy toolbar, syntax colours, optional gutter, Copy and Wrap. |
 | `ImageCarousel` | `ct-image-carousel` | Navy frame, uncropped 16:9 image viewer, caption, and green selected image button. |
 | `Accordion` | `ct-accordion` | Navy surface, plus/minus indicator, active success-colored label. |
 | `DataTable` | `ct-data-table` | Raised toolbar, neutral dividers, compact pager, horizontal table overflow. |
 | `Dropdown` | `ct-dropdown` | Label and native graphite field with visible border. |
+| `Combobox` | `ct-combobox` | Search field and raised, bounded popup with green active option. |
+| `PanZoomView` | `ct-pan-zoom-view` | Transparent, focusable viewport with visible zoom controls. |
 | `Badge` | `ct-badge` | Compact corners and tinted success, warning or danger background. |
 | `Alert` | `ct-alert` | Raised surface with a status-colored left edge. |
 | `Dialog` | `ct-dialog` | Navy modal panel inside a native `dialog.ct-dialog-backdrop`; tall content scrolls in the full-screen dialog. |

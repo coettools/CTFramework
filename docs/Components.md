@@ -15,6 +15,108 @@ return html`
 `;
 ```
 
+## Chart
+
+`Chart` draws numeric or time-based line/area series and category-based bars in
+SVG, without another runtime library. The plot follows its container's width.
+The full data table remains available even when drawing is thinned for width.
+The following complete module needs `<div id="app"></div>` in the page.
+For a plain browser import, replace the package path with your built vendor URL.
+
+```js
+import CT, { Chart, Component } from "@coettools/ctframework";
+
+class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { Hidden: [] };
+  }
+
+  ToggleSeries(id, visible) {
+    this.SetState((state) => ({
+      Hidden: visible ? state.Hidden.filter((value) => value !== id) : [...state.Hidden, id]
+    }));
+  }
+
+  Render() {
+    return Chart({
+      Title: "Completed jobs",
+      Height: 260,
+      X: { Label: "Time", Format: (value) => `${value}s` },
+      Y: { Label: "Jobs", Min: 0, Format: (value) => `${value} jobs` },
+      Series: [
+        { Id: "a", Label: "Queue A", Points: [{ X: 0, Y: 2 }, { X: 1, Y: 5 }, { X: 2, Y: 3 }] },
+        { Id: "b", Label: "Queue B", Points: [{ X: 0, Y: 1 }, { X: 1, Y: 4 }, { X: 2, Y: 6 }], Dashed: true }
+      ],
+      Markers: [{ X: 1, Label: "Worker added" }],
+      Hidden: this.state.Hidden,
+      OnToggleSeries: (id, visible) => this.ToggleSeries(id, visible)
+    });
+  }
+}
+
+CT.Start({ App, Target: "#app" });
+```
+
+Bar values correspond to `Categories` in order. Negative values are supported;
+positive and negative stacks accumulate separately. Use `Stacked: false` to
+compare grouped bars, or `Stacked: true` to show their combined contributions.
+This fragment belongs inside a component's `Render` method:
+
+```js
+return Chart({
+  Title: "Jobs by queue",
+  Type: "bar",
+  Stacked: true,
+  Categories: ["Morning", "Afternoon"],
+  Y: { Label: "Jobs", Format: (value) => `${value} jobs` },
+  Series: [
+    { Id: "a", Label: "Queue A", Values: [12, 17] },
+    { Id: "b", Label: "Queue B", Values: [8, 5] }
+  ]
+});
+```
+
+For `Type: "area"`, use the line-series `Points` shape. Stacked areas require
+aligned x coordinates across all their series. This avoids implying values
+where a series supplied no measurement. `Y: null` marks missing data; gaps are
+not interpolated or silently treated as zero. Formatters receive numeric values
+for continuous axes and category labels for bar X values;
+use numeric timestamps or `Date` values for time coordinates and an appropriate
+`X.Format`. No date-string parsing or time-zone assumption is added.
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `Title` | Required | Accessible name and visible heading. |
+| `ShowTitle` | `true` | Hide only the visible heading; retain the accessible name. |
+| `Type` | `"line"` | `"line"`, `"area"`, or `"bar"`. |
+| `Height` | `240` | Plot height in CSS pixels. Width follows its container. |
+| `X`, `Y` | Auto | Axis object with `Label`, `Min`, `Max`, `Format`, and `Ticks`. Explicit `Min: 0` is honored. |
+| `X.Format`, `Y.Format` | Numeric/category text; ISO for Date X | `(value) => text`, used by ticks, tooltip, and table. Date coordinates normalize to numeric timestamps before custom formatting. |
+| `X.Ticks`, `Y.Ticks` | About 5 | Optional explicit tick-value arrays; narrow widths reduce label density. |
+| `Series` | `[]` | Unique `Id`, `Label`, optional `Color`, and either `Points` or `Values`. |
+| `Series[].Points` | Required for line/area | `{ X, Y }` coordinates. X is finite numeric/Date; Y finite numeric or null. |
+| `Series[].Values` | Required for bars | Values aligned to Categories, including null for missing values. |
+| `Series[].Dashed` | `false` | Additional line-style cue; series also have labelled legend entries. |
+| `Series[].Color` | Chart token | Optional project CSS color. Verify contrast after overriding it. |
+| `Categories` | `[]` | Ordered category labels for bars. |
+| `Stacked` | `false` | Stack bars/areas instead of independent areas or grouped bars. |
+| `Markers` | `[]` | Line/area `{ X, Label }` vertical reference lines with text labels. |
+| `Legend` | Multiple series | Show labelled series entries; these become toggles when OnToggleSeries is supplied. |
+| `Hidden` | `[]` | Parent-controlled series IDs to omit from the plot and visible-data table. |
+| `OnToggleSeries` | None | `(id, visible)` requests a parent update to Hidden; does not mutate parent state. |
+| `EmptyText` | `"No data"` | Message when no visible measurements remain. Legend controls remain available. |
+| `Key` | None | Managed component identity in a changing sibling list. |
+
+Hover or touch the plot to inspect the nearest supplied x/category. Focus it and
+use Left/Right for the same values with polite announcements. Missing values show
+a dash rather than interpolation. Select **Show as table** for the formatted
+full dataset; **Hide table** closes it. Resize keeps table and keyboard state.
+Hidden series can be restored through their legend buttons. There is no entry
+animation, data streaming, logarithmic scale, pan, or zoom API in this control.
+
+Use the [chart tokens and styling](Styling.md#style-charts) for project overrides.
+
 ## ApplicationLayout
 
 `ApplicationLayout` is the default application shell: a fixed `Header`, optional `SideNavigation`, independently scrolling `Content`, and optional `Footer`. It fills the desktop viewport and returns to normal page scrolling on smaller screens. Pass raw HTML or CTFramework components to each region.
@@ -184,6 +286,208 @@ return html`<form ${CT.On("submit", (event) => {
   <button type="reset">Reset</button>
 </form>`;
 ```
+
+## Combobox
+
+Use `Combobox` when a person must choose one value from a long list. The text field filters options; it does not accept a new value. Keep `Value` in parent state and update it from `OnChange(value, option)`. Strings and objects with `Value` and `Label` can be mixed in `Options`.
+
+This complete example needs `<div id="app"></div>` in the page and module tooling that resolves the package import:
+
+```js
+import CT, { Combobox, Component, GetFormValues } from "@coettools/ctframework";
+
+const html = CT.Html;
+const places = [
+  { Value: "harbor", Label: "Harbor", Group: "Coast", Description: "Ferry terminal", Keywords: ["boat", "port"] },
+  { Value: "beach", Label: "Beach", Group: "Coast" },
+  { Value: "ridge", Label: "Ridge", Group: "Inland", Disabled: true }
+];
+
+class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { Place: "harbor" };
+  }
+
+  Render() {
+    return html`<form ${CT.On("submit", (event) => {
+      event.preventDefault();
+      console.log(GetFormValues(event.currentTarget).Place);
+    })}>
+      ${Combobox({
+        Id: "place",
+        Name: "Place",
+        Label: "Place",
+        Placeholder: "Search places",
+        Value: this.state.Place,
+        Options: places,
+        Required: true,
+        EmptyText: "No places match",
+        OnChange: (value) => this.SetState({ Place: value })
+      })}
+      <button type="submit">Submit</button>
+      <button type="reset">Reset</button>
+    </form>`;
+  }
+}
+
+CT.Start({ App, Target: "#app" });
+```
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `Id` | Generated | Input ID; the visible label points to it. |
+| `Name` | None | Native form field name. The selected value, never the search text, is submitted through a hidden field and available to `GetFormValues`. |
+| `Label` | Required | Visible input label. |
+| `Placeholder` | `"Search"` | Search field placeholder. |
+| `Value` | `""` | Parent-controlled selected value. Give each option a unique non-empty value. |
+| `Options` | `[]` | Strings or `{ Value, Label, Group?, Description?, Keywords?, Disabled? }`. `Keywords` can be a string or an array. |
+| `OnChange` | None | Receives `(value, option)` when selection changes; clearing calls `OnChange("", null)`. |
+| `Required` / `Disabled` | `false` | Required selection or disabled control. Disabled fields are omitted from form submission. |
+| `EmptyText` | `"No matches"` | Popup message when filtering finds no matches. |
+| `MaxVisible` | `50` | Positive cap on matching options rendered at once, rounded down. Invalid or zero values use 50. |
+| `Filter` | Built-in matching | Optional `(option, query) => boolean` replacing default matching. |
+| `RenderOption` | None | Optional `(option) => CT.Html` for display-only row content; interactive descendants are not accepted. |
+| `Key` | None | Stable identity when the component factory is used in a changing list. |
+
+The built-in filter matches every query word, case-insensitively, against labels and keywords and ranks word-start matches first. Filtering waits 100 ms after typing. Only the first `MaxVisible` matches are shown, followed by a count of remaining matches. Group headings follow first-seen group order and cannot be selected. A polite status announces the result count. `Description` appears below a default option label; `RenderOption` replaces that default row content.
+
+Typing, ArrowDown, or the toggle button opens the list; focus alone does not. ArrowUp/ArrowDown move over enabled options, Home/End jump to the first/last enabled option, and Enter selects the active one. Click or tap also selects. The input retains focus while the list is open. Escape closes the list, and Tab closes it and moves focus normally. Leaving without selecting restores the selected label (or an empty input); typed text is never committed. The clear button appears for a selection and calls `OnChange("", null)`.
+
+Replacing `Options` while open retains an active option if it still matches. If the selected value disappears, the input becomes empty without calling `OnChange`. A native form reset restores the value supplied when the component mounted and calls `OnChange` once; if that option is gone, it reports the empty value. A cancelled reset has no effect. See [combobox styling](Styling.md#style-comboboxes-and-pan-zoom-views) for scoped CSS.
+
+Option objects need a non-empty `Label` and a non-empty string or finite numeric
+`Value`. Invalid entries are skipped; the first entry wins when values stringify
+identically. Replace the `Options` array when changing entries so its search index
+is rebuilt. A disabled option supplied as the parent's selected value stays
+selected; users cannot choose it from the list. Invalid or interactive
+`RenderOption` content uses the default label and description instead.
+
+## PanZoomView
+
+`PanZoomView` displays a bounded world plane. Supply a non-empty `Label`, finite `Bounds: { MinX, MinY, MaxX, MaxY }` with positive width and height, and either SVG `Content` or a canvas `Draw` callback. The `Camera` uses `{ X, Y, Zoom }`: `X` and `Y` are the world point at the viewport center. Keep it in parent state through `OnCameraChange` when the parent controls it. Without `Camera`, the view initially fits the bounds. The viewport is a focusable, labelled `role="group"`.
+
+For SVG content, `CT.Html` accepts detached SVG child roots such as `g` and `circle` and gives them the SVG namespace when inserted. This complete example needs `<div id="app"></div>`:
+
+```js
+import CT, { Component, PanZoomView } from "@coettools/ctframework";
+
+const html = CT.Html;
+
+class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { Camera: null, Selected: "" };
+    this._view = null;
+    this._setView = (handle) => { this._view = handle; };
+  }
+
+  Render() {
+    return html`<section>
+      <button type="button" ${CT.On("click", () => this._view?.CenterOn(80, 50, 1.5))}>Find station</button>
+      <div class="example-map">
+        ${PanZoomView({
+          Label: "Station map",
+          Bounds: { MinX: 0, MinY: 0, MaxX: 200, MaxY: 100 },
+          Camera: this.state.Camera,
+          Content: html`<g>
+            <rect x="0" y="0" width="200" height="100" fill="#1b3442"></rect>
+            <circle data-ct-item="station" role="button" tabindex="0" aria-label="Station"
+              cx="80" cy="50" r="12" fill="#2ab0b5"></circle>
+          </g>`,
+          OnCameraChange: (camera) => this.SetState({ Camera: camera }),
+          OnItemActivate: (itemId) => this.SetState({ Selected: itemId }),
+          Ref: this._setView
+        })}
+      </div>
+      <p>Selected: ${this.state.Selected || "None"}</p>
+    </section>`;
+  }
+}
+
+CT.Start({ App, Target: "#app" });
+```
+
+Set `.example-map { height: 20rem; }` in the page stylesheet. SVG elements opt in to item events with `data-ct-item="id"`. Add `tabindex="0"`, `role="button"`, and an accessible name to interactive items; Enter and Space activate the focused item. A short click or tap activates an item, while a drag does not. `OnItemHover` can provide tooltip state from pointer hover.
+
+For canvas, the caller draws and hit-tests its own data. `Draw(context, camera, size)` receives CSS-pixel `size` and a context already cleared and scaled for the device pixel ratio. Apply the camera transform in CSS pixels yourself. Canvas pixels are hidden from assistive technology, so provide an ordinary accessible alternative list for the same actions, as in this complete example:
+
+```js
+import CT, { Component, PanZoomView } from "@coettools/ctframework";
+
+const html = CT.Html;
+const points = [{ Id: "a", Name: "North stop", X: 40, Y: 30 }, { Id: "b", Name: "South stop", X: 160, Y: 70 }];
+
+class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { Camera: null, Selected: "", Redraw: 0 };
+    this._view = null;
+    this._setView = (handle) => { this._view = handle; };
+  }
+
+  Render() {
+    return html`<section>
+      <div class="example-map">
+        ${PanZoomView({
+          Label: "Transit diagram",
+          Bounds: { MinX: 0, MinY: 0, MaxX: 200, MaxY: 100 },
+          Camera: this.state.Camera,
+          Draw: (context, camera, size) => {
+            context.translate(size.Width / 2, size.Height / 2);
+            context.scale(camera.Zoom, camera.Zoom);
+            context.translate(-camera.X, -camera.Y);
+            context.fillStyle = "#2ab0b5";
+            for (const point of points) {
+              context.beginPath();
+              context.arc(point.X, point.Y, 8, 0, Math.PI * 2);
+              context.fill();
+            }
+          },
+          HitTest: (worldX, worldY) => points.find((point) => Math.hypot(point.X - worldX, point.Y - worldY) <= 8)?.Id ?? null,
+          Redraw: this.state.Redraw,
+          OnCameraChange: (camera) => this.SetState({ Camera: camera }),
+          OnItemActivate: (itemId) => this.SetState({ Selected: itemId }),
+          Ref: this._setView
+        })}
+      </div>
+      <h2>Stops</h2>
+      <ul>${points.map((point) => html`<li>
+        <button type="button" ${CT.On("click", () => {
+          this._view?.CenterOn(point.X, point.Y, 1.5);
+          this.SetState({ Selected: point.Id });
+        })}>${point.Name}</button>
+      </li>`)}</ul>
+      <p>Selected: ${points.find((point) => point.Id === this.state.Selected)?.Name ?? "None"}</p>
+    </section>`;
+  }
+}
+
+CT.Start({ App, Target: "#app" });
+```
+
+Again set `.example-map { height: 20rem; }`. When the underlying canvas data changes, pass a changed `Redraw` value to request another draw. `HitTest(worldX, worldY)` returns an item ID or `null`. The parent owns the alternative list, its labels, and its actions.
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `Label` | Required | Accessible name of the viewport. |
+| `Bounds` | Required | World extent `{ MinX, MinY, MaxX, MaxY }`. |
+| `Camera` | Fit to bounds initially | `{ X, Y, Zoom }`, with world center coordinates and positive zoom. |
+| `MinZoom` / `MaxZoom` | Fit / `4` | Positive finite zoom limits; `MinZoom` must not exceed `MaxZoom`. |
+| `Content` | None | SVG children in world coordinates; exclusive with `Draw`. |
+| `Draw` | None | `(context, camera, size)` canvas drawing callback; exclusive with `Content`. |
+| `HitTest` | None | `(worldX, worldY) => itemId or null` for canvas item events. |
+| `Redraw` | None | Any value; changing it requests a canvas redraw. |
+| `OnCameraChange` | None | `(camera)` after pan or zoom, at most once per animation frame. |
+| `OnItemActivate` | None | `(itemId, event)` after a click, tap, or keyboard activation on an opted-in SVG item, or a canvas hit. |
+| `OnItemHover` | None | `(itemId or null, event)` when pointer hover changes. |
+| `Controls` | `true` | Show visible Zoom in, Zoom out, and Fit buttons. |
+| `Ref` | None | `(handle) => ...` receives `{ CenterOn(x, y, zoom?) }` on mount, then `null` on unmount. |
+| `Key` | None | Stable identity when the component factory is used in a changing list. |
+
+Drag with a mouse or one touch pointer to pan; movement below 4 px remains a click. Wheel and trackpad zoom anchor to the pointer, and two-touch pinch anchors to its midpoint. Wheel and touch gestures inside the viewport do not scroll the page. Arrow keys pan by 10% of the current view; `+`/`-` zoom at the center and `0` fits the bounds. Tab reaches SVG items when they are focusable. The view uses native pointer events and `ResizeObserver` to track its container.
+
+The camera is clamped so each axis keeps an overlap of 20% of the smaller of the visible world footprint and the bounds. At high zoom, that means 20% of the viewport footprint, not 20% of the entire bounds. `CenterOn(x, y, zoom?)` animates for 180 ms, subject to clamping, and moves immediately when reduced motion is preferred. The root fills its container with `width: 100%`, `height: 100%`, and `min-height: 16rem`; set the container dimensions. Performance with large scenes depends on the caller's drawing work and requires profiling on target devices. See [viewport styling](Styling.md#style-comboboxes-and-pan-zoom-views).
 
 ## SideNavigation
 

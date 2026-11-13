@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PanZoomView checks</title>
+    <style>
+      main {
+        padding: 1rem;
+        max-width: 65rem;
+        margin: auto;
+      }
+      .viewer {
+        height: 22rem;
+        margin-bottom: 1rem;
+      }
+      .small {
+        height: 18rem;
+      }
+      svg [data-ct-item] {
+        fill: #2ab0b5;
+        stroke: #e4e4eb;
+        stroke-width: 2;
+      }
+      svg [data-ct-item]:focus {
+        outline: 3px solid #32cd32;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>PanZoomView checks</h1>
+      <p id="result">Running…</p>
+      <div id="app"></div>
+    </main>
+    <script type="module" src="./Main.js"></script>
+  </body>
+</html>

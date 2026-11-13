@@ -31,6 +31,14 @@
     --ct-font-family: Bahnschrift, "Arial Narrow", sans-serif;
     --ct-font-mono: Consolas, "Courier New", monospace;
     --ct-focus-ring: none;
+    --ct-chart-1: light-dark(#126a70, #46c8cc);
+    --ct-chart-2: light-dark(#245993, #8ebfff);
+    --ct-chart-3: light-dark(#795410, #ebbc74);
+    --ct-chart-4: light-dark(#734187, #c8a4fa);
+    --ct-chart-5: light-dark(#3b641d, #b5d986);
+    --ct-chart-6: light-dark(#a8273a, #f3a2aa);
+    --ct-chart-7: light-dark(#67551d, #e4d29c);
+    --ct-chart-8: light-dark(#14616a, #70cbd2);
   }
 
   *,
@@ -702,6 +710,240 @@
   }
   .ct-alert-danger {
     border-color: var(--ct-color-danger);
+  }
+
+  .ct-chart {
+    min-width: 0;
+    padding: 1rem;
+    border: 1px solid var(--ct-color-border);
+    border-radius: var(--ct-radius-panel);
+    background: var(--ct-color-surface);
+    color: var(--ct-color-text);
+  }
+
+  .ct-chart-header {
+    margin-bottom: 0.75rem;
+  }
+
+  .ct-chart-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+
+  .ct-chart-plot {
+    min-width: 0;
+    touch-action: pan-y;
+  }
+
+  .ct-chart-svg {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .ct-chart-grid {
+    stroke: var(--ct-color-border);
+    stroke-width: 1;
+  }
+
+  .ct-chart-axis {
+    fill: var(--ct-color-muted);
+    font-size: 0.75rem;
+  }
+
+  .ct-chart-series {
+    stroke-width: 2;
+  }
+
+  .ct-chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+  }
+
+  .ct-chart-legend button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    background: var(--ct-color-surface-raised);
+    color: var(--ct-color-text);
+  }
+
+  .ct-chart-legend button[aria-pressed="false"] {
+    text-decoration: line-through;
+  }
+
+  .ct-chart-tooltip {
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--ct-radius-control);
+    background: var(--ct-color-surface-raised);
+    color: var(--ct-color-text);
+    overflow-wrap: anywhere;
+  }
+
+  .ct-chart-crosshair {
+    stroke: var(--ct-color-text);
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+    pointer-events: none;
+  }
+
+  .ct-chart-table {
+    max-height: 28rem;
+    overflow: auto;
+    margin-top: 0.75rem;
+  }
+
+  .ct-chart-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .ct-combobox {
+    position: relative;
+    min-width: 0;
+  }
+
+  .ct-combobox-label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+  }
+
+  .ct-combobox-field {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .ct-combobox-input {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    min-height: 2.75rem;
+  }
+
+  .ct-combobox-clear,
+  .ct-combobox-toggle {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0.35rem;
+  }
+
+  .ct-combobox-group-label,
+  .ct-combobox-empty,
+  .ct-combobox-more {
+    padding: 0.5rem 0.75rem;
+    color: var(--ct-color-muted);
+  }
+
+  .ct-combobox-group-label {
+    font-weight: 700;
+  }
+
+  .ct-combobox-description {
+    display: block;
+    font-size: 0.875em;
+    color: var(--ct-color-muted);
+  }
+
+  .ct-combobox-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .ct-combobox-popup {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    max-height: min(20rem, 50vh);
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--ct-color-border);
+    border-radius: var(--ct-radius-control);
+    background: var(--ct-color-surface-raised);
+    color: var(--ct-color-text);
+    box-shadow: 0 0.5rem 1.5rem var(--ct-color-backdrop);
+  }
+
+  .ct-combobox-option {
+    min-height: 2.75rem;
+    padding: 0.65rem 0.75rem;
+    border-left: 2px solid transparent;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+  }
+
+  .ct-combobox-option.is-active {
+    border-left-color: var(--ct-color-success);
+    background: var(--ct-color-success-soft);
+    color: var(--ct-color-success);
+  }
+
+  .ct-combobox-option[aria-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .ct-pan-zoom-view {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 16rem;
+    overflow: hidden;
+    border: 1px solid var(--ct-color-border);
+    border-radius: var(--ct-radius-panel);
+    background: transparent;
+    touch-action: none;
+    user-select: none;
+    cursor: grab;
+  }
+
+  .ct-pan-zoom-view:active {
+    cursor: grabbing;
+  }
+
+  .ct-pan-zoom-view:focus-visible {
+    outline: 2px solid var(--ct-color-accent-hover);
+    outline-offset: 2px;
+    box-shadow: var(--ct-focus-ring);
+  }
+
+  .ct-pan-zoom-svg,
+  .ct-pan-zoom-canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .ct-pan-zoom-controls {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    max-width: calc(100% - 1rem);
+    cursor: auto;
+  }
+
+  .ct-pan-zoom-controls button {
+    padding: 0.4rem 0.6rem;
+    min-height: 2.75rem;
   }
 
   .ct-dropdown {

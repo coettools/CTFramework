@@ -11,7 +11,9 @@ import CT, {
   ApplicationLayout,
   Badge,
   Card,
+  Chart,
   CodeBlock,
+  Combobox,
   Component,
   DataTable,
   Dialog,
@@ -22,6 +24,7 @@ import CT, {
   HttpClient,
   ImageCarousel,
   MaxLength,
+  PanZoomView,
   PopupWindow,
   Required,
   Route,
@@ -45,7 +48,7 @@ import CT, {
 | `CT.Start({ App, Target?, Props? })` | Waits for the document, mounts an application class, and handles startup failures. Returns a promise of the root/fallback DOM node, or null when no fallback can be displayed. Target defaults to #app. |
 | `CT.View({ Component, Props?, Key? })` | Describes a managed child component for a template or layout. Pass the component class, not an instance. Key identifies the child in a changing list. |
 | `CT.CreateSelection(target, scope?)` | Explicit selection helper; accepts a selector, DOM node, or iterable of nodes. |
-| `CT.Html` | Tagged template function for component markup. One root HTML element is required. |
+| `CT.Html` | Tagged template function for component markup. One root element is required; detached SVG child roots such as `g` and `circle` receive the SVG namespace. |
 | `CT.On(eventType, handler)` | Adds a supported event marker inside an HTML start tag. Unsupported events are rejected; `focus` and `blur` use delegated `focusin` and `focusout`. |
 | `CT.Attr(name, value)` | Adds a dynamic attribute or property marker inside an HTML start tag. Do not quote a marker inside an attribute value. |
 | `CT.Mount(component, target, props?)` | Renders a `Component` subclass or instance into an element or selector. Return CT views from the component's `Render` method. |
@@ -188,4 +191,4 @@ const requestId = Guid();
 
 ## Components
 
-`ApplicationLayout`, `Accordion`, `Alert`, `Badge`, `Card`, `CodeBlock`, `DataTable`, `Dialog`, `Dropdown`, `FallbackView`, `ImageCarousel`, `PopupWindow`, `SideNavigation`, `Toast`, and `Tooltip` are documented in [Components.md](Components.md).
+`ApplicationLayout`, `Accordion`, `Alert`, `Badge`, `Card`, `Chart`, `CodeBlock`, `Combobox`, `DataTable`, `Dialog`, `Dropdown`, `FallbackView`, `ImageCarousel`, `PanZoomView`, `PopupWindow`, `SideNavigation`, `Toast`, and `Tooltip` are documented in [Components.md](Components.md).

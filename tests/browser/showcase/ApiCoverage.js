@@ -1,4 +1,7 @@
 export const ShowcaseApiCoverage = [
+  "Chart",
+  "Combobox",
+  "PanZoomView",
   "Accordion",
   "ApplicationLayout",
   "Alert",

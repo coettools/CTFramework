@@ -23,6 +23,30 @@ const IsTemplateMarker = (value, type) => {
   return value?.__ctTemplateMarker === type;
 };
 
+const SvgTemplateRoots = new Set([
+  "g",
+  "path",
+  "circle",
+  "rect",
+  "ellipse",
+  "line",
+  "polyline",
+  "polygon",
+  "text",
+  "tspan",
+  "defs",
+  "use",
+  "symbol",
+  "image",
+  "clippath",
+  "mask",
+  "lineargradient",
+  "radialgradient",
+  "stop",
+  "pattern",
+  "marker",
+]);
+
 export class CTSelection {
   constructor(target, scope = document) {
     this.elements = CTFramework.ResolveElements(target, scope);
@@ -841,9 +865,16 @@ export class CTFramework {
       markup += `<!--ct-slot-${index}-->`;
     });
 
-    template.innerHTML = markup;
+    // Detached SVG child templates need their namespace before insertion into an SVG slot.
+    const svgRoot = SvgTemplateRoots.has(
+      markup
+        .trimStart()
+        .match(/^<([a-zA-Z]+)/)?.[1]
+        .toLowerCase(),
+    );
+    template.innerHTML = svgRoot ? `<svg xmlns="http://www.w3.org/2000/svg">${markup}</svg>` : markup;
 
-    const roots = Array.from(template.content.childNodes).filter((node) => node.nodeType !== Node.TEXT_NODE || node.textContent.trim());
+    const roots = Array.from(svgRoot ? template.content.firstChild.childNodes : template.content.childNodes).filter((node) => node.nodeType !== Node.TEXT_NODE || node.textContent.trim());
 
     if (roots.length !== 1 || roots[0].nodeType !== Node.ELEMENT_NODE) {
       throw new Error(`CT.Html requires one root HTML element. Received: ${markup.trim()}`);

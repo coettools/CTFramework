@@ -15,7 +15,7 @@ This is the practical entry point for CTFramework. The guides show the public AP
 ## Rules That Make CTFramework Predictable
 
 - Use `const html = CT.Html;` once per module, then use `html\`...\`` for views.
-- A template must have one root HTML element.
+- A template must have one root element. Detached SVG child roots such as `g` and `circle` can be passed to SVG component slots.
 - Put `CT.On(...)` and `CT.Attr(...)` inside an element's start tag.
 - Use native `class` in static HTML. For a dynamic class, `CT.Attr("className", value)` maps to the HTML `class` attribute.
 - Use `SetState` for component state; do not manually redraw a mounted component.
@@ -26,10 +26,15 @@ This is the practical entry point for CTFramework. The guides show the public AP
 
 ```js
 import CT, {
-  Accordion, Alert, ApplicationLayout, Badge, Card, CodeBlock, Component, DataTable, Dialog, Dropdown,
-  FallbackView, GetFormValues, Guid, HttpClient, ImageCarousel, MaxLength, PopupWindow,
+  Accordion, Alert, ApplicationLayout, Badge, Card, Chart, CodeBlock, Combobox, Component, DataTable, Dialog, Dropdown,
+  FallbackView, GetFormValues, Guid, HttpClient, ImageCarousel, MaxLength, PanZoomView, PopupWindow,
   Required, Route, Router, SideNavigation, Store, Toast, Tooltip
 } from "@coettools/ctframework";
 ```
 
 Try the [online guide](https://framework.coettools.com/) for interactive examples, or run the showcase in `tests/browser/showcase/` from this repository. Examples remain separate from the production runtime.
+
+For searchable single selection, see [Combobox](Components.md#combobox). For a bounded SVG or canvas viewport, see [PanZoomView](Components.md#panzoomview). Their CSS hooks are in the [component reference](Styling.md#component-reference).
+
+Use [Chart](Components.md#chart) for line, area and grouped or stacked bar data,
+with keyboard inspection and a full formatted data table.

@@ -71,6 +71,13 @@ Documentation examples should be independent of any application's private setup.
 
 ## Browser Verification
 
+The [Combobox checks](tests/browser/combobox/README.md) cover searchable selection,
+capped large lists, native forms and modal focus. The
+[PanZoomView checks](tests/browser/pan-zoom-view/README.md) cover SVG/canvas,
+camera geometry, drag/pinch/keyboard gestures, resize and managed cleanup.
+The [Chart checks](tests/browser/chart/README.md) cover SVG geometry, signed
+stacks, formatters, keyboard/touch inspection, full tables and responsive themes.
+
 The [component checks](http://127.0.0.1:4170/tests/browser/components/) cover table
 and accordion identity, native dropdown forms/reset, tooltip accessibility, menu
 collapse cycles, popup focus, and alert priority. Add `?source` to test source
@@ -200,7 +207,13 @@ Read [Styling.md](docs/Styling.md) for the supplied classes, every theme token, 
 
 ## Components
 
-Read [Components.md](docs/Components.md) for `ApplicationLayout`, `Accordion`, `DataTable`, `Dropdown`, `SideNavigation`, `Tooltip`, `Badge`, `Card`, `CodeBlock`, `ImageCarousel`, `Alert`, `Dialog`, `PopupWindow`, `Toast`, and `FallbackView` usage.
+`Chart` draws SVG line/area and grouped or stacked bar charts, with token-based
+colors, keyboard inspection and a full formatted data table. See
+[Chart usage](docs/Components.md#chart) and [chart styling](docs/Styling.md#style-charts).
+
+Read [Components.md](docs/Components.md) for `ApplicationLayout`, `Accordion`, `DataTable`, `Dropdown`, `Combobox`, `PanZoomView`, `SideNavigation`, `Tooltip`, `Badge`, `Card`, `CodeBlock`, `ImageCarousel`, `Alert`, `Dialog`, `PopupWindow`, `Toast`, and `FallbackView` usage.
+
+`Combobox` provides searchable, controlled single selection for long option lists, including grouped and disabled options. `PanZoomView` provides a bounded pan and zoom viewport for SVG content or a canvas draw callback. See their [usage](docs/Components.md#combobox), [viewport examples](docs/Components.md#panzoomview), and [style overrides](docs/Styling.md#style-comboboxes-and-pan-zoom-views).
 
 `ImageCarousel` provides manual image navigation, captions, slide selectors,
 keyboard controls, and touch/drag swiping. It handles empty galleries and failed

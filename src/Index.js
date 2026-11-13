@@ -4,13 +4,16 @@ import { Accordion } from "./components/Accordion.js";
 import { Alert } from "./components/Alert.js";
 import { Badge } from "./components/Badge.js";
 import { Card } from "./components/Card.js";
+import { Chart } from "./components/Chart.js";
 import { CodeBlock } from "./components/CodeBlock.js";
+import { Combobox } from "./components/Combobox.js";
 import { DataTable } from "./components/DataTable.js";
 import { Dialog } from "./components/Dialog.js";
 import { Dropdown } from "./components/Dropdown.js";
 import { FallbackView } from "./components/FallbackView.js";
 import { ImageCarousel } from "./components/ImageCarousel.js";
 import { PopupWindow } from "./components/PopupWindow.js";
+import { PanZoomView } from "./components/PanZoomView.js";
 import { SideNavigation } from "./components/SideNavigation.js";
 import { Toast } from "./components/Toast.js";
 import { Tooltip } from "./components/Tooltip.js";
@@ -30,13 +33,16 @@ export {
   Alert,
   Badge,
   Card,
+  Chart,
   CodeBlock,
+  Combobox,
   DataTable,
   Dialog,
   Dropdown,
   FallbackView,
   ImageCarousel,
   PopupWindow,
+  PanZoomView,
   SideNavigation,
   Toast,
   Tooltip,
