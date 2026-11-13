@@ -76,8 +76,8 @@ class ChartChecks extends Component {
                 { X: 2, Y: 0 },
               ],
             },
-            { Id: "hits", Label: "Observation", Type: "scatter", PointRadius: 3, Points: [{ X: 1, Y: 500 }] },
-            { Id: "crits", Label: "Notable observation", Type: "scatter", PointRadius: 5, Points: [{ X: 2, Y: 0 }] },
+            { Id: "hits", Label: "Observation", Type: "scatter", PointRadius: 3, PointShape: "square", Points: [{ X: 1, Y: 500 }] },
+            { Id: "crits", Label: "Notable observation", Type: "scatter", PointRadius: 5, PointShape: "diamond", Points: [{ X: 2, Y: 0 }] },
             {
               Id: "completion",
               Label: "Complete",
@@ -204,13 +204,26 @@ CT(async () => {
     Assert(grouped.querySelector(".ct-chart-axis").textContent.includes("Shift Morning"), "Categorical axis calls X.Format with the label");
 
     const mixed = document.querySelector("#mixed-chart");
-    Assert(!mixed.querySelector('[data-series="hits"] path') && mixed.querySelector('[data-series="hits"] circle').getAttribute("r") === "3", "Scatter draws explicit SVG dots without a connecting path");
-    Assert(mixed.querySelector('[data-series="crits"] circle').getAttribute("r") === "5", "Each scatter series has its own SVG radius");
+    const square = mixed.querySelector('[data-series="hits"] .ct-chart-point');
+    const diamond = mixed.querySelector('[data-series="crits"] .ct-chart-point');
+    Assert(
+      !mixed.querySelector('[data-series="hits"] path') && square.localName === "rect" && square.getAttribute("width") === "6" && square.getAttribute("height") === "6",
+      "Scatter squares use explicit SVG geometry without a connecting path",
+    );
+    Assert(diamond.localName === "polygon" && diamond.points.numberOfItems === 4 && diamond.getBBox().width === 10 && diamond.getBBox().height === 10, "Scatter diamonds use four vertices and the per-series half-size");
+    Assert(!diamond.closest("g[clip-path]"), "A boundary point keeps its full shape instead of being cut into a triangle");
+    const mixedSwatches = mixed.querySelectorAll(".ct-chart-legend .ct-chart-swatch");
+    Assert(mixedSwatches[1].querySelector(".ct-chart-point").localName === "rect" && mixedSwatches[2].querySelector(".ct-chart-point").localName === "polygon", "Legend swatches match the point shapes");
+    Assert(document.querySelector("#timeline .ct-chart-series circle")?.getAttribute("r") === "2.5", "Omitted PointShape keeps a circular isolated point");
     Assert(mixed.querySelector(".ct-chart-axis-right").textContent.includes("%"), "Right axis has its own formatted ticks");
     const mixedPlot = mixed.querySelector(".ct-chart-plot");
     mixedPlot.focus();
     mixedPlot.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "ArrowRight" }));
     Assert(mixed.querySelector("[aria-live]").textContent === "1 · Trend: 500 jobs · Observation: 500 jobs · Notable observation: — · Complete: 40%", "Mixed-series announcement formats each axis independently");
+    Assert(
+      mixed.querySelectorAll(".ct-chart-tooltip-row")[1].querySelector(".ct-chart-point").localName === "rect" && mixed.querySelectorAll(".ct-chart-tooltip-row")[2].querySelector(".ct-chart-point").localName === "polygon",
+      "Tooltip swatches match each series without changing value announcements",
+    );
     mixed.querySelector("[aria-controls]").click();
     await Settle();
     Assert(mixed.querySelectorAll("tbody tr").length === 3, "Scatter does not insert halfway table rows");

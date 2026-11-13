@@ -73,6 +73,8 @@ export const CreateChartData = (props) => {
     if (!["left", "right"].includes(axis) || (axis === "right" && !y2)) throw new TypeError("Chart Series.Axis must be left, or right with a Y2 axis.");
     const pointRadius = entry.PointRadius ?? 2.5;
     if (!Number.isFinite(pointRadius) || pointRadius <= 0) throw new RangeError("Chart Series.PointRadius must be positive and finite.");
+    const pointShape = entry.PointShape === undefined ? "circle" : entry.PointShape;
+    if (!["circle", "square", "diamond"].includes(pointShape)) throw new TypeError("Chart Series.PointShape must be circle, square or diamond.");
     let colors;
     if (entry.Colors !== undefined) {
       colors = ReadArray(entry.Colors, "Series.Colors").map((color) => (color === null ? null : ReadLabel(color, "Series.Colors color")));
@@ -103,6 +105,7 @@ export const CreateChartData = (props) => {
       Type: type,
       Axis: axis,
       PointRadius: pointRadius,
+      PointShape: pointShape,
       Colors: colors,
       Values: values,
       Positions: positions,

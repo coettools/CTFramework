@@ -28,6 +28,14 @@ try {
         checks.size = size;
         ctx.fillRect(size.Width / 2 - camera.X, size.Height / 2 - camera.Y, 12, 12);
       };
+
+      this.Ref = (handle) => {
+        if (handle)
+          requestAnimationFrame(() => {
+            checks.centeredBeforeSize = checks.draws === 0;
+            handle.CenterOn(120, -80, 0.75);
+          });
+      };
     }
 
     ComponentOnMount() {
@@ -42,7 +50,7 @@ try {
       return html`<div>
         <label>Build notes <input id="notes" /></label>
         <button type="button" id="count" ${CT.On("click", () => this.SetState({ Count: this.state.Count + 1 }))}>Changes: ${this.state.Count}</button>
-        ${PanZoomView({ Label: "Passive tree", Bounds: { MinX: -2000, MinY: -2000, MaxX: 2000, MaxY: 2000 }, Camera: { X: 0, Y: 0, Zoom: 1 }, Draw: this.Draw })}
+        ${PanZoomView({ Label: "Passive tree", Bounds: { MinX: -2000, MinY: -2000, MaxX: 2000, MaxY: 2000 }, Camera: { X: 0, Y: 0, Zoom: 1 }, Ref: this.Ref, Draw: this.Draw })}
         ${Chart({
           Title: "Damage preview",
           Series: [
@@ -130,6 +138,10 @@ try {
   await Settle();
   Assert(document.activeElement === tree && tree.getAttribute("aria-selected") === "true" && !planner.hidden, "Left wraps and activates the last enabled tab");
   CheckSize();
+  Assert(
+    checks.centeredBeforeSize && Math.abs(checks.camera.X - 120) < 0.01 && Math.abs(checks.camera.Y + 80) < 0.01 && Math.abs(checks.camera.Zoom - 0.75) < 0.01,
+    "CenterOn from Ref in a hidden Tabs panel applies once at its first real size",
+  );
   notes.value = "Keep this draft";
   count.click();
   await Settle();

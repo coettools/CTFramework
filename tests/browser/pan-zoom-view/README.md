@@ -1,5 +1,9 @@
 # PanZoomView browser checks
 
+The fixture also starts a canvas hidden, calls its Ref handle's CenterOn before
+the first size, then reveals it. The canvas must paint at the requested camera
+without animation or frame errors, with backing dimensions matching its viewport.
+
 Run `npm run build` and `npm run test:browser`. Open
 `/tests/browser/pan-zoom-view/`, then repeat with `?source` and `?readable`.
 The status must read PASS. Controls remain available for manual use afterward.

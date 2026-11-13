@@ -325,6 +325,10 @@ patterns, keyboard values, and the full data table remain necessary non-color cu
 for each category. A `null` entry uses the series color. The selected bar color
 also appears in its tooltip swatch. The right axis uses the same theme tokens as
 the left axis, while `Y2.Format` controls its displayed values.
+Use `Series[].PointShape` (`circle`, `square`, or `diamond`) and `PointRadius`
+for marker geometry. The plot, legend and tooltip share those shapes. Geometry
+is written as SVG attributes; a project does not need CSS radius rules. The
+`ct-chart-point` class identifies point markers for focused visual overrides.
 
 ```css
 .project-report {

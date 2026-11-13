@@ -81,7 +81,9 @@ return Chart({
 For `Type: "area"` or `Type: "scatter"`, use the line-series `Points` shape.
 On a continuous chart, `Series[].Type` can mix `"line"`, `"area"`, and
 `"scatter"` series. Set `PointRadius` to size scatter points and dots at
-isolated line or area values. Stacked continuous charts require every series to
+isolated line or area values. `PointShape` selects `"circle"`, `"square"`, or
+`"diamond"` for each series; legend and tooltip swatches show the same shape.
+Stacked continuous charts require every series to
 be an area with aligned x coordinates. This avoids implying values
 where a series supplied no measurement. `Y: null` marks missing data; gaps are
 not interpolated or silently treated as zero. Formatters receive numeric values
@@ -113,8 +115,8 @@ return Chart({
   Y2: { Label: "Completion", Min: 0, Max: 100, Format: (value) => `${value}%` },
   Series: [
     { Id: "planned", Label: "Planned", Type: "area", Points: [{ X: 0, Y: 4 }, { X: 1, Y: 6 }] },
-    { Id: "done", Label: "Done", Type: "line", Points: [{ X: 0, Y: 3 }, { X: 1, Y: null }], PointRadius: 4 },
-    { Id: "rate", Label: "Completion rate", Type: "scatter", Axis: "right", Points: [{ X: 0, Y: 75 }, { X: 1, Y: 83 }], PointRadius: 5 }
+    { Id: "done", Label: "Done", Type: "line", Points: [{ X: 0, Y: 3 }, { X: 1, Y: null }], PointRadius: 4, PointShape: "square" },
+    { Id: "rate", Label: "Completion rate", Type: "scatter", Axis: "right", Points: [{ X: 0, Y: 75 }, { X: 1, Y: 83 }], PointRadius: 5, PointShape: "diamond" }
   ]
 });
 ```
@@ -151,7 +153,8 @@ return Chart({
 | `Series` | `[]` | Unique `Id`, `Label`, optional `Color`, and either `Points` or `Values`. |
 | `Series[].Type` | Chart `Type` | `"line"`, `"area"`, or `"scatter"` on continuous charts; bar charts remain bar-only. |
 | `Series[].Axis` | `"left"` | `"left"` or `"right"`; right requires `Y2`. |
-| `Series[].PointRadius` | `2.5` | Positive finite SVG circle radius in CSS pixels for scatter and isolated line/area dots. |
+| `Series[].PointRadius` | `2.5` | Positive finite marker half-size in plot pixels: circle radius, or half the square/diamond width and height. |
+| `Series[].PointShape` | `"circle"` | `"circle"`, `"square"`, or `"diamond"` for scatter and isolated line/area points; matches legend and tooltip swatches. |
 | `Series[].Points` | Required for line/area/scatter | `{ X, Y }` coordinates. X is finite numeric/Date; Y finite numeric or null. |
 | `Series[].Values` | Required for bars | Values aligned to Categories, including null for missing values. |
 | `Series[].Dashed` | `false` | Additional line-style cue; series also have labelled legend entries. |
@@ -614,6 +617,13 @@ Again set `.example-map { height: 20rem; }`. When the underlying canvas data cha
 Drag with a mouse or one touch pointer to pan; movement below 4 px remains a click. Wheel and trackpad zoom anchor to the pointer, and two-touch pinch anchors to its midpoint. Wheel and touch gestures inside the viewport do not scroll the page. Arrow keys pan by 10% of the current view; `+`/`-` zoom at the center and `0` fits the bounds. Tab reaches SVG items when they are focusable. The view uses native pointer events and `ResizeObserver` to track its container.
 
 The camera is clamped so each axis keeps an overlap of 20% of the smaller of the visible world footprint and the bounds. At high zoom, that means 20% of the viewport footprint, not 20% of the entire bounds. `CenterOn(x, y, zoom?)` animates for 180 ms, subject to clamping, and moves immediately when reduced motion is preferred. The root fills its container with `width: 100%`, `height: 100%`, and `min-height: 16rem`; set the container dimensions. Performance with large scenes depends on the caller's drawing work and requires profiling on target devices. See [viewport styling](Styling.md#style-comboboxes-and-pan-zoom-views).
+
+You can call `CenterOn` through `Ref` before a hidden view has its first size.
+The latest target becomes its initial camera when it is revealed, without an
+entry animation. Omitted zoom uses the initial Camera scale, or the fit scale
+calculated from its measured viewport. A later controlled Camera update replaces
+that pending target. A rendering error cancels the current centering animation;
+after correcting the drawing code, a resize or `Redraw` can paint again.
 
 ## SideNavigation
 

@@ -16,13 +16,26 @@ const Near = (left, right) => Math.abs(left - right) < 0.01;
 class Checks extends Component {
   constructor(props) {
     super(props);
-    this.state = { Camera: { X: 0, Y: 0, Zoom: 1 }, CanvasCamera: { X: 0, Y: 0, Zoom: 1 }, Redraw: 0 };
+    this.state = { Camera: { X: 0, Y: 0, Zoom: 1 }, CanvasCamera: { X: 0, Y: 0, Zoom: 1 }, Redraw: 0, Hidden: true };
     this.Activations = [];
     this.Updates = 0;
     this.Draws = 0;
     this.Hits = [];
     this.Ref = (handle) => {
       this.Handle = handle;
+    };
+
+    this.HiddenDraws = 0;
+    this.HiddenRef = (handle) => {
+      this.HiddenHandle = handle;
+      if (handle) requestAnimationFrame(() => handle.CenterOn(120, -80, 0.75));
+    };
+
+    this.DrawHidden = (context, camera, size) => {
+      this.HiddenDraws++;
+      this.LastHiddenCamera = camera;
+      this.LastHiddenSize = size;
+      context.fillRect(size.Width / 2 - 5, size.Height / 2 - 5, 10, 10);
     };
   }
 
@@ -38,6 +51,15 @@ class Checks extends Component {
 
   Render() {
     return html`<section>
+      <div class="viewer" id="hidden-view" ${CT.Attr("hidden", this.state.Hidden)}>
+        ${PanZoomView({
+          Label: "Initially hidden diagram",
+          Bounds: { MinX: -1000, MinY: -1000, MaxX: 1000, MaxY: 1000 },
+          MinZoom: 0.1,
+          Ref: this.HiddenRef,
+          Draw: this.DrawHidden,
+        })}
+      </div>
       <p id="activated">Activated: ${this.Activations.join(", ") || "none"}</p>
       <div class="viewer" id="svg-view">
         ${PanZoomView({
@@ -148,7 +170,7 @@ CT(async () => {
     app.SetState({ Redraw: 1 });
     await Settle();
     Assert(app.Draws > beforeDraw, "Redraw requests a canvas frame");
-    const canvas = document.querySelector("canvas");
+    const canvas = document.querySelector("#canvas-view canvas");
     Assert(canvas.width >= app.LastSize.Width, "Canvas backing size accounts for device scale");
     app.Handle.CenterOn(70, 50, 1);
     await new Promise((resolve) => setTimeout(resolve, 240));
@@ -158,7 +180,14 @@ CT(async () => {
     await Settle();
     await Settle();
     Assert(app.LastSize.Height < 330, "ResizeObserver redraws a resized canvas");
-    document.querySelector("#result").textContent = "PASS: SVG namespace, identity, threshold, activation, wheel anchor, keyboard, pinch, controlled CenterOn, canvas redraw and resize.";
+    Assert(app.HiddenDraws === 0 && app.HiddenHandle, "The hidden diagram has a handle before it has a viewport or a camera");
+    app.SetState({ Hidden: false });
+    await Settle();
+    await Settle();
+    Assert(app.HiddenDraws > 0 && Near(app.LastHiddenCamera.X, 120) && Near(app.LastHiddenCamera.Y, -80) && Near(app.LastHiddenCamera.Zoom, 0.75), "CenterOn before the first size paints the requested camera when revealed");
+    const hiddenCanvas = document.querySelector("#hidden-view canvas");
+    Assert(hiddenCanvas.width === Math.round(app.LastHiddenSize.Width * devicePixelRatio) && hiddenCanvas.height === Math.round(app.LastHiddenSize.Height * devicePixelRatio), "The revealed canvas has the measured backing size");
+    document.querySelector("#result").textContent = "PASS: SVG namespace, identity, threshold, activation, wheel anchor, keyboard, pinch, controlled and hidden CenterOn, canvas redraw and resize.";
     document.querySelector("#result").dataset.status = "passed";
   } catch (error) {
     document.querySelector("#result").textContent = error.stack;

@@ -19,6 +19,7 @@ export class PanZoomViewComponent extends Component {
     this._hovered = null;
     this._frame = null;
     this._animation = null;
+    this._pendingCenter = null;
     this._notify = false;
     this._suppressClick = false;
     this._handle = { CenterOn: (x, y, zoom) => this.CenterOn(x, y, zoom) };
@@ -61,7 +62,8 @@ export class PanZoomViewComponent extends Component {
       this._lastCameraProps = this.props.Camera ? { ...this.props.Camera } : null;
       if (!SameCamera(this.props.Camera, this._emittedCamera)) {
         this._animation = null;
-        this.SetCamera(this.props.Camera ?? this.GetFit());
+        if (!this._camera) this._pendingCenter = null;
+        else this.SetCamera(this.props.Camera ?? this.GetFit());
       }
     } else this.SetCamera(this._camera);
     if (previousProps.Redraw !== this.props.Redraw || previousProps.Draw !== this.props.Draw || previousProps.Content !== this.props.Content) this.QueueFrame();
@@ -73,6 +75,7 @@ export class PanZoomViewComponent extends Component {
     if (this._frame !== null) cancelAnimationFrame(this._frame);
     this._frame = null;
     this._animation = null;
+    this._pendingCenter = null;
     this._pointers.clear();
     for (const [name, handler] of Object.entries(this._events)) this._root?.removeEventListener(name, handler, name === "click");
     this.props.Ref?.(null);
@@ -93,7 +96,10 @@ export class PanZoomViewComponent extends Component {
     const initial = !this._camera;
     this._size = { Width: this._root.clientWidth || rect.width, Height: this._root.clientHeight || rect.height };
     this._rect = this._root.getBoundingClientRect();
-    this.SetCamera(initial ? (this.props.Camera ?? this.GetFit()) : this._camera, !initial);
+    const pending = initial ? this._pendingCenter : null;
+    const camera = pending ? { ...pending, Zoom: pending.Zoom ?? this.props.Camera?.Zoom ?? this.GetFit().Zoom } : initial ? (this.props.Camera ?? this.GetFit()) : this._camera;
+    this.SetCamera(camera, Boolean(pending) || !initial);
+    this._pendingCenter = null;
     this.QueueFrame();
   }
 
@@ -111,23 +117,30 @@ export class PanZoomViewComponent extends Component {
     this._frame = requestAnimationFrame((time) => {
       this._frame = null;
       if (this.__disposed) return;
-      if (this._animation) {
-        const progress = Math.min(1, (time - this._animation.Start) / 180);
-        const eased = 1 - (1 - progress) ** 3;
-        const { From, To } = this._animation;
-        this._camera = ClampCamera({ X: From.X + (To.X - From.X) * eased, Y: From.Y + (To.Y - From.Y) * eased, Zoom: From.Zoom + (To.Zoom - From.Zoom) * eased }, this.props.Bounds, this._size, this.GetLimits());
-        this._notify = true;
-        if (progress === 1) this._animation = null;
-      }
 
-      this.Paint();
-      const notify = this._notify;
-      this._notify = false;
-      if (notify) {
-        this._emittedCamera = { ...this._camera };
-        this.props.OnCameraChange?.({ ...this._camera });
+      try {
+        if (this._animation) {
+          const progress = Math.min(1, (time - this._animation.Start) / 180);
+          const eased = 1 - (1 - progress) ** 3;
+          const { From, To } = this._animation;
+          this._camera = ClampCamera({ X: From.X + (To.X - From.X) * eased, Y: From.Y + (To.Y - From.Y) * eased, Zoom: From.Zoom + (To.Zoom - From.Zoom) * eased }, this.props.Bounds, this._size, this.GetLimits());
+          this._notify = true;
+          if (progress === 1) this._animation = null;
+        }
+
+        this.Paint();
+        const notify = this._notify;
+        this._notify = false;
+        if (notify) {
+          this._emittedCamera = { ...this._camera };
+          this.props.OnCameraChange?.({ ...this._camera });
+        }
+        if (this._animation) this.QueueFrame();
+      } catch (error) {
+        this._animation = null;
+        this._notify = false;
+        throw error;
       }
-      if (this._animation) this.QueueFrame();
     });
   }
 
@@ -298,8 +311,16 @@ export class PanZoomViewComponent extends Component {
     }
   }
 
-  CenterOn(x, y, zoom = this._camera?.Zoom) {
+  CenterOn(x, y, zoom = this._camera?.Zoom ?? this.props.Camera?.Zoom) {
     if (!this._root || this.__disposed) return;
+    if (!Number.isFinite(x) || !Number.isFinite(y) || (zoom !== undefined && (!Number.isFinite(zoom) || zoom <= 0))) throw new TypeError("PanZoomView CenterOn needs finite X/Y and an optional positive Zoom.");
+    if (!this._camera) {
+      this._animation = null;
+      this._pendingCenter = { X: x, Y: y, Zoom: zoom };
+
+      return;
+    }
+
     const target = ClampCamera({ X: x, Y: y, Zoom: zoom }, this.props.Bounds, this._size, this.GetLimits());
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) this.SetCamera(target, true);
     else {

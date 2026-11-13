@@ -120,3 +120,76 @@ test("cancelled pointers and lost capture cannot later activate a stale item", (
   assert.deepEqual(activated, []);
   assert.equal(control._pointers.size, 0);
 });
+
+test("CenterOn before first size applies the latest valid target at the real viewport without animation", () => {
+  const control = CreateControl();
+  control._camera = null;
+  control._size = { Width: 1, Height: 1 };
+  let hidden = true;
+  control._root.getBoundingClientRect = () => ({ left: 0, top: 0, width: hidden ? 0 : 800, height: hidden ? 0 : 400 });
+  control._root.clientWidth = 800;
+  control._root.clientHeight = 400;
+  control.CenterOn(40, -25, 0.5);
+  control.Resize();
+  assert.equal(control._camera, null);
+  assert.equal(control._animation, null);
+  assert.deepEqual(control._pendingCenter, { X: 40, Y: -25, Zoom: 0.5 });
+  assert.throws(() => control.CenterOn(NaN, 2, 1), /CenterOn/);
+  control.CenterOn(90, -35, 0.6);
+  hidden = false;
+  control.Resize();
+  assert.deepEqual(control._camera, { X: 90, Y: -35, Zoom: 0.6 });
+  assert.equal(control._pendingCenter, null);
+  assert.equal(control._animation, null);
+  assert.equal(control._notify, true);
+});
+
+test("CenterOn without an initial zoom resolves fit after sizing and controlled Camera can supersede it", () => {
+  const control = CreateControl();
+  control._camera = null;
+  control._size = { Width: 1, Height: 1 };
+  control._root.clientWidth = size.Width;
+  control._root.clientHeight = size.Height;
+  control._root.getBoundingClientRect = () => ({ left: 0, top: 0, width: size.Width, height: size.Height });
+  control.CenterOn(50, -30);
+  control.Resize();
+  assert.equal(control._camera.Zoom, FitCamera(bounds, size).Zoom);
+  assert.equal(control._camera.X, 50);
+  assert.equal(control._camera.Y, -30);
+  control._camera = null;
+  control.CenterOn(90, 0, 1);
+  const previous = control.props;
+  control.props = { ...previous, Camera: { X: 10, Y: 20, Zoom: 0.5 } };
+  control.ComponentOnUpdate(previous);
+  assert.equal(control._pendingCenter, null);
+  assert.equal(control._camera, null);
+  control.Resize();
+  assert.deepEqual(control._camera, control.props.Camera);
+});
+
+test("a failed animation frame clears its animation and a later redraw can paint", (context) => {
+  const control = new PanZoomViewComponent({ Label: "Diagram", Bounds: bounds, MinZoom: 0.01 });
+  control._root = {};
+  control._size = size;
+  control._camera = { X: 10, Y: 20, Zoom: 0.5 };
+  control._animation = { From: {}, To: { X: 40, Y: 30, Zoom: 1 }, Start: 0 };
+  let frame;
+  let paints = 0;
+  const original = globalThis.requestAnimationFrame;
+  context.after(() => (original === undefined ? delete globalThis.requestAnimationFrame : (globalThis.requestAnimationFrame = original)));
+  globalThis.requestAnimationFrame = (callback) => {
+    frame = callback;
+
+    return 1;
+  };
+
+  control.Paint = () => paints++;
+  control.QueueFrame();
+  assert.throws(() => frame(100), /Camera/);
+  assert.equal(control._animation, null);
+  assert.equal(control._frame, null);
+  assert.deepEqual(control._camera, { X: 10, Y: 20, Zoom: 0.5 });
+  control.QueueFrame();
+  frame(200);
+  assert.equal(paints, 1);
+});

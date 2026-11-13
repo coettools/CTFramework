@@ -8,6 +8,10 @@ The runner exposes its mounted fixture as `window.chartChecks`. Wait for `#resul
 - At touch width, tap or drag horizontally. Check the nearest sample and confirm vertical page scrolling remains usable.
 - Open and close the full table with the keyboard. Check that it includes 600 positions, missing measurements display a dash, and the scrollable table fits inside the page.
 - Toggle both legend entries off and on. Verify focus, names, pressed states, the empty message and recovery. Compare the plot and legend patterns in each theme.
+- Inspect the mixed chart's square and diamond points at their configured sizes,
+  including the diamond on the lower boundary. Plot, legend and tooltip must use
+  matching shapes. Isolated line/area markers use PointShape too; omitted values
+  stay circular. The raw table must contain only supplied X coordinates.
 - Inspect grouped and signed stacked bars, stacked areas with gaps, the labelled marker and the empty chart. Open and close the native dialog twice and resize while it is open.
 
 Line and area coordinates accept finite numbers and valid Dates. Date coordinates are normalized to epoch milliseconds before formatting. X positions are unique per series. Stacked areas require identical X positions across all series, including hidden series. Use a null Y for a missing measurement. A missing lower area leaves a gap in each area whose baseline depends on it. The tooltip and table retain supplied values even when that baseline is unknown.

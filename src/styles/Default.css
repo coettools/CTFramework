@@ -943,6 +943,10 @@
     stroke-width: 2;
   }
 
+  .ct-chart-point {
+    stroke: none;
+  }
+
   .ct-chart-legend {
     display: flex;
     flex-wrap: wrap;

@@ -261,6 +261,17 @@ test("category colors preserve numeric bar data and remain aligned after gaps an
   assert.throws(() => Data({ Type: "bar", Categories: ["A"], Series: [{ Id: "a", Label: "A", Values: [2], Colors: [] }] }), /Colors/);
 });
 
+test("point shapes use one explicit per-series contract and preserve raw coordinates", () => {
+  const data = Data({ Type: "scatter", Series: [Series("a", [2, 5]), { ...Series("b", [1, 3]), PointShape: "square" }, { ...Series("c", [4, 6]), PointShape: "diamond" }] });
+  assert.deepEqual(
+    data.Series.map((series) => series.PointShape),
+    ["circle", "square", "diamond"],
+  );
+  assert.deepEqual(data.Positions, [0, 1]);
+  assert.deepEqual([...data.Series[1].Values.values()], [1, 3]);
+  for (const shape of ["triangle", "Square", "", null, 4, {}]) assert.throws(() => Data({ Series: [{ ...Series("a", [1]), PointShape: shape }] }), /PointShape/);
+});
+
 test("right-axis series have independent zero bounds, domains, geometry and formatting", () => {
   const data = Data({ Y: { Min: 0, Format: (value) => `${value} jobs` }, Y2: { Min: 0, Max: 100, Format: (value) => `${value}%` }, Series: [Series("a", [2, 4]), { ...Series("b", [50, 100]), Axis: "right", Type: "scatter" }] });
   const layout = ChartLayout(data, 600);

@@ -179,7 +179,18 @@ export class App extends Component {
         Title: "Chart",
         Content: CodeBlock({
           Title: "Usage",
-          Code: ["Chart({", '  Title: "Completed jobs",', '  Type: "scatter",', "  Series: [{", '    Id: "queue", Label: "Queue A",', "    PointRadius: 5,", "    Points: [{ X: 0, Y: 2 }, { X: 1, Y: 5 }]", "  }]", "});"].join("\n"),
+          Code: [
+            "Chart({",
+            '  Title: "Completed jobs",',
+            '  Type: "scatter",',
+            "  Series: [{",
+            '    Id: "queue", Label: "Queue A",',
+            "    PointRadius: 5,",
+            '    PointShape: "diamond",',
+            "    Points: [{ X: 0, Y: 2 }, { X: 1, Y: 5 }]",
+            "  }]",
+            "});",
+          ].join("\n"),
         }),
       },
       {
@@ -588,6 +599,7 @@ export class App extends Component {
                   Type: "scatter",
                   Axis: "right",
                   PointRadius: 5,
+                  PointShape: "diamond",
                   Points: [
                     { X: 0, Y: 25 },
                     { X: 1, Y: 50 },
@@ -599,6 +611,7 @@ export class App extends Component {
                   Label: "Queue C",
                   Type: "line",
                   PointRadius: 4,
+                  PointShape: "square",
                   Points: [
                     { X: 0, Y: 1 },
                     { X: 1, Y: null },

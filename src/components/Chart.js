@@ -9,13 +9,18 @@ const html = CT.Html;
 const attr = CT.Attr;
 const Identity = (value) => value;
 const SeriesColor = (series, position) => series.Colors?.[position] ?? series.Color;
+const PointMarker = (series, x, y, radius = series.PointRadius) => {
+  if (series.PointShape === "square") return html`<rect class="ct-chart-point" fill="currentColor" ${attr("x", x - radius)} ${attr("y", y - radius)} ${attr("width", radius * 2)} ${attr("height", radius * 2)}></rect>`;
+  if (series.PointShape === "diamond") return html`<polygon class="ct-chart-point" fill="currentColor" ${attr("points", `${x},${y - radius} ${x + radius},${y} ${x},${y + radius} ${x - radius},${y}`)}></polygon>`;
+
+  return html`<circle class="ct-chart-point" fill="currentColor" ${attr("cx", x)} ${attr("cy", y)} ${attr("r", radius)}></circle>`;
+};
+
 const SeriesSwatch = (series) =>
   html`<svg class="ct-chart-swatch" width="32" height="12" aria-hidden="true" ${attr("style", { color: series.Color })}>
-    ${series.Type === "scatter"
-      ? html`<circle cx="16" cy="6" ${attr("r", Math.min(5, series.PointRadius))} fill="currentColor"></circle>`
-      : series.Type === "bar"
-        ? html`<rect x="4" y="2" width="24" height="8" fill="currentColor"></rect>`
-        : html`<line x1="1" x2="31" y1="6" y2="6" stroke="currentColor" stroke-width="3" ${attr("stroke-dasharray", series.Dash)}></line>`}
+    ${series.Type === "bar"
+      ? html`<rect x="4" y="2" width="24" height="8" fill="currentColor"></rect>`
+      : [series.Type === "scatter" ? null : html`<line x1="1" x2="31" y1="6" y2="6" stroke="currentColor" stroke-width="3" ${attr("stroke-dasharray", series.Dash)}></line>`, PointMarker(series, 16, 6, Math.min(5, series.PointRadius))]}
   </svg>`;
 
 class ChartComponent extends Component {
@@ -171,19 +176,22 @@ class ChartComponent extends Component {
     </table>`;
   }
 
-  RenderSeries(series, index, data, layout) {
+  RenderSeries(series, index, data, layout, clip) {
     if (series.Axis === "right") layout = { ...layout, ScaleY: layout.ScaleY2 };
     const points = layout.Layers[index];
     let shapes;
     if (data.Type === "bar") {
       const bars = ChartBars(points, layout, index, data.Visible.length, data.Stacked);
-      shapes = bars.map((bar) => html`<rect ${attr("fill", SeriesColor(series, bar.Position))} stroke="var(--ct-color-surface)" ${attr("x", bar.X)} ${attr("y", bar.Y)} ${attr("width", bar.Width)} ${attr("height", bar.Height)}></rect>`);
+      shapes = html`<g ${attr("clip-path", `url(#${clip})`)}
+        >${bars.map((bar) => html`<rect ${attr("fill", SeriesColor(series, bar.Position))} stroke="var(--ct-color-surface)" ${attr("x", bar.X)} ${attr("y", bar.Y)} ${attr("width", bar.Width)} ${attr("height", bar.Height)}></rect>`)}</g
+      >`;
     } else {
       const paths = series.Type === "scatter" ? { Dots: ChartDots(points, layout) } : ChartPaths(points, layout, series.Type === "area", data.Stacked);
       shapes = [
-        paths.Area ? html`<path fill="currentColor" fill-opacity="0.27" ${attr("d", paths.Area)}></path>` : null,
-        paths.Line ? html`<path fill="none" stroke="currentColor" ${attr("d", paths.Line)}></path>` : null,
-        paths.Dots.map((dot) => html`<circle ${attr("r", series.PointRadius)} fill="currentColor" ${attr("cx", dot.X)} ${attr("cy", dot.Top)}></circle>`),
+        html`<g ${attr("clip-path", `url(#${clip})`)}>
+          ${paths.Area ? html`<path fill="currentColor" fill-opacity="0.27" ${attr("d", paths.Area)}></path>` : null} ${paths.Line ? html`<path fill="none" stroke="currentColor" ${attr("d", paths.Line)}></path>` : null}
+        </g>`,
+        paths.Dots.filter((dot) => dot.X >= layout.Left && dot.X <= layout.Right && dot.Top >= layout.Top && dot.Top <= layout.Bottom).map((dot) => PointMarker(series, dot.X, dot.Top)),
       ];
     }
 
@@ -213,7 +221,7 @@ class ChartComponent extends Component {
         <clipPath ${attr("id", clip)}><rect ${attr("x", Left)} ${attr("y", Top)} ${attr("width", Right - Left)} ${attr("height", Bottom - Top)}></rect></clipPath>
       </defs>
       <g class="ct-chart-grid">${layout.Y.Ticks.map((tick) => html`<line ${attr("x1", Left)} ${attr("x2", Right)} ${attr("y1", ScaleY(tick))} ${attr("y2", ScaleY(tick))}></line>`)}</g>
-      <g ${attr("clip-path", `url(#${clip})`)}>${data.Visible.map((series, index) => this.RenderSeries(series, index, data, layout))}</g>
+      <g>${data.Visible.map((series, index) => this.RenderSeries(series, index, data, layout, clip))}</g>
       <g class="ct-chart-axis">
         ${layout.YLabels.map((tick) => html`<text text-anchor="end" dominant-baseline="middle" ${attr("x", Left - 5)} ${attr("y", ScaleY(tick))}>${data.FormatY(tick)}</text>`)}
         ${layout.Labels.map((tick) => html`<text ${attr("text-anchor", tick.Anchor)} ${attr("x", tick.X)} ${attr("y", Bottom + 15)}>${tick.Label}</text>`)}
