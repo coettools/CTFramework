@@ -156,3 +156,52 @@ test("layout collapse retains focus in an enabled panel or repairs it to the con
     assert.deepEqual(focused, value === undefined ? [] : [[0, "tab"]]);
   }
 });
+
+test("Columns uses equal row tracks, clamps spans and measures one row instead of every item", () => {
+  const records = [items[0], { ...items[1], Disabled: false }, { ...items[2], Span: "full" }, { Id: "wide", Title: "Wide", Content: "Details", Span: 8 }];
+  const control = Control({ Layout: "columns", Columns: 2, Items: records, MinPanelWidth: "24rem" });
+  const view = control.Render();
+  assert.equal(view.props.values.find((value) => value?.name === "style").value.width, "calc(2 * (24rem) + 1 * var(--ct-tabs-gap, 1rem))");
+  const grid = view.props.values.find((value) => value?.name === "style" && value.value?.gridTemplateColumns);
+  assert.equal(grid.value.gridTemplateColumns, "repeat(2, minmax(0, 1fr))");
+  const panels = Panels(view);
+  assert.deepEqual(
+    panels.map((panel) => Attr(panel, "style").gridColumn),
+    ["span 1", "span 1", "1 / -1", "span 2"],
+  );
+  control.props = { ...control.props, Layout: "tabs" };
+  const tabs = Panels(control.Render());
+  assert.ok(tabs.every((panel) => Attr(panel, "style") === null));
+  assert.deepEqual(
+    tabs.map((panel) => panel.key),
+    records.map((record) => record.Id),
+  );
+});
+
+test("ShowHeadings false keeps named regions including zero badges and ignores HeadingLevel", () => {
+  const control = Control({ Layout: "columns", ShowHeadings: false, HeadingLevel: 99 });
+  const columns = Panels(control.Render());
+  assert.ok(columns.every((panel) => !panel.props.values.some((value) => typeof value?.tag === "string" && /^h[1-6]$/.test(value.tag))));
+  assert.deepEqual(
+    columns.map((panel) => Attr(panel, "aria-label")),
+    ["Gear", "Locked", "Tree 0"],
+  );
+  assert.ok(columns.every((panel) => Attr(panel, "role") === "region" && Attr(panel, "aria-labelledby") === null));
+  control.props = { ...control.props, Layout: "tabs" };
+  const tabs = Panels(control.Render());
+  assert.ok(tabs.every((panel) => Attr(panel, "role") === "tabpanel" && Attr(panel, "aria-label") === null && Attr(panel, "aria-labelledby").endsWith("-tab")));
+  const headingOn = Control({ Layout: "columns", HeadingLevel: 3 });
+  assert.ok(Panels(headingOn.Render()).every((panel) => panel.props.values.some((value) => value?.tag === "h3")));
+});
+
+test("new layout options validate strictly and the optional weighted layout remains current", () => {
+  for (const Columns of [0, -1, 1.5, "2", null, Infinity, Number.MAX_SAFE_INTEGER + 1]) assert.throws(() => Tabs(Options({ Columns })), /Columns/);
+  for (const ShowHeadings of [0, "false", null]) assert.throws(() => Tabs(Options({ ShowHeadings })), /ShowHeadings/);
+  assert.doesNotThrow(() => Tabs(Options({ ShowHeadings: false, HeadingLevel: "unused" })));
+  const weighted = Control({ Layout: "columns" });
+  const view = weighted.Render();
+  assert.equal(view.props.values.find((value) => value?.name === "style").value.width, "calc(4 * (22rem) + 2 * var(--ct-tabs-gap, 1rem))");
+  assert.ok(Panels(view).every((panel) => Attr(panel, "style") === null && Attr(panel, "aria-label") === null));
+  const full = Control({ Layout: "columns", Items: [{ Id: "full", Title: "All", Span: "full", Content: "Full row" }] });
+  assert.equal(Attr(Panels(full.Render())[0], "style").gridColumn, "1 / -1");
+});

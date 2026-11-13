@@ -180,31 +180,47 @@ Use the [chart tokens and styling](Styling.md#style-charts) for project override
 
 ## Tabs
 
-Use `Tabs` to show all panels side by side when they fit and one selected panel
-when they do not. `Layout: "auto"` measures the control's own width. The
-following fragment belongs inside a component's `Render` method with
-`const html = CT.Html` and `Tabs` imported from the package:
+Use `Tabs` to show panels in columns when they fit and one selected panel when
+they do not. `Layout: "auto"` measures the control's own width. Set `Columns`
+when panels should wrap into rows. This fragment belongs inside a component's
+`Render` method with `const html = CT.Html` and `Tabs` and `Card` imported from
+the package:
 
 ```js
 return Tabs({
   Label: "Workspace sections",
   Layout: "auto",
-  MinPanelWidth: "22rem",
-  HeadingLevel: 3,
+  Columns: 2,
+  MinPanelWidth: "20rem",
+  ShowHeadings: false,
   Items: [
-    { Id: "overview", Title: "Overview", Content: html`<p>Current work.</p>` },
-    { Id: "activity", Title: "Activity", Badge: 3, Content: html`<p>Recent updates.</p>` },
-    { Id: "notes", Title: "Notes", Content: html`<p>Project notes.</p>` }
+    { Id: "overview", Title: "Overview", Content: Card({ Title: "Overview", HeadingLevel: 3, Content: html`<p>Current work.</p>` }) },
+    { Id: "activity", Title: "Activity", Badge: 0, Content: Card({ Title: "Activity", HeadingLevel: 3, Content: html`<p>No recent updates.</p>` }) },
+    { Id: "details", Title: "Details", Span: "full", Content: Card({ Title: "Details", HeadingLevel: 3, Content: html`<p>Project details.</p>` }) }
   ]
 });
 ```
 
 `Items` need unique string or finite-number `Id` values, nonempty `Title`
-values, and content. `Badge` adds a short count or label. `Disabled` prevents
-tab selection. `Span` is a positive integer for the panel's width in columns
-mode. `Layout` can be `"auto"` (default), `"tabs"`, or `"columns"`.
-`MinPanelWidth` defaults to `"22rem"`; `HeadingLevel` defaults to `2` and
-accepts integers `1`–`6` for headings in columns mode.
+values, and content. `Badge` adds a short count or label, including `0`.
+`Disabled` prevents tab selection. `Layout` can be `"auto"` (default),
+`"tabs"`, or `"columns"`.
+
+`Columns` is an optional positive safe integer. With it, columns mode uses that
+many equal tracks (`repeat(N, minmax(0, 1fr))`); panels fill rows in `Items`
+order. Numeric `Span` values are positive safe integers and occupy that many
+tracks, clamped to `Columns`. `Span: "full"` fills a row. Without `Columns`,
+each panel gets a weighted track; a numeric `Span` sets its track weight.
+`"full"` counts as one weight while occupying all tracks and creating a row.
+`MinPanelWidth` defaults to `"22rem"`. In `"auto"` mode with `Columns`,
+the threshold is `Columns × MinPanelWidth + (Columns − 1) × gap`. Without
+`Columns`, it remains based on the sum of panel weights and gaps.
+
+`ShowHeadings` defaults to `true`. In columns mode, it displays each panel's
+title above its content at `HeadingLevel` (default `2`, valid `1`–`6`). Set it
+to `false` when content, such as `Card`, supplies its own heading; `HeadingLevel`
+is then ignored. Each column panel remains a named region using its title and
+badge, while tabs mode continues to name panels from their tab buttons.
 
 Selection is internal when `Value` is omitted. To control it, pass `Value`
 and update parent state in `OnChange(id)`. `OnChange` runs on user selection;
@@ -213,7 +229,7 @@ and update parent state in `OnChange(id)`. `OnChange` runs on user selection;
 stateful `CT.View` children keep their state. The control keeps selection across
 parent renders when its `Key` is stable. In tabs mode, Left/Right and Home/End
 select enabled tabs; Tab moves into the panel. In columns mode, every panel is
-visible under its own heading in reading order.
+visible in `Items` reading order, with headings when `ShowHeadings` is true.
 
 ## SplitLayout
 

@@ -781,6 +781,7 @@
 
   .ct-tabs[data-layout="columns"] > .ct-tabs-panels {
     display: grid;
+    grid-auto-flow: row;
     gap: var(--ct-tabs-gap);
     align-items: start;
   }

@@ -214,8 +214,13 @@ colors, keyboard inspection, and a full formatted data table. See
 
 Read [Components.md](docs/Components.md) for `ApplicationLayout`, `Accordion`, `DataTable`, `Dropdown`, `Combobox`, `PanZoomView`, `SideNavigation`, `Tooltip`, `Badge`, `Card`, `CodeBlock`, `ImageCarousel`, `Alert`, `Dialog`, `PopupWindow`, `Toast`, and `FallbackView` usage.
 
-`Tabs` switches from side-by-side panels to a tab list as its container narrows;
-`SplitLayout` pairs a bounded side column with flexible main content. See
+`Tabs` switches from side-by-side panels to a tab list as its container narrows.
+Set `Columns` for equal tracks that wrap into rows, and use `Span: "full"` for a
+panel that fills a row. Set `ShowHeadings: false` when panel content already has
+its own heading; the column regions keep accessible names. Without `Columns`,
+panels retain weighted tracks; `"full"` can still create another row.
+`SplitLayout` pairs a bounded
+side column with flexible main content. See
 [Tabs](docs/Components.md#tabs) and [SplitLayout](docs/Components.md#splitlayout).
 `Popover` shows structured details from a focusable trigger. See
 [Popover usage](docs/Components.md#popover).

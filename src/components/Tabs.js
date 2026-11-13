@@ -166,29 +166,37 @@ class TabsComponent extends Component {
   RenderPanel(item) {
     const id = this._ids.get(item.Id);
     const tabs = this._mode === "tabs";
-    const heading = {
-      tag: `h${this.props.HeadingLevel ?? 2}`,
-      props: { id: `${id}-heading`, className: "ct-tabs-heading" },
-      children: NormalizeNodes(Caption(item)),
-    };
+    const headings = this.props.ShowHeadings !== false;
+    const heading =
+      !tabs && headings
+        ? {
+            tag: `h${this.props.HeadingLevel ?? 2}`,
+            props: { id: `${id}-heading`, className: "ct-tabs-heading" },
+            children: NormalizeNodes(Caption(item)),
+          }
+        : null;
+    const span = item.Span === "full" ? "1 / -1" : this.props.Columns === undefined ? null : `span ${Math.min(item.Span ?? 1, this.props.Columns)}`;
+    const label = item.Badge === undefined ? item.Title : `${item.Title} ${item.Badge}`;
 
     return {
       ...html`<section
         class="ct-tabs-panel"
         ${attr("id", `${id}-panel`)}
-        ${attr("role", tabs ? "tabpanel" : null)}
-        ${attr("aria-labelledby", `${id}-${tabs ? "tab" : "heading"}`)}
+        ${attr("role", tabs ? "tabpanel" : headings ? null : "region")}
+        ${attr("aria-labelledby", tabs ? `${id}-tab` : headings ? `${id}-heading` : null)}
+        ${attr("aria-label", !tabs && !headings ? label : null)}
+        ${attr("style", !tabs && span ? { gridColumn: span } : null)}
         ${attr("tabindex", tabs ? 0 : -1)}
         ${attr("hidden", tabs && item.Id !== this._selected)}
       >
-        ${tabs ? null : heading} ${CreateComponent(PanelContent, { Content: item.Content })}
+        ${heading} ${CreateComponent(PanelContent, { Content: item.Content })}
       </section>`,
       key: item.Id,
     };
   }
 
   Render() {
-    const { Items = [], Layout = "auto", MinPanelWidth = "22rem", Value } = this.props;
+    const { Items = [], Columns, Layout = "auto", MinPanelWidth = "22rem", Value } = this.props;
     const mode = Layout === "auto" ? (this._autoMode ?? "tabs") : Layout;
     this._focus = this.FindFocus();
     const collapsing = this._mode === "columns" && mode === "tabs";
@@ -198,9 +206,10 @@ class TabsComponent extends Component {
     this._mode = mode;
 
     this._ids = new Map(Items.map((item) => [item.Id, this._ids.get(item.Id) ?? `ct-tabs-${Guid()}`]));
-    const units = Items.reduce((sum, item) => sum + (item.Span ?? 1), 0);
-    const threshold = `calc(${units} * (${MinPanelWidth}) + ${Math.max(0, Items.length - 1)} * var(--ct-tabs-gap, 1rem))`;
-    const tracks = Items.map((item) => `minmax(0, ${item.Span ?? 1}fr)`).join(" ");
+    const units = Columns ?? Items.reduce((sum, item) => sum + (item.Span === "full" ? 1 : (item.Span ?? 1)), 0);
+    const gaps = Math.max(0, (Columns ?? Items.length) - 1);
+    const threshold = `calc(${units} * (${MinPanelWidth}) + ${gaps} * var(--ct-tabs-gap, 1rem))`;
+    const tracks = Columns === undefined ? Items.map((item) => `minmax(0, ${item.Span === "full" ? 1 : (item.Span ?? 1)}fr)`).join(" ") : `repeat(${Columns}, minmax(0, 1fr))`;
 
     return html`<div class="ct-tabs" tabindex="-1" ${attr("data-layout", mode)}>
       <div class="ct-tabs-measure" aria-hidden="true"><div class="ct-tabs-ruler" ${attr("style", { width: threshold })}></div></div>

@@ -53,6 +53,58 @@ const StatCard = ({ label, value }) => {
   `;
 };
 
+class TabsChartPanel extends Component {
+  Render() {
+    return html`<section>
+      <h4>Completed tasks</h4>
+      ${Chart({
+        Title: "Completed tasks",
+        ShowTitle: false,
+        Type: "line",
+        X: { Label: "Day" },
+        Y: { Label: "Tasks", Min: 0 },
+        Series: [
+          {
+            Id: "tasks",
+            Label: "Completed",
+            Points: [
+              { X: 1, Y: 2 },
+              { X: 2, Y: 4 },
+              { X: 3, Y: 3 },
+            ],
+          },
+        ],
+      })}
+    </section>`;
+  }
+}
+
+class TabsDiagramPanel extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { Camera: null };
+  }
+
+  Render() {
+    return html`<section>
+      <h4>Process diagram</h4>
+      <div style="height: 16rem">
+        ${PanZoomView({
+          Label: "Process diagram",
+          Bounds: { MinX: -100, MinY: -70, MaxX: 100, MaxY: 70 },
+          Camera: this.state.Camera,
+          Content: html`<g>
+            <circle cx="-40" cy="0" r="18" fill="var(--ct-color-accent)"></circle>
+            <circle cx="40" cy="0" r="18" fill="var(--ct-color-success)"></circle>
+            <line x1="-22" y1="0" x2="22" y2="0" stroke="currentColor"></line>
+          </g>`,
+          OnCameraChange: (camera) => this.SetState({ Camera: camera }),
+        })}
+      </div>
+    </section>`;
+  }
+}
+
 export class App extends Component {
   constructor(props) {
     super(props);
@@ -202,9 +254,14 @@ export class App extends Component {
             "Tabs({",
             '  Label: "Workspace sections",',
             '  Layout: "auto",',
+            "  Columns: 2,",
+            '  MinPanelWidth: "16rem",',
+            "  ShowHeadings: false,",
             "  Items: [",
-            '    { Id: "overview", Title: "Overview", Content: html`<p>Work</p>` },',
-            '    { Id: "notes", Title: "Notes", Content: html`<p>Notes</p>` }',
+            '    { Id: "overview", Title: "Overview", Content: Card({ Title: "Overview", Content: html`<p>Work</p>` }) },',
+            '    { Id: "notes", Title: "Notes", Content: Card({ Title: "Notes", Content: html`<p>Notes</p>` }) },',
+            '    { Id: "chart", Title: "Chart", Span: "full", Content: CT.View({ Component: TabsChartPanel, Key: "chart" }) },',
+            '    { Id: "diagram", Title: "Diagram", Span: "full", Content: CT.View({ Component: TabsDiagramPanel, Key: "diagram" }) }',
             "  ]",
             "});",
           ].join("\n"),
@@ -515,24 +572,45 @@ export class App extends Component {
                 Label: "Workspace sections",
                 Layout: "auto",
                 MinPanelWidth: "16rem",
-                HeadingLevel: 4,
+                Columns: 2,
+                ShowHeadings: false,
                 Value: this.state.selectedTab,
                 OnChange: (id) => this.SetState({ selectedTab: id }),
                 Items: [
                   {
                     Id: "overview",
                     Title: "Overview",
-                    Content: CT.View({
-                      Component: ChildCounter,
-                      Props: { ParentCount: this.state.count },
-                      Key: "tabs-counter",
+                    Content: Card({
+                      Title: "Overview",
+                      HeadingLevel: 4,
+                      Content: CT.View({
+                        Component: ChildCounter,
+                        Props: { ParentCount: this.state.count },
+                        Key: "tabs-counter",
+                      }),
                     }),
                   },
                   {
                     Id: "notes",
                     Title: "Notes",
                     Badge: this.state.notes.length,
-                    Content: html`<p>There are ${this.state.notes.length} saved notes.</p>`,
+                    Content: Card({
+                      Title: "Notes",
+                      HeadingLevel: 4,
+                      Content: html`<p>There are ${this.state.notes.length} saved notes.</p>`,
+                    }),
+                  },
+                  {
+                    Id: "chart",
+                    Title: "Chart",
+                    Span: "full",
+                    Content: CT.View({ Component: TabsChartPanel, Key: "tabs-chart" }),
+                  },
+                  {
+                    Id: "diagram",
+                    Title: "Diagram",
+                    Span: "full",
+                    Content: CT.View({ Component: TabsDiagramPanel, Key: "tabs-diagram" }),
                   },
                 ],
               })}

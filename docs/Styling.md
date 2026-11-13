@@ -346,8 +346,13 @@ and text tokens. No fixed font family is added.
 
 ## Style Tabs, SplitLayout, And Popover
 
-Tabs use `--ct-tabs-gap` between columns and `--ct-tabs-padding` within tab
-buttons. SplitLayout uses `--ct-layout-gap` between columns and
+Tabs use `--ct-tabs-gap` between panels in columns mode, including between
+rows. When `Columns` is set, equal tracks wrap and `Span: "full"` fills a row;
+without it, panels use weighted tracks, with `"full"` still taking a row.
+`ShowHeadings: false`
+removes the column captions while retaining named regions, without requiring
+a CSS override. `--ct-tabs-padding` controls padding within tab buttons.
+SplitLayout uses `--ct-layout-gap` between columns and
 `--ct-split-layout-sticky-top` to offset a sticky side. Set these on a wrapper
 when one workspace needs different spacing:
 
@@ -372,7 +377,7 @@ Components add their own classes. Use these only when you need a focused overrid
 | --- | --- | --- |
 | `ApplicationLayout` | `ct-application-layout` | Graphite shell, navy header with accent edge; independent content scrolling on desktop. |
 | `SideNavigation` | `ct-side-navigation` | Graphite rail; green-tinted selection with a left edge. |
-| `Tabs` | `ct-tabs` | Horizontal tab list when panels do not fit; heading-labelled columns otherwise. Preserve tab focus and horizontal scrolling. |
+| `Tabs` | `ct-tabs` | Horizontal tab list when panels do not fit; columns can wrap when `Columns` is set. Column headings are optional. Preserve tab focus and horizontal scrolling. |
 | `SplitLayout` | `ct-split-layout` | Two columns with an optional sticky, independently scrolling side; stacks at its own width threshold. |
 | `Popover` | `ct-popover` | Anchored top-layer card with focus and pointer access. Preserve its focus outline, card scrolling, and viewport fit. |
 | `Card` | `ct-card` | Navy panel, raised header and selective accent edge. Header actions sit beside the title and wrap on narrow cards; heading level does not change styling. |

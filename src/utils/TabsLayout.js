@@ -1,4 +1,4 @@
-const options = new Set(["Items", "Label", "Layout", "MinPanelWidth", "Value", "OnChange", "HeadingLevel", "OnLayoutChange", "Key"]);
+const options = new Set(["Items", "Label", "Layout", "Columns", "MinPanelWidth", "Value", "OnChange", "HeadingLevel", "ShowHeadings", "OnLayoutChange", "Key"]);
 const itemOptions = new Set(["Id", "Title", "Content", "Badge", "Disabled", "Span"]);
 const IsId = (value) => (typeof value === "string" && value.length > 0) || Number.isFinite(value);
 const IsLabel = (value) => typeof value === "string" && value.trim().length > 0;
@@ -12,10 +12,12 @@ const CheckKeys = (value, keys, name) => {
 
 export const ValidateTabs = (props) => {
   CheckKeys(props, options, "Tabs");
-  const { Items = [], HeadingLevel = 2, Layout = "auto", MinPanelWidth = "22rem" } = props;
+  const { Items = [], HeadingLevel = 2, ShowHeadings = true, Columns, Layout = "auto", MinPanelWidth = "22rem" } = props;
   if (!IsLabel(props.Label)) throw new TypeError("Tabs Label must be a non-empty string.");
   if (!["auto", "columns", "tabs"].includes(Layout)) throw new TypeError("Tabs Layout must be auto, columns or tabs.");
-  if (!Number.isInteger(HeadingLevel) || HeadingLevel < 1 || HeadingLevel > 6) throw new RangeError("Tabs HeadingLevel must be an integer from 1 to 6.");
+  if (typeof ShowHeadings !== "boolean") throw new TypeError("Tabs ShowHeadings must be a boolean.");
+  if (ShowHeadings && (!Number.isInteger(HeadingLevel) || HeadingLevel < 1 || HeadingLevel > 6)) throw new RangeError("Tabs HeadingLevel must be an integer from 1 to 6.");
+  if (Columns !== undefined && (!Number.isSafeInteger(Columns) || Columns < 1)) throw new RangeError("Tabs Columns must be a positive integer.");
   if (!IsLabel(MinPanelWidth) || (globalThis.CSS && !(CSS.supports("letter-spacing", MinPanelWidth) && CSS.supports("width", `calc(1 * (${MinPanelWidth}))`)))) {
     throw new TypeError("Tabs MinPanelWidth must be a CSS length.");
   }
@@ -32,7 +34,7 @@ export const ValidateTabs = (props) => {
     if (ids.has(item.Id)) throw new TypeError(`Tabs item Id must be unique. Duplicate: ${item.Id}`);
     if (!IsLabel(item.Title)) throw new TypeError("Tabs item Title must be a non-empty string.");
     if (!Object.hasOwn(item, "Content")) throw new TypeError("Tabs items require Content.");
-    if (item.Span !== undefined && !(Number.isSafeInteger(item.Span) && item.Span >= 1)) throw new RangeError("Tabs item Span must be a positive integer.");
+    if (item.Span !== undefined && item.Span !== "full" && !(Number.isSafeInteger(item.Span) && item.Span >= 1)) throw new RangeError('Tabs item Span must be a positive integer or "full".');
     if (item.Disabled !== undefined && typeof item.Disabled !== "boolean") throw new TypeError("Tabs item Disabled must be a boolean.");
     if (item.Badge !== undefined && typeof item.Badge !== "string" && !Number.isFinite(item.Badge)) throw new TypeError("Tabs item Badge must be text or a finite number.");
     ids.add(item.Id);

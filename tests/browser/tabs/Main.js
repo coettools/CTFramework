@@ -71,7 +71,7 @@ try {
   class Fixture extends Component {
     constructor(props) {
       super(props);
-      this.state = { Controlled: false, Value: 0, Layout: "auto" };
+      this.state = { Controlled: false, Value: 0, Layout: "auto", Rows: false, ShowHeadings: true, Clamp: true };
     }
 
     Render() {
@@ -81,8 +81,10 @@ try {
             Label: "Character sections",
             Key: "character",
             Layout: this.state.Layout,
+            Columns: this.state.Rows ? 2 : undefined,
+            ShowHeadings: this.state.ShowHeadings,
             HeadingLevel: 3,
-            MinPanelWidth: "calc(7rem + 3px)",
+            MinPanelWidth: this.state.Rows ? "24rem" : "calc(7rem + 3px)",
             Value: this.state.Controlled ? this.state.Value : undefined,
             OnChange: (id) => {
               checks.changes.push(id);
@@ -91,8 +93,21 @@ try {
             OnLayoutChange: (mode) => checks.layouts.push(mode),
             Items: [
               { Id: 0, Title: "Gear and equipment", Content: html`<p>Equipped items</p>` },
-              { Id: "locked", Title: "Unavailable", Disabled: true, Content: "Unavailable in this build." },
-              { Id: "tree", Title: "Passive tree and damage preview", Span: 2, Badge: 0, Content: CT.View({ Component: Planner }) },
+              { Id: "locked", Title: this.state.Rows ? "Stats" : "Unavailable", Disabled: !this.state.Rows, Content: "Character statistics." },
+              { Id: "tree", Title: "Passive tree and damage preview", Span: this.state.Rows ? "full" : 2, Badge: 0, Content: CT.View({ Component: Planner }) },
+              ...(this.state.Rows
+                ? [
+                    {
+                      Id: "skills",
+                      Title: "Skills",
+                      Span: this.state.Clamp ? 8 : "full",
+                      Content: html`<div>
+                        <h3>Skill groups</h3>
+                        <label>Skill notes <input id="skill-notes" /></label>
+                      </div>`,
+                    },
+                  ]
+                : []),
             ],
           })}
         </div>
@@ -198,6 +213,60 @@ try {
   Assert(canvas === planner.querySelector("canvas") && svg === planner.querySelector(".ct-chart-svg") && count === planner.querySelector("#count"), "The original canvas, SVG and stateful button survived");
   Assert(count.textContent.includes("1") && checks.mounts === 1 && checks.unmounts === 0, "The managed child retained its state with one mount");
   Assert(checks.camera.X === camera.X && checks.camera.Y === camera.Y && checks.camera.Zoom === camera.Zoom, "The camera survived reveal and width changes");
+
+  app.SetState({ Controlled: false, Layout: "auto", Rows: true, ShowHeadings: false });
+  await Settle();
+  root.style.setProperty("--ct-tabs-gap", "20px");
+  await Settle();
+  const rowPanels = Array.from(root.querySelectorAll(".ct-tabs-panel"));
+  const rowThreshold = root.querySelector(".ct-tabs-ruler").getBoundingClientRect().width;
+  Assert(Math.abs(rowThreshold - (2 * 24 * parseFloat(getComputedStyle(document.documentElement).fontSize) + 20)) < 1, "Columns measures two minimum widths and one current CSS gap, regardless of the four items");
+  for (let cycle = 0; cycle < 3; cycle++) {
+    await Resize(rowThreshold + 4);
+    const boxes = rowPanels.map((panel) => panel.getBoundingClientRect());
+    Assert(root.dataset.layout === "columns" && Math.abs(boxes[0].width - boxes[1].width) < 1 && Math.abs(boxes[0].top - boxes[1].top) < 1, "The two summary panels share equal tracks in the first row");
+    Assert(
+      boxes[2].top > boxes[0].bottom && boxes[3].top > boxes[2].bottom && Math.abs(boxes[2].width - root.clientWidth) < 1 && Math.abs(boxes[3].width - root.clientWidth) < 1,
+      "Full and oversized numeric spans occupy separate full-width rows in item order",
+    );
+    Assert(
+      rowPanels.every((panel) => panel.getAttribute("role") === "region" && panel.hasAttribute("aria-label") && !panel.hasAttribute("aria-labelledby")) && planner.getAttribute("aria-label").endsWith(" 0"),
+      "Heading-free columns remain named regions, including a zero badge",
+    );
+    Assert(!root.querySelector(".ct-tabs-heading") && root.querySelector("#skill-notes").closest("section").querySelector("h3").textContent === "Skill groups", "ShowHeadings false removes captions and leaves the content's own heading");
+    CheckSize();
+    notes.focus();
+    await Resize(rowThreshold - 1);
+    Assert(root.dataset.layout === "tabs" && !planner.hidden && document.activeElement === notes && TabsList().length === 4, "A multi-row collapse retains the focused stateful tree panel");
+    Assert(
+      rowPanels.every((panel) => panel.getAttribute("role") === "tabpanel" && panel.hasAttribute("aria-labelledby") && !panel.hasAttribute("aria-label") && !panel.style.gridColumn),
+      "Tab labels replace region labels and clear column spans",
+    );
+    CheckSize();
+  }
+
+  app.SetState({ ShowHeadings: true, Clamp: false });
+  await Resize(rowThreshold + 4);
+  Assert(
+    root.querySelectorAll(".ct-tabs-heading").length === 4 && rowPanels.every((panel) => panel.getAttribute("aria-labelledby") === panel.querySelector(".ct-tabs-heading").id),
+    "The default headings can be restored without replacing panels",
+  );
+  Assert(rowPanels[3].style.gridColumn === "1 / -1", "A full span remains explicit after changing from a clamped numeric span");
+  app.SetState({ ShowHeadings: false });
+  await Settle();
+  Assert(
+    wrapper === planner.querySelector(".ct-tabs-content") &&
+      canvas === planner.querySelector("canvas") &&
+      svg === planner.querySelector(".ct-chart-svg") &&
+      notes === planner.querySelector("#notes") &&
+      notes.value === "Keep this draft" &&
+      count.textContent.includes("1"),
+    "Rows and heading changes preserve the same managed input, counter, canvas and SVG",
+  );
+  Assert(
+    checks.mounts === 1 && checks.unmounts === 0 && checks.camera.X === camera.X && checks.camera.Y === camera.Y && checks.camera.Zoom === camera.Zoom,
+    "Repeated row transitions and heading changes retain one child instance and the user's camera",
+  );
   document.querySelector("#outside").focus();
   host.style.removeProperty("width");
   app.SetState({ Controlled: false, Layout: "auto" });

@@ -18,3 +18,10 @@ its base URL so relative assets also load on nested parameter routes.
 5. Missing scripts or unknown showcase paths must return 404, not the entry HTML.
 6. In Utilities, click Open Faial route. GetParameters must show Name: Faial.
    Refresh the nested URL, then use Back/Forward; the value must follow the path.
+7. On Components, widen the Tabs example enough to show Overview and Notes side
+   by side, with Chart and Diagram each on a full row below. The column panels
+   must have no extra Tabs heading; each region still needs an accessible name.
+   Increase the Overview counter, open the chart table, and pan the diagram.
+   Use the width button and tab controls to switch repeatedly between modes.
+   The counter, chart table and camera position must persist. Repeat at 390px
+   with touch and check keyboard tab order and horizontal overflow.
